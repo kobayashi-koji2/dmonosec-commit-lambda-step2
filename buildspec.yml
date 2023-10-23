@@ -1,0 +1,56 @@
+version: 0.2
+env:
+  variables:
+    # ビルド環境側 環境変数
+    SWITCH_ROLE: FALSE
+phases:
+  install:
+    runtime-versions:
+      # pythonのバージョン指定
+      python: 3.8
+  pre_build:
+    commands:
+      - echo 'CodeBuildプロジェクト側 環境変数'
+      - echo 'account_id:'${account_id}
+      - echo 'global_name:'${global_name}
+
+      - echo 'カレントAccount ID 取得'
+      - export CURRENT_ID=$(aws sts get-caller-identity --no-verify | jq -r '.Account')
+      - echo 'CURRENT_ID:'${CURRENT_ID}
+      
+      - echo 'IAMスイッチロール 要否判定'
+      - |
+        if [ ${account_id} != ${CURRENT_ID} ] ; then
+          SWITCH_ROLE=TRUE
+          echo 'クロスアカウントでデプロイ実行'
+          AWS_STS_CREDENTIALS=$(aws sts assume-role --role-arn "arn:aws:iam::${account_id}:role/${global_name}-iamr-deploy-service" --role-session-name AWSCLI-Session --no-verify)
+          export AWS_ACCESS_KEY_ID=$(echo ${AWS_STS_CREDENTIALS} | jq -r '.Credentials.AccessKeyId')
+          export AWS_SECRET_ACCESS_KEY=$(echo ${AWS_STS_CREDENTIALS} | jq -r '.Credentials.SecretAccessKey')
+          export AWS_SESSION_TOKEN=$(echo ${AWS_STS_CREDENTIALS} | jq -r '.Credentials.SessionToken')
+        else
+          echo 'シングルアカウントでデプロイ実行'
+        fi
+      - |
+      - echo 'SWITCH_ROLE:'${SWITCH_ROLE}
+  build:
+    commands:
+      - dirs=`find * -maxdepth 0 -type d`
+      - echo 'zip化してs3へコピー'
+      - |
+        for dir in $dirs;
+        do
+          echo $dir
+          cd ${dir}/contents
+          zip -r ${dir}.zip ./
+          aws s3 cp ${dir}.zip s3://${global_name}-s3-codebuild-lambda/lambda/
+          cd ../../
+        done
+      - |
+      - echo 'lambdaを更新(ソースコードのデプロイ)'
+      - |
+        for dir in $dirs;
+        do
+          echo $dir
+          aws lambda update-function-code --function-name ${global_name}-lambda-${dir} --s3-bucket ${global_name}-s3-codebuild-lambda-2 --s3-key lambda/${dir}.zip
+        done
+      - |
