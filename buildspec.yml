@@ -7,7 +7,7 @@ phases:
   install:
     runtime-versions:
       # pythonのバージョン指定
-      python: 3.8
+      python: 3.9
   pre_build:
     commands:
       - echo 'CodeBuildプロジェクト側 環境変数'
