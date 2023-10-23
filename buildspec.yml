@@ -42,7 +42,7 @@ phases:
           echo $dir
           cd ${dir}/contents
           zip -r ${dir}.zip ./
-          aws s3 cp ${dir}.zip s3://${global_name}-s3-codebuild-lambda/lambda/
+          aws s3 cp ${dir}.zip s3://${global_name}-s3-codebuild-lambda-2/lambda/
           cd ../../
         done
       - |
