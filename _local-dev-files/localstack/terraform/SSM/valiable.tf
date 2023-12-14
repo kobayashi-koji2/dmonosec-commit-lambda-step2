@@ -14,4 +14,4 @@ variable notification_list_table_name {}
 variable pre_register_devices_table_name {} 
 variable cnt_hist_table_name {}
 variable remote_control_name {}
-variable user_device_group_name {}
+variable device_relation_name {}
