@@ -11,7 +11,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=dummy
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
-      - SSM_KEY_TABLE_NAME=l-ssm-dynamodb-table-names
+      - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
     volumes:
       - ../_local-dev-files/layer/common_functions_layer:/opt
       - ./contents:/var/task

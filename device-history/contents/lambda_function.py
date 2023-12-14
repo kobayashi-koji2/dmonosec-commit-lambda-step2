@@ -1,24 +1,133 @@
 import json
 import os
-import boto3
 import logging
-import validate
+import traceback
+
+import boto3
 from botocore.exceptions import ClientError
 
-dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
-
 # layer
-import db
-import ssm
 import convert
+import ssm
 
-# テスト
-import db_dev
+import ddb
+import validate
+
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 parameter = None
 logger = logging.getLogger()
+
+
+def create_history_message(hist):
+    msg = ""
+    # 接点入力変化
+    if hist["event_type"] == "di_change":
+        terminal_name = hist.get(
+            "terminal_name", "接点入力" + str(hist.get("terminal_no", ""))
+        )
+        msg = f"【接点入力変化】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
+
+    # 接点出力変化
+    elif hist["event_type"] == "do_change":
+        terminal_name = hist.get(
+            "terminal_name", "接点出力" + str(hist.get("terminal_no", ""))
+        )
+        msg = f"【接点出力変化】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
+
+    # アナログ入力変化（Ph2）
+    elif hist["event_type"] == "ai_change":
+        msg = ""
+
+    # バッテリーニアエンド
+    elif hist["event_type"] == "battery_near":
+        if hist["occurrence_flag"] == 1:
+            msg = "【電池残量変化（少ない）】\nデバイスの電池残量が少ない状態に変化しました。"
+        elif hist["occurrence_flag"] == 0:
+            msg = "【電池残量変化（十分）】\nデバイスの電池残量が十分な状態に変化しました。"
+
+    # 機器異常
+    elif hist["event_type"] == "device_abnormality":
+        if hist["occurrence_flag"] == 1:
+            msg = "【機器異常（発生）】\n機器異常が発生しました。"
+        elif hist["occurrence_flag"] == 0:
+            msg = "【機器異常（復旧）】\n機器異常が復旧しました。"
+
+    # パラメータ異常
+    elif hist["event_type"] == "parameter_abnormality":
+        if hist["occurrence_flag"] == 1:
+            msg = "【パラメータ異常（発生）】\nパラメータ異常が発生しました。"
+        elif hist["occurrence_flag"] == 0:
+            msg = "【パラメータ異常（復旧）】\nパラメータ異常が復旧しました。"
+
+    # FW更新異常
+    elif hist["event_type"] == "fw_update_abnormality":
+        if hist["occurrence_flag"] == 1:
+            msg = "【FW異常（発生）】\nFW更新異常が発生しました。"
+        elif hist["occurrence_flag"] == 0:
+            msg = "【FW異常（復旧）】\nFW更新異常が復旧しました。"
+
+    # 電源ON
+    elif hist["event_type"] == "power_on":
+        msg = "【電源ON】\nデバイスの電源がONになりました。"
+
+    # デバイスヘルシー未受信（Ph2？）
+    elif hist["event_type"] == "device_unhealthy":
+        msg = ""
+
+    # 接点入力未変化検出（Ph2）
+    elif hist["event_type"] == "di_unhealthy":
+        msg = ""
+
+    # 画面操作による制御
+    elif hist["event_type"] == "manual_control":
+        # TODO 要求仕様更新を待ってから対応
+        msg = ""
+
+    # タイマー設定による制御
+    elif (
+        hist["event_type"] == "on_timer_control"
+        or hist["event_type"] == "off_timer_control"
+    ):
+        # TODO 要求仕様更新を待ってから対応
+        msg = ""
+
+    # 連動設定による制御（Ph2）
+    elif hist["event_type"] == "linked_control":
+        msg = ""
+
+    return msg
+
+
+def create_response(request_params, hist_list):
+    res_hist_list = []
+    for hist in hist_list:
+        res_hist_list.append(
+            {
+                "event_datetime": hist["event_datetime"],
+                "recv_datetime": hist["recv_datetime"],
+                "device_id": hist["device_id"],
+                "device_name": hist["hist_data"].get("device_name"),
+                "device_imei": hist["hist_data"].get("imei"),
+                "event_type": hist["hist_data"].get("event_type"),
+                "history_message": create_history_message(hist["hist_data"]),
+                "email_notification": "1"
+                if hist["hist_data"].get("notification_hist_id")
+                else "0",
+            }
+        )
+
+    return {
+        "code": "0000",
+        "history": {
+            "history_start_datetime": request_params["history_start_datetime"],
+            "history_end_datetime": request_params["history_end_datetime"],
+            "event_type_list": request_params["event_type_list"],
+            "history_list": res_hist_list,
+        },
+    }
 
 
 def lambda_handler(event, context):
@@ -39,16 +148,9 @@ def lambda_handler(event, context):
         # DynamoDB操作オブジェクト生成
         try:
             user_table = dynamodb.Table(parameter["USER_TABLE"])
-            device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
-            device_state_table = dynamodb.Table(parameter.get("STATE_TABLE"))
             account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            pre_register_table = dynamodb.Table(
-                parameter.get("PRE_REGISTER_DEVICE_TABLE")
-            )
-            user_device_group_table = dynamodb.Table(
-                parameter.get("USER_DEVICE_GROUP_TABLE")
-            )
+            hist_list_table_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
         except KeyError as e:
             parameter = None
             body = {"code": "9999", "message": e}
@@ -58,7 +160,10 @@ def lambda_handler(event, context):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        validate_result = validate.validate(event, user_table)
+        validate_result = validate.validate(
+            event, account_table, user_table, contract_table
+        )
+        print(validate_result)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
@@ -66,142 +171,35 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
 
-        user_info = validate_result["user_info"]
-        decoded_idtoken = validate_result["decoded_idtoken"]
-        user_id = user_info["Item"]["user_id"]
-        user_type = user_info["Item"]["user_type"]
-        # contract_id = decoded_idtoken['contract_id']
-        contract_id = "na1234567"
-
-        ##################
-        # デバイス順序更新
-        ##################
-        # 更新前デバイス順序
-        device_order_list = user_info["Item"]["user_data"]["device_order"]
-        # 管理デバイス(直接)
-        # manage_device_list = db_dev.get_user_device_group_table('u-'+user_id, user_device_group_table, sk_prefix='d-')
-        # print(user_id)
-        # print(manage_device_list)
-        # manage_group_list = db_dev.get_user_device_group_table(user_id, user_device_group_table, sk_prefix='g-').get('key2',[])
-        # 管理デバイス(グループ)
-        # group_manage_device_list = []
-        # or item in manage_group_list:
-        # group_manage_device_list.append(db_dev.get_user_device_group_table(user_id, user_device_group_table, sk_prefix='g-').get('key2',[])
-        # group_manage_devices = db_dev.get_user
-        # print(manage_device_list)
-        # 更新判定
-
-        # 更新後デバイス順序
-        # device_order_list = db.get_device_order(manage_device_list,user_id,device_order_list_old)
-
-        ##################
-        # デバイス一覧取得
-        ##################
-        device_list = get_device_list(
-            device_order_list, device_table, device_state_table
-        )
-
         try:
-            if user_type == "admin" or user_type == "sub_admin":
-                # アカウントに紐づくデバイスIDを取得
-                # device_id_list = db.get_contract_info(contract_id,contract_table)
-                # デバイス情報取得
-                # device_info = get_device_list(device_order_list, device_table, device_state_table)
-                # 未登録デバイス情報取得
-                pre_reg_device_info = db.get_pre_reg_device_info(
-                    contract_id, pre_register_table
-                )
-                res_body = {
-                    "code": "0000",
-                    "message": "",
-                    "device_list": device_list,
-                    "unregistered_device_list": pre_reg_device_info,
-                }
-            elif user_type == "worker" or user_type == "referrer":
-                logger.debug("権限:作業者")
-                # デバイス情報取得
-                # device_info = get_device_list(device_order_list, device_table, device_state_table)
-                res_body = {"code": "0000", "messege": "", "device_list": device_list}
-            else:
-                res_body = {"code": "9999", "messege": "ユーザ権限が不正です。"}
+            # 履歴取得
+            hist_list = ddb.get_hist_list(
+                hist_list_table_table, validate_result["request_params"]
+            )
+            response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:
             print(e)
-            body = {"code": "9999", "message": "デバイス一覧の取得に失敗しました。"}
+            print(traceback.format_exc())
+            body = {"code": "9999", "message": "履歴一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
-        print(f"レスポンスボディ:{res_body}")
+
         return {
             "statusCode": 200,
             "headers": res_headers,
             "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                response, ensure_ascii=False, default=convert.decimal_default_proc
             ),
         }
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,
             "body": json.dumps(body, ensure_ascii=False),
         }
-
-
-# デバイス一覧取得
-def get_device_list(device_list, device_table, device_state_table):
-    device_state_list, not_device_info_list, not_state_info_list = [], [], []
-    order = 0
-    for item in device_list:
-        order += 1
-        device_info = db.get_device_info(item, device_table)
-        # デバイス現状態取得
-        device_state = db.get_device_state(item, device_state_table)
-        if len(device_info["Items"]) == 0:
-            not_device_info_list.append(item)
-            continue
-        elif "Item" not in device_state:
-            not_state_info_list.append(item)
-            # レスポンス生成(現状態情報なし)
-            device_state_list.append(
-                {
-                    "device_id": item,
-                    "device_name": device_info["Items"][0]["device_data"]["config"][
-                        "device_name"
-                    ],
-                    "imei": device_info["Items"][0]["imei"],
-                    "device_order": order,
-                    "signal_status": "",
-                    "battery_near_status": "",
-                    "device_abnormality": "",
-                    "parameter_abnormality": "",
-                    "fw_update_abnormality": "",
-                    "device_unhealthy": "",
-                    "di_unhealthy": "",
-                }
-            )
-            continue
-        # レスポンス生成(現状態情報あり)
-        device_state_list.append(
-            {
-                "device_id": item,
-                "device_name": device_info["Items"][0]["device_data"]["config"][
-                    "device_name"
-                ],
-                "imei": device_info["Items"][0]["imei"],
-                "device_order": order,
-                "signal_status": device_state["Item"]["signal_status"],
-                "battery_near_status": device_state["Item"]["battery_near_status"],
-                "device_abnormality": device_state["Item"]["device_abnormality"],
-                "parameter_abnormality": device_state["Item"]["parameter_abnormality"],
-                "fw_update_abnormality": device_state["Item"]["fw_abnormality"],
-                "device_unhealthy": "",
-                "di_unhealthy": "",
-            }
-        )
-
-    print("情報が存在しないデバイス:", not_device_info_list)
-    print("現状態が存在しないデバイス:", not_state_info_list)
-    return device_state_list
