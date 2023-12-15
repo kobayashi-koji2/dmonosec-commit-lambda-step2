@@ -26,15 +26,20 @@ tflocal apply -var-file ssm.tfvars -auto-approve
 
 # m-office-accounts
 awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-accounts --item '{"account_id": {"S": "a261dadc-a4a7-4a5e-909a-0a9ee2ace39e"},"email_address": {"S": "mun-yamashita@design.secom.co.jp"},"auth_id": {"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},"user_data": {"M": {"config": {"M": {"user_name": {"S": "山下 宗史"}, "password_update_datetime": {"N": "12345"}, "del_datetime": {"N": "12345"}, "auth_status": {"S": "1"}, "auth_period": {"N": "12345"}}}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-accounts --item '{"account_id": {"S": "8965a9aa-1ed3-4856-b1f4-47a8a86771a1"},"email_address": {"S": "mun-yamashita+monosec-worker@design.secom.co.jp"},"auth_id": {"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"},"user_data": {"M": {"config": {"M": {"user_name": {"S": "山下 作業者"}, "password_update_datetime": {"N": "12345"}, "del_datetime": {"N": "12345"}, "auth_status": {"S": "1"}, "auth_period": {"N": "12345"}}}}}}'
 
 # t-monosec-users
-awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-users --item '{"user_id": {"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},"account_id": {"S": "c74a5ce9-437a-4fd1-a8fc-81885ec65a52"},"contract_id": {"S": "a261dadc-a4a7-4a5e-909a-0a9ee2ace39e"},"user_type": {"S": "admin"},"user_data": {"M": {"config": {"M": {"mail_address": {"S": "mun-yamashita@design.secom.co.jp"}}}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-users --item '{"user_id": {"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},"account_id": {"S": "a261dadc-a4a7-4a5e-909a-0a9ee2ace39e"},"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"user_type": {"S": "admin"},"user_data": {"M": {"config": {"M": {"mail_address": {"S": "mun-yamashita@design.secom.co.jp"}}}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-users --item '{"user_id": {"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"},"account_id": {"S": "8965a9aa-1ed3-4856-b1f4-47a8a86771a1"},"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"user_type": {"S": "worker"},"user_data": {"M": {"config": {"M": {"mail_address": {"S": "mun-yamashita@design.secom.co.jp"}}}}}}'
 
 # m-office-contracts
-awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-contracts --item '{"contract_id": {"S": "a261dadc-a4a7-4a5e-909a-0a9ee2ace39e"},"service": {"S": "monosc"},"contract_data": {"M": {"user_list": {"L": [{"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"}]},"device_list": {"L": [{"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},{"S": "a2be194e-64fc-42ce-977e-d8dcf7109825"}]},"group_list": {"L": []}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-contracts --item '{"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"service": {"S": "monosc"},"contract_data": {"M": {"user_list": {"L": [{"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},{"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"}]},"device_list": {"L": [{"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},{"S": "a2be194e-64fc-42ce-977e-d8dcf7109825"}]},"group_list": {"L": []}}}}'
 
 # m-device-relation
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-device-relation --item '{"key1": {"S": "u-ed20f13d-3b86-4d37-aadd-2190f47990c6"},"key2": {"S": "d-869411fe-200a-4d2d-9eeb-7506e49c0a50"}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-device-relation --item '{"key1": {"S": "u-ed20f13d-3b86-4d37-aadd-2190f47990c6"},"key2": {"S": "g-6868b7a4-eec6-46e0-b392-9021f021193d"}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-device-relation --item '{"key1": {"S": "g-6868b7a4-eec6-46e0-b392-9021f021193d"},"key2": {"S": "d-a2be194e-64fc-42ce-977e-d8dcf7109825"}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-device-relation --item '{"key1": {"S": "u-bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"},"key2": {"S": "d-869411fe-200a-4d2d-9eeb-7506e49c0a50"}}'
 
 # t-monosec-hist-list
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-hist-list --item '{"device_id": {"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},"hist_id": {"S": "920c19ba-f86c-45c0-ac8d-f1319ef9de28"},"event_datetime": {"N": "1702263329000"},"recv_datetime": {"N": "1702263421000"},"hist_data": {"M": {"device_name": {"S": "SC1Fアダプター"},"imei": {"S": "1234"},"event_type": {"S": "di_change"},"terminal_name": {"S": "入力1"},"control_trigger": {"S": "検知"},"do_di_return": {"S": "トリガー1"},"terminal_state_name": {"S": "ON"},"terminal_state_icon": {"S": "icon-on"},"notification_hist": {"S": "通知あり"}}}}'

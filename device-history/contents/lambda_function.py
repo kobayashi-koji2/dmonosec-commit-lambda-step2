@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import logging
 import traceback
 
@@ -16,9 +18,16 @@ import validate
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
+DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
 
 parameter = None
 logger = logging.getLogger()
+
+
+def epochmsec_to_str(epochmsec):
+    utc_datetime = datetime.fromtimestamp(float(epochmsec / 1000), tz=timezone.utc)
+    jst_datetime = utc_datetime.astimezone(ZoneInfo("Asia/Tokyo"))
+    return f"{jst_datetime:%Y/%m/%d %H:%M:%S}"
 
 
 def create_history_message(hist):
@@ -106,8 +115,8 @@ def create_response(request_params, hist_list):
     for hist in hist_list:
         res_hist_list.append(
             {
-                "event_datetime": hist["event_datetime"],
-                "recv_datetime": hist["recv_datetime"],
+                "event_datetime": epochmsec_to_str(hist["event_datetime"]),
+                "recv_datetime": epochmsec_to_str(hist["recv_datetime"]),
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
                 "device_imei": hist["hist_data"].get("imei"),
@@ -150,6 +159,9 @@ def lambda_handler(event, context):
             user_table = dynamodb.Table(parameter["USER_TABLE"])
             account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
+            device_relation_table = dynamodb.Table(
+                parameter.get("DEVICE_RELATION_TABLE")
+            )
             hist_list_table_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
         except KeyError as e:
             parameter = None
@@ -161,7 +173,11 @@ def lambda_handler(event, context):
             }
 
         validate_result = validate.validate(
-            event, account_table, user_table, contract_table
+            event,
+            account_table,
+            user_table,
+            contract_table,
+            device_relation_table,
         )
         print(validate_result)
         if validate_result["code"] != "0000":

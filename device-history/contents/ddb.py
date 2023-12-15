@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -8,6 +9,9 @@ from decimal import Decimal
 
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client("dynamodb", region_name="ap-northeast-1")
+
+
+DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
 
 
 ###################################
@@ -59,16 +63,42 @@ def get_hist_list(hist_list_table_table, params):
     sortkeyExpression = None
     if params["history_start_datetime"] and params["history_end_datetime"]:
         sortkeyExpression = Key("event_datetime").between(
-            Decimal(params["history_start_datetime"]) * 1000,
-            Decimal(params["history_end_datetime"]) * 1000 + 999,
+            Decimal(
+                int(
+                    datetime.strptime(
+                        params["history_start_datetime"], DATE_FORMAT
+                    ).timestamp()
+                )
+                * 1000
+            ),
+            Decimal(
+                int(
+                    datetime.strptime(
+                        params["history_end_datetime"], DATE_FORMAT
+                    ).timestamp()
+                )
+                * 1000
+                + 999
+            ),
         )
     elif params["history_start_datetime"]:
         sortkeyExpression = Key("event_datetime").gte(
-            Decimal(params["history_start_datetime"]) * 1000
+            Decimal(
+                int(
+                    datetime.strptime(
+                        params["history_start_datetime"], DATE_FORMAT
+                    ).timestamp()
+                )
+                * 1000
+            )
         )
     elif params["history_end_datetime"]:
         sortkeyExpression = Key("event_datetime").lte(
-            Decimal(params["history_end_datetime"]) * 1000 + 999
+            Decimal(
+                int(datetime.strptime(params["history_end_datetime"], DATE_FORMAT))
+                * 1000
+                + 999
+            )
         )
     hist_list = []
     for device_id in params["device_list"]:

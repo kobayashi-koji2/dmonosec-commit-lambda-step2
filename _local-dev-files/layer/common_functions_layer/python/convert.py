@@ -2,7 +2,11 @@ from decimal import Decimal
 from jose import jwt
 
 #idトークンデコード
-def decode_idtoken(idtoken):
+def decode_idtoken(event):
+    headers = event.get('headers',{})
+    if not headers or 'Authorization' not in headers:
+        return False
+    idtoken = event['headers']['Authorization']
     decoded_idtoken = jwt.get_unverified_claims(idtoken)
     return decoded_idtoken
 

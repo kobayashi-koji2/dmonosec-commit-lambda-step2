@@ -1,5 +1,4 @@
 import json
-import boto3
 import logging
 from datetime import datetime
 
@@ -10,8 +9,31 @@ import convert
 logger = logging.getLogger()
 
 
+DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
+
+
+def get_user_device_list(user_id, device_relation_table):
+    device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
+    print(device_relation_list)
+    user_device_list = []
+    for relation in device_relation_list:
+        relation_id = relation["key2"]
+        if relation_id.startswith("d-"):
+            user_device_list.append(relation_id[2:])
+        elif relation_id.startswith("g-"):
+            user_device_list.extend(
+                [
+                    relation_device_id["key2"][2:]
+                    for relation_device_id in db.get_device_relation(
+                        relation_id, device_relation_table, sk_prefix="d-"
+                    )
+                ]
+            )
+    return user_device_list
+
+
 # パラメータチェック
-def validate(event, account_table, user_table, contract_table):
+def validate(event, account_table, user_table, contract_table, device_relation_table):
     headers = event.get("headers", {})
     if not headers:
         return {"code": "9999", "message": "パラメータが不正です。"}
@@ -27,7 +49,7 @@ def validate(event, account_table, user_table, contract_table):
         logger.error(e)
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info(user_id, user_table)
+    user_res = db.get_user_info_by_user_id(user_id, user_table)
     if "Item" not in user_res:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
     user = user_res["Item"]
@@ -47,14 +69,16 @@ def validate(event, account_table, user_table, contract_table):
 
     if params["history_start_datetime"]:
         try:
-            datetime.strptime(params["history_start_datetime"], "%Y%m%d%H%M%S")
+            datetime.strptime(params["history_start_datetime"], DATE_FORMAT)
         except ValueError:
+            print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         try:
-            datetime.strptime(params["history_end_datetime"], "%Y%m%d%H%M%S")
+            datetime.strptime(params["history_end_datetime"], DATE_FORMAT)
         except ValueError:
+            print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if (
@@ -71,7 +95,6 @@ def validate(event, account_table, user_table, contract_table):
     if "Item" not in contract_res:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
     contract = contract_res["Item"]
-    print(contract)
 
     # 権限チェック（共通）
     for device_id in params["device_list"]:
@@ -79,7 +102,11 @@ def validate(event, account_table, user_table, contract_table):
             return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
 
     # 権限チェック（作業者）
-    # TODO デバイス関係テーブルを使ってチェック
+    if user["user_type"] != "admin":
+        user_device_list = get_user_device_list(user["user_id"], device_relation_table)
+        for device_id in params["device_list"]:
+            if device_id not in user_device_list:
+                return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
 
     return {
         "code": "0000",
