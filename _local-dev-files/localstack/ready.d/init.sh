@@ -33,7 +33,14 @@ awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-users --item '{"us
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-users --item '{"user_id": {"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"},"account_id": {"S": "8965a9aa-1ed3-4856-b1f4-47a8a86771a1"},"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"user_type": {"S": "worker"},"user_data": {"M": {"config": {"M": {"mail_address": {"S": "mun-yamashita@design.secom.co.jp"}}}}}}'
 
 # m-office-contracts
-awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-contracts --item '{"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"service": {"S": "monosc"},"contract_data": {"M": {"user_list": {"L": [{"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},{"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"}]},"device_list": {"L": [{"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},{"S": "a2be194e-64fc-42ce-977e-d8dcf7109825"}]},"group_list": {"L": []}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-m-office-contracts --item '{"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"service": {"S": "monosc"},"contract_data": {"M": {"user_list": {"L": [{"S": "ed20f13d-3b86-4d37-aadd-2190f47990c6"},{"S": "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"}]},"device_list": {"L": [{"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},{"S": "a2be194e-64fc-42ce-977e-d8dcf7109825"}]},"group_list": {"L": [{"S": "6868b7a4-eec6-46e0-b392-9021f021193d"}]}}}}'
+
+# t-monosec-devices
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-devices --item '{"device_id": {"S": "a2be194e-64fc-42ce-977e-d8dcf7109825"},"imei": {"S": "imei1"},"contract_state": {"N": "1"},"device_type": {"N": "1"},"device_data": {"M": {"device_data": {"M": {}},"config": {"M": {"device_name": {"S": "正面玄関"}}}}}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-devices --item '{"device_id": {"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},"imei": {"S": "imei2"},"contract_state": {"N": "1"},"device_type": {"N": "1"},"device_data": {"M": {"device_data": {"M": {}},"config": {"M": {"device_name": {"S": "裏口"}}}}}}'
+
+# t-monosec-groups
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-groups --item '{"group_id": {"S": "6868b7a4-eec6-46e0-b392-9021f021193d"},"group_data": {"M": {"config": {"M": {"contract_id": {"S": "1ea207eb-dd2e-401f-918d-ac293581cd4c"},"group_name": {"S": "SCセンター1F"},"del_datetime": {"N": "12345"}}}}}}'
 
 # m-device-relation
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-device-relation --item '{"key1": {"S": "u-ed20f13d-3b86-4d37-aadd-2190f47990c6"},"key2": {"S": "d-869411fe-200a-4d2d-9eeb-7506e49c0a50"}}'

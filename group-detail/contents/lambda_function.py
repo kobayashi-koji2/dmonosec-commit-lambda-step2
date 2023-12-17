@@ -42,6 +42,9 @@ def lambda_handler(event, context):
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
             group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
             device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
+            device_relation_table = dynamodb.Table(
+                parameter.get("DEVICE_RELATION_TABLE")
+            )
         except KeyError as e:
             parameter = None
             body = {"code": "9999", "message": e}
@@ -52,7 +55,7 @@ def lambda_handler(event, context):
             }
 
         # パラメータチェック
-        validate_result = validate.validate(event, user_table)
+        validate_result = validate.validate(event, contract_table, user_table)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
@@ -61,24 +64,29 @@ def lambda_handler(event, context):
             }
         user = validate_result["user_info"]
 
-        group_list = []
+        device_list = []
         try:
-            contract_info = db.get_contract_info(user["contract_id"], contract_table)
-            for group_id in (
-                contract_info.get("Item", {})
-                .get("contract_data", {})
-                .get("group_list", {})
-            ):
-                group_info = db.get_group_info(group_id, group_table).get("Item", {})
-                group_list.append(
+            contract = validate_result["contract_info"]
+            group_id = validate_result["request_params"]["group_id"]
+            group_info = db.get_group_info(group_id, group_table).get("Item", {})
+            relation_list = db.get_device_relation(
+                "g-" + group_id, device_relation_table, sk_prefix="d-"
+            )
+            for relation in relation_list:
+                device_id = relation["key2"][2:]
+                print(device_id)
+                print(db.get_device_info(device_id, device_table))
+                device_info = db.get_device_info(device_id, device_table)
+                if not device_info:
+                    continue
+                device_list.append(
                     {
-                        "group_id": group_id,
-                        "group_name": group_info.get("group_data", {})
+                        "device_id": device_id,
+                        "device_name": device_info.get("device_data", {})
                         .get("config", {})
-                        .get("group_name", {}),
+                        .get("device_name", {}),
                     }
                 )
-                print(group_list)
         except ClientError as e:
             print(e)
             print(traceback.format_exc())
@@ -88,7 +96,15 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
-        res_body = {"code": "0000", "message": "", "group_list": group_list}
+        res_body = {
+            "code": "0000",
+            "message": "",
+            "group_id": group_info.get("group_id", {}),
+            "group_name": group_info.get("group_data", {})
+            .get("config", {})
+            .get("group_name", {}),
+            "device_list": device_list,
+        }
         return {
             "statusCode": 200,
             "headers": res_headers,

@@ -40,9 +40,8 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
     if "Authorization" not in headers:
         return {"code": "9999", "messege": "パラメータが不正です。"}
 
-    idtoken = event["headers"]["Authorization"]
     try:
-        decoded_idtoken = convert.decode_idtoken(idtoken)
+        decoded_idtoken = convert.decode_idtoken(event)
         logger.debug("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:

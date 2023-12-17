@@ -2,7 +2,7 @@ import os
 import json
 
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from operator import itemgetter
 
 
@@ -98,12 +98,11 @@ def get_contract_info(contract_id, contract_table):
 
 # デバイス情報取得
 def get_device_info(device_id, device_table):
-    device_info = device_table.query(
-        IndexName="contract_state_index",
-        KeyConditionExpression=Key("device_id").eq(device_id)
-        & Key("contract_state").eq(1),
-    )
-    return device_info
+    device_list = device_table.query(
+        KeyConditionExpression=Key("device_id").eq(device_id),
+        FilterExpression=Attr("contract_state").eq(1),
+    ).get("Items")
+    return device_list[0] if device_list else None
 
 
 # 現状態取得
