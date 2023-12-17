@@ -1,5 +1,6 @@
 import json
 import logging
+import traceback
 from datetime import datetime
 
 # layer
@@ -45,7 +46,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         logger.debug("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
-        logger.error(e)
+        print(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
     user_res = db.get_user_info_by_user_id(user_id, user_table)
@@ -54,12 +55,12 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
     user = user_res["Item"]
 
     # 入力値ェック
-    body = json.loads(event.get("body", "{}"))
+    query_params = event.get("queryStringParameters", {})
     params = {
-        "history_start_datetime": body.get("history_start_datetime"),
-        "history_end_datetime": body.get("history_end_datetime"),
-        "event_type_list": body.get("event_type_list", []),
-        "device_list": body.get("device_list", []),
+        "history_start_datetime": query_params.get("history_start_datetime"),
+        "history_end_datetime": query_params.get("history_end_datetime"),
+        "event_type_list": query_params.get("event_type_list", []),
+        "device_list": query_params.get("device_list", []),
     }
     print(params)
 
