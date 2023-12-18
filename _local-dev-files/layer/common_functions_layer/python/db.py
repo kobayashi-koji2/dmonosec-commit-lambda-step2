@@ -90,6 +90,11 @@ def get_account_info(pk, table):
     return response
 
 
+def get_account_info_by_account_id(account_id, table):
+    response = table.get_item(Key={"account_id": account_id})
+    return response
+
+
 # 契約情報取得
 def get_contract_info(contract_id, contract_table):
     contract_info = contract_table.get_item(Key={"contract_id": contract_id})
