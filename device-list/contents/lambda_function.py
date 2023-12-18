@@ -102,12 +102,12 @@ def lambda_handler(event, context):
                 item1 = item1['key2']
                 #ユーザに紐づくデバイスIDを取得
                 if item1.startswith('d-'):
-                    device_id_list.append(item1)
+                    device_id_list.append(re.sub('^d-', '', item1))
                 #グループIDをキーにデバイスIDを取得
                 elif item1.startswith('g-'):
                     device_group_relation = db.get_device_relation(item1, tables['device_relation_table'], sk_prefix='d-')
                     for item2 in device_group_relation:
-                        device_id_list.append(item2['key2'])
+                        device_id_list.append(re.sub('^d-', '', item2['key2']))
             #2.2 デバイスID一覧生成
             device_id_list = set(device_id_list)
         else:
@@ -201,7 +201,7 @@ def lambda_handler(event, context):
                 ).get('group_data',{}).get('config',{}).get('group_name',""))
             print(f'グループ名:{group_name_list}')
             #デバイス現状態取得
-            device_state = db.get_device_state(item, tables['device_state_table']).get('Item',{})
+            device_state = db.get_device_state(item1, tables['device_state_table']).get('Item',{})
             if 'Item' not in device_state:
                 print(f'device current status information does not exist:{item1}')
                 
