@@ -67,18 +67,17 @@ def lambda_handler(event, context):
                 .get("contract_data", {})
                 .get("user_list", {})
             ):
-                user_info = db.get_user_info_by_user_id(user_id, user_table)
                 account_info = db.get_account_info_by_account_id(
-                    user_info.get("account_id"), account_table
+                    user.get("account_id"), account_table
                 )
-                account_config = account_info.get("user_data", {}).get("config", {})
+                account = account_info["Item"]
+                account_config = account.get("user_data", {}).get("config", {})
                 user_list.append(
                     {
-                        "user_id": user_info.get("user_id"),
-                        "email_address": account_info.get("email_address"),
-                        # "full_name": user_info.get("user_id"),
+                        "user_id": user.get("user_id"),
+                        "email_address": account.get("email_address"),
                         "user_name": account_config.get("user_name"),
-                        "user_type": user_info.get("user_type"),
+                        "user_type": user.get("user_type"),
                     }
                 )
                 print(user_list)

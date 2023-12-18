@@ -65,25 +65,26 @@ def lambda_handler(event, context):
         user = validate_result["user_info"]
 
         user_id = validate_result["request_params"]["user_id"]
-        user_info = db.get_user_info_by_user_id(user_id, user_table)
         account_info = db.get_account_info_by_account_id(
-            user_info.get("account_id"), account_table
+            user.get("account_id"), account_table
         )
-        account_config = account_info.get("user_data", {}).get("config", {})
+        account = account_info["Item"]
+        account_config = account.get("user_data", {}).get("config", {})
 
         group_relation_list = db.get_device_relation(
             "u-" + user_id, device_relation_table, sk_prefix="g-"
         )
         group_list = []
         for group_relation in group_relation_list:
-            group_id = group_relation["key2"][:2]
-            group_info = db.get_group_info(group_id, group_table).get("Item", {})
+            group_id = group_relation["key2"][2:]
+            group_info = db.get_group_info(group_id, group_table).get("Item")
+            print(group_info)
             group_list.append(
                 {
                     "group_id": group_id,
                     "group_name": group_info.get("group_data", {})
                     .get("config", {})
-                    .get("group_name", {}),
+                    .get("group_name"),
                 }
             )
 
@@ -92,14 +93,14 @@ def lambda_handler(event, context):
         )
         device_list = []
         for device_relation in device_relation_list:
-            device_id = device_relation["key2"][:2]
-            device_info = db.get_device_info(device_id, device_table).get("Item", {})
+            device_id = device_relation["key2"][2:]
+            device_info = db.get_device_info(device_id, device_table)
             device_list.append(
                 {
                     "device_id": device_id,
                     "device_name": device_info.get("device_data", {})
                     .get("config", {})
-                    .get("device_name", {}),
+                    .get("device_name"),
                 }
             )
 
@@ -107,9 +108,9 @@ def lambda_handler(event, context):
             "code": "0000",
             "message": "",
             "user_id": user_id,
-            "email_address": account_info.get("email_address"),
+            "email_address": account.get("email_address"),
             "user_name": account_config.get("user_name"),
-            "user_type": user_info.get("user_type"),
+            "user_type": user.get("user_type"),
             "management_group_list": group_list,
             "management_device_list": device_list,
         }
