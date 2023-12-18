@@ -1,71 +1,103 @@
+import time
+
 import boto3
 from boto3.dynamodb.conditions import Key
 
+import db
+import convert
 
-dynamodb = boto3.resource('dynamodb')
-client = boto3.client('dynamodb', region_name='ap-northeast-1')
+dynamodb = boto3.resource("dynamodb")
+client = boto3.client("dynamodb", region_name="ap-northeast-1")
 
-#ユーザ情報取得
-def get_user_info(user_id,user_table):
-    user_table = user_table.get_item(
-        Key={
-            'user_id': user_id
+
+def delete_group_info(
+    group_id,
+    contract,
+    device_relation_table,
+    contract_table_name,
+    group_table_name,
+    device_relation_table_name,
+):
+    # トランザクション書き込み用オブジェクト
+    transact_items = []
+    # テーブル更新用キー
+    group_data_attr = "group_data"
+    config_attr = "config"
+    del_datetime_attr = "del_datetime"
+    contract_data_attr = "contract_data"
+    group_list_attr = "group_list"
+
+    #################################################
+    # 契約管理テーブル更新用オブジェクト作成
+    #################################################
+    group_list = contract.get("contract_data", []).get("group_list", [])
+    group_list.remove(group_id)
+    contract_update_expression = f"SET #contract_data.#group_list = :group_list"
+    contract_expression_attribute_values = {":group_list": group_list}
+    contract_expression_attribute_name = {
+        "#contract_data": contract_data_attr,
+        "#group_list": group_list_attr,
+    }
+    contract_expression_attribute_values_fmt = convert.dict_dynamo_format(
+        contract_expression_attribute_values
+    )
+
+    update_contract = {
+        "Update": {
+            "TableName": contract_table_name,
+            "Key": {"contract_id": {"S": contract["contract_id"]}},
+            "UpdateExpression": contract_update_expression,
+            "ExpressionAttributeValues": contract_expression_attribute_values_fmt,
+            "ExpressionAttributeNames": contract_expression_attribute_name,
         }
+    }
+    transact_items.append(update_contract)
+
+    #################################################
+    # デバイス関係テーブル削除用オブジェクト作成
+    #################################################
+    relation_list = db.get_device_relation(
+        "g-" + group_id, device_relation_table, sk_prefix="d-"
     )
-    return user_table
-
-#アカウント情報取得
-def get_account_info(user_id,account_table):
-    account_table = account_table.query(
-        IndexName='user_id_index',
-        KeyConditionExpression=Key('user_id').eq(user_id)
-    )
-
-    return account_table
-
-#契約情報取得
-def get_contract_info(contract_id,contract_table):
-    contract_info = contract_table.get_item(
-        Key={
-            'contract_id':contract_id
+    print(relation_list)
+    for relation in relation_list:
+        remove_relation = {
+            "Delete": {
+                "TableName": device_relation_table_name,
+                "Key": {
+                    "key1": {"S": relation["key1"]},
+                    "key2": {"S": relation["key2"]},
+                },
+            }
         }
+        transact_items.append(remove_relation)
+
+    #################################################
+    # グループテーブル更新用オブジェクト作成
+    #################################################
+    group_update_expression = f"SET #group_data.#config.#del_datetime = :del_datetime"
+    group_expression_attribute_values = {":del_datetime": int(time.time() * 1000)}
+    group_expression_attribute_name = {
+        "#group_data": group_data_attr,
+        "#config": config_attr,
+        "#del_datetime": del_datetime_attr,
+    }
+    group_expression_attribute_values_fmt = convert.dict_dynamo_format(
+        group_expression_attribute_values
     )
-    return contract_info
 
-#アカウントに紐づくデバイスID取得
-def get_device_id_all(contract_id_list,contract_table):
-    device_id_list = []
-    for item in contract_id_list:
-        contract_info = get_contract_info(item,contract_table)
-        device_id_list+=contract_info['Items'][0]['contract_data']['device_list']
+    update_group = {
+        "Update": {
+            "TableName": group_table_name,
+            "Key": {"group_id": {"S": group_id}},
+            "UpdateExpression": group_update_expression,
+            "ExpressionAttributeValues": group_expression_attribute_values_fmt,
+            "ExpressionAttributeNames": group_expression_attribute_name,
+        }
+    }
+    transact_items.append(update_group)
 
-    return device_id_list
-
-
-#デバイス情報取得
-def get_device_info(device_id,device_table):
-    device_info = device_table.query(
-        IndexName='contract_state_index',
-        KeyConditionExpression=Key('device_id').eq(device_id) & Key('contract_state').eq(1)
-    )
-    return device_info
-    
-#グループ情報取得
-def get_group_info(group_id,group_table):
-    group_info = group_table.get_item(
-        Key={
-            'group_id': group_id
-        }    
-    )
-    return group_info
-
-#トランザクション(書き込み)
-def execute_transact_write_item(transact_items):
-    try:
-        client.transact_write_items(
-            TransactItems=transact_items
-        )
-        return True
-    except Exception as e:
-        print(e)
-        return False
+    #################################################
+    # DB書き込みトランザクション実行
+    #################################################
+    return db.execute_transact_write_item(transact_items)

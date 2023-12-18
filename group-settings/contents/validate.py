@@ -15,7 +15,6 @@ def validate(event, contract_table, user_table):
     if "Authorization" not in headers:
         return {"code": "9999", "messege": "リクエストパラメータが不正です。"}
 
-    idtoken = event["headers"]["Authorization"]
     try:
         decoded_idtoken = convert.decode_idtoken(event)
         print("idtoken:", decoded_idtoken)
@@ -52,7 +51,7 @@ def validate(event, contract_table, user_table):
         if path_params["group_id"] not in contract["contract_data"]["group_list"]:
             return {"code": "9999", "messege": "不正なグループIDが指定されています。"}
 
-    # TODO デバイスIDの権限チェック
+    # デバイスIDの権限チェック
     device_list = body_params.get("device_list", [])
     for device_id in device_list:
         if device_id not in contract["contract_data"]["device_list"]:
