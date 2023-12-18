@@ -56,17 +56,33 @@ def delete_group_info(
     #################################################
     # デバイス関係テーブル削除用オブジェクト作成
     #################################################
-    relation_list = db.get_device_relation(
+    device_relation_list = db.get_device_relation(
         "g-" + group_id, device_relation_table, sk_prefix="d-"
     )
-    print(relation_list)
-    for relation in relation_list:
+    print(device_relation_list)
+    for device_relation in device_relation_list:
         remove_relation = {
             "Delete": {
                 "TableName": device_relation_table_name,
                 "Key": {
-                    "key1": {"S": relation["key1"]},
-                    "key2": {"S": relation["key2"]},
+                    "key1": {"S": device_relation["key1"]},
+                    "key2": {"S": device_relation["key2"]},
+                },
+            }
+        }
+        transact_items.append(remove_relation)
+
+    user_relation_list = db.get_device_relation(
+        "g-" + group_id, device_relation_table, sk_prefix="u-", gsi_name="key2_index"
+    )
+    print(user_relation_list)
+    for user_relation in user_relation_list:
+        remove_relation = {
+            "Delete": {
+                "TableName": device_relation_table_name,
+                "Key": {
+                    "key1": {"S": user_relation["key1"]},
+                    "key2": {"S": user_relation["key2"]},
                 },
             }
         }
