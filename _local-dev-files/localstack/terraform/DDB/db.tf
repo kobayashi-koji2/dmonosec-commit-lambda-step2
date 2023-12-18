@@ -6,7 +6,6 @@ variable "num"{}
 resource "aws_dynamodb_table" "account" {
   name           = "${var.global_name}-ddb-m-office-accounts"
   hash_key       = "account_id"
-  range_key      = "email_address"
   stream_enabled = "false"
   table_class    = "STANDARD"
 
@@ -30,6 +29,12 @@ resource "aws_dynamodb_table" "account" {
   global_secondary_index {
     hash_key        = "auth_id"
     name            = "auth_id_index"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    hash_key        = "email_address"
+    name            = "email_address_index"
     projection_type = "ALL"
   }
 
