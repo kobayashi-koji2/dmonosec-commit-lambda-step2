@@ -23,6 +23,7 @@ def validate(event,tables):
             'messege':'トークンの検証に失敗しました。'
         }
     #1.3 ユーザー権限確認
+    '''
     account_info = db.get_account_info(user_id,tables['account_table'])
     print(account_info)
     if len(account_info['Items']) == 0:
@@ -31,6 +32,7 @@ def validate(event,tables):
             'messege':'アカウント情報が存在しません。'
         }
     account_id = account_info['Items'][0]['account_id']
+    '''
     #モノセコムユーザ管理テーブル取得
     user_info = db.get_user_info_by_user_id(user_id,tables['user_table'])
     if "Item" not in user_info:

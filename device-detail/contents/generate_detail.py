@@ -6,11 +6,6 @@ logger = logging.getLogger()
 def get_device_detail(device_info,device_state,group_info_list):
     last_receiving_time = ''
     group_list = []
-    if not device_info:
-        return {
-            'code':'9999',
-            'message':'デバイス情報が見つかりません。'
-        }
     #最終受信日時取得
     if device_state:
         pattern = re.compile(r'.*update_datetime$')
@@ -36,11 +31,11 @@ def get_device_detail(device_info,device_state,group_info_list):
         'device_type':device_info['device_type'],
         'group_list': group_list,
         'last_receiving_time':last_receiving_time,
+        'battery_near_status':device_state.get('battery_near_status',''),
         'signal_status':device_state.get('signal_status',''),
-        'di_list':terminal_info['di_list'],
-        'do_list':terminal_info['do_list'],
-        'do_timer_list':terminal_info['do_timer_list'],
-        'ai_list':terminal_info['do_list']
+        'di_list':terminal_info.get('di_list',''),
+        'do_list':terminal_info.get('do_list','')
+        #'ai_list':terminal_info.get('ai_list','') #フェーズ2
     }
     
     return device_detail
@@ -63,6 +58,11 @@ def terminal_info_fmt(terminal_settings,device_state):
     for item in terminal_settings.get('do_list',{}):
         do_no = item['do_no']
         key = f'do{do_no}_state'
+        for timer_item in item.get('do_timer_list',{}):
+            do_timer_list.append({
+                'do_onoff_control': timer_item.get('do_onoff_control',{}),
+                'do_time': timer_item.get('do_time',{})
+            })
         do_list.append({
             'do_no': do_no,
             'do_name': item.get('do_name',''),
@@ -73,14 +73,9 @@ def terminal_info_fmt(terminal_settings,device_state):
             'do_off_icon': item.get('do_off_icon',''),
             'do_control': item.get('do_control'),
             'do_specified_time': item.get('do_specified_time'),
-            'do_di_return': item.get('do_di_return')
+            'do_di_return': item.get('do_di_return'),
+            'do_timer_list': do_timer_list
         })
-        for timer_item in item.get('do_timer_list',{}):
-            do_timer_list.append({
-                'do_no':do_no,
-                'do_onoff_control': timer_item.get('do_onoff_control',{}),
-                'do_time': timer_item.get('do_time',{})
-            })
     
     
     print(do_list)
@@ -89,6 +84,5 @@ def terminal_info_fmt(terminal_settings,device_state):
     return  {
         'di_list':di_list,
         'do_list':do_list,
-        'do_timer_list':do_timer_list,
         'ai_list':''
     }
