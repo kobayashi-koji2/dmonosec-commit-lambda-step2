@@ -84,49 +84,54 @@ def lambda_handler(event, context):
                 parameter.get("DEVICE_RELATION_TABLE"),
             )
 
-        if result[0]:
-            group_info = db.get_group_info(result[1], group_table).get("Item", {})
-            relation_list = db.get_device_relation(
-                "g-" + result[1], device_relation_table, sk_prefix="d-"
-            )
-            print(result[1])
-            print(relation_list)
-            device_list = []
-            for relation in relation_list:
-                device_id = relation["key2"][2:]
-                print(device_id)
-                print(db.get_device_info(device_id, device_table))
-                device_info = db.get_device_info(device_id, device_table)
-                if not device_info:
-                    continue
-                device_list.append(
-                    {
-                        "device_id": device_id,
-                        "device_name": device_info.get("device_data", {})
-                        .get("config", {})
-                        .get("device_name", {}),
-                    }
-                )
-            res_body = {
-                "code": "0000",
-                "message": "",
-                "group_id": group_info["group_id"],
-                "group_name": group_info.get("group_data", {})
-                .get("config", {})
-                .get("group_name", {}),
-                "device_list": device_list,
-            }
-        else:
-            print(result)
+        if not result[0]:
             res_body = {"code": "9999", "message": "グループの登録・更新に失敗しました。"}
+            return {
+                "statusCode": 200,
+                "headers": res_headers,
+                "body": json.dumps(
+                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                ),
+            }
+
+        group_info = db.get_group_info(result[1], group_table).get("Item", {})
+        relation_list = db.get_device_relation(
+            "g-" + result[1], device_relation_table, sk_prefix="d-"
+        )
+        print(result[1])
+        print(relation_list)
+        device_list = []
+        for relation in relation_list:
+            device_id = relation["key2"][2:]
+            print(device_id)
+            print(db.get_device_info(device_id, device_table))
+            device_info = db.get_device_info(device_id, device_table)
+            if not device_info:
+                continue
+            device_list.append(
+                {
+                    "device_id": device_id,
+                    "device_name": device_info.get("device_data", {})
+                    .get("config", {})
+                    .get("device_name", {}),
+                }
+            )
+        res_body = {
+            "code": "0000",
+            "message": "",
+            "group_id": group_info["group_id"],
+            "group_name": group_info.get("group_data", {})
+            .get("config", {})
+            .get("group_name", {}),
+            "device_list": device_list,
+        }
 
         return {
             "statusCode": 200,
             "headers": res_headers,
             "body": json.dumps(
                 res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            )
-            #'body': res_body
+            ),
         }
     except Exception as e:
         print(e)

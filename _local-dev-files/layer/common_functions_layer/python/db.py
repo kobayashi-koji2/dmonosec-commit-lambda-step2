@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
@@ -65,6 +66,7 @@ def execute_transact_write_item(transact_items):
         return True
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         return False
 
 
@@ -86,6 +88,14 @@ def get_user_info_by_user_id(user_id, table):
 def get_account_info(pk, table):
     response = table.query(
         IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk)
+    )
+    return response
+
+
+def get_account_info_by_email_address(email_address, table):
+    response = table.query(
+        IndexName="email_address_index",
+        KeyConditionExpression=Key("email_address").eq(email_address),
     )
     return response
 

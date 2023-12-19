@@ -1,0 +1,54 @@
+import os
+import secrets
+import string
+
+import boto3
+
+
+def get_random_password_string(length):
+    pass_chars = string.ascii_letters + string.digits + string.punctuation
+    password = "".join(secrets.choice(pass_chars) for x in range(length))
+    return password
+
+
+def create_cognito_user(email_address):
+    client = boto3.client(
+        "cognito-idp",
+        region_name=os.environ.get("AWS_REGION"),
+        endpoint_url=os.environ.get("endpoint_url"),
+    )
+    # if True:  # TODO ローカル確認用（localstackがCognito未対応のため）
+    #     return "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"
+    response = client.admin_create_user(
+        UserPoolId="ap-northeast-1_jh1Y2Rjv7",  # TODO 環境ごと動的に取得
+        Username=email_address,
+        TemporaryPassword=get_random_password_string(8),  # TODO パスワード桁数を要確認
+        UserAttributes=[
+            {
+                "Name": "email",
+                "Value": email_address,
+            }
+        ],
+    )
+    return response["User"]["Username"]
+
+
+def update_cognito_user(auth_id, email_address):
+    # if True:  # TODO ローカル確認用（localstackがCognito未対応のため）
+    #     return "bd6fff86-88f1-4ebe-ab02-2e37b8ce51a2"
+    client = boto3.client(
+        "cognito-idp",
+        region_name=os.environ.get("AWS_REGION"),
+        endpoint_url=os.environ.get("endpoint_url"),
+    )
+    response = client.admin_update_user_attributes(
+        UserPoolId="ap-northeast-1_jh1Y2Rjv7",  # TODO 環境ごと動的に取得
+        Username=auth_id,
+        UserAttributes=[
+            {
+                "Name": "email",
+                "Value": email_address,
+            }
+        ],
+    )
+    return response["User"]["Username"]
