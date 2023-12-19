@@ -6,11 +6,6 @@ logger = logging.getLogger()
 def get_device_detail(device_info,device_state,group_info_list):
     last_receiving_time = ''
     group_list = []
-    if not device_info:
-        return {
-            'code':'9999',
-            'message':'デバイス情報が見つかりません。'
-        }
     #最終受信日時取得
     if device_state:
         pattern = re.compile(r'.*update_datetime$')
@@ -37,10 +32,10 @@ def get_device_detail(device_info,device_state,group_info_list):
         'group_list': group_list,
         'last_receiving_time':last_receiving_time,
         'signal_status':device_state.get('signal_status',''),
-        'di_list':terminal_info['di_list'],
-        'do_list':terminal_info['do_list'],
-        'do_timer_list':terminal_info['do_timer_list'],
-        'ai_list':terminal_info['do_list']
+        'di_list':terminal_info.get('di_list',''),
+        'do_list':terminal_info.get('do_list',''),
+        'do_timer_list':terminal_info.get('do_timer_list',''),
+        'ai_list':terminal_info.get('do_list','')
     }
     
     return device_detail

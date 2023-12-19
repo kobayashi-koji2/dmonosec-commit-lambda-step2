@@ -175,7 +175,7 @@ def lambda_handler(event, context):
         ##################
         order = 1
         device_list,device_info_list,group_name_list = [],[],[]
-        for item1 in device_order:
+        for item1 in device_order_update:
             #デバイス情報取得
             device_info = ddb.get_device_info(item1, tables['device_table'])
             if len(device_info['Items']) == 1:
