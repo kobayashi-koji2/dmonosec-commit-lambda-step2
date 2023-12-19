@@ -34,7 +34,7 @@ phases:
       - echo 'SWITCH_ROLE:'${SWITCH_ROLE}
   build:
     commands:
-      - dirs=`find * -maxdepth 0 -type d`
+      - dirs=`find * -maxdepth 0 -type d -not -path '_local_dev-files'`
       - echo 'zip化してs3へコピー'
       - |
         for dir in $dirs;
