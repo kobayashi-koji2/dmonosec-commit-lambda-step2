@@ -44,7 +44,6 @@ def lambda_handler(event, context):
                 'device_state_table' : dynamodb.Table(parameter.get('STATE_TABLE')),
                 'account_table' : dynamodb.Table(parameter.get('ACCOUNT_TABLE')),
                 'contract_table' : dynamodb.Table(parameter.get('CONTRACT_TABLE')),
-                #'pre_register_table' : dynamodb.Table(parameter.get('PRE_REGISTER_DEVICE_TABLE')),
                 'device_relation_table' : dynamodb.Table(parameter.get('DEVICE_RELATION_TABLE'))
             }
         except KeyError as e:
@@ -67,9 +66,7 @@ def lambda_handler(event, context):
                 'body': json.dumps(validate_result, ensure_ascii=False)
             }
         device_id = validate_result['device_id']
-        device_relation = validate_result['device_relation']
         print(f'デバイスID:{device_id}')
-        print(f'デバイス関係:{device_relation}')
         
         ##################
         # 4 デバイス情報取得
@@ -95,17 +92,14 @@ def lambda_handler(event, context):
             device_state = db.get_device_state(device_id, tables['device_state_table']).get('Item',{})
             #4.3 グループ情報取得
             group_info_list = []
-            for item1 in device_relation:
-                item1 = item1['key2']
-                if item1.startswith('g-'):
-                    group_info = db.get_group_info(re.sub('^g-', '', item1), tables['group_table'])
-                    if 'Item' in group_info:
-                        group_info_list.append(group_info['Item'])
-            #print(f'グループ情報:{group_info_list}')
+            device_group_relation = db.get_device_relation(f'd-{device_id}',tables['device_relation_table'],sk_prefix='g-',gsi_name='key2_index')
+            print(device_group_relation)
+            for item1 in device_group_relation:
+                item1 = item1['key1']
+                group_info = db.get_group_info(re.sub('^g-', '', item1), tables['group_table'])
+                if 'Item' in group_info:
+                    group_info_list.append(group_info['Item'])
             #4.4 デバイス詳細情報生成
-            #print(f'デバイス情報:{device_info}')
-            #print(f'デバイス状態:{device_state}')
-            #print(f'グループ情報:{group_info_list}')
             res_body = generate_detail.get_device_detail(device_info[0],device_state,group_info_list)
         except ClientError as e:
             print(e)

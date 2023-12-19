@@ -75,8 +75,7 @@ def validate(event, tables):
     return {
         'code':'0000',
         'user_info': user_info,
-        'device_id': device_id,
-        'device_relation': operation_auth['device_relation']
+        'device_id': device_id
     }
 
 # 操作権限チェック
@@ -97,20 +96,6 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     if user_type == 'worker' or user_type == 'referrer':
         # 3.1 ユーザに紐づくデバイスID取得
         user_devices = []
-        '''
-        device_user_relation = db.get_device_relation(f'u-{user_id}',tables['device_relation_table'],sk_prefix='d-')
-        print(device_user_relation)
-        for item1 in device_user_relation:
-            device_id = item1['key2']
-            user_devices.append(re.sub('^d-', '', device_id))
-        print(f'ユーザに紐づくデバイスID一覧:{user_devices}')
-        # 3.2 ユーザに紐づくグループ配下のデバイスID取得
-        user_groups = []
-        user_group_relation = db.get_device_relation(f'u-{user_id}',tables['device_relation_table'],sk_prefix='g-')
-        for item2 in user_group_relation:
-            group_id = item2['key2']
-            user_groups.append(re.sub('^g-', '', group_id))
-        '''
         device_relation = db.get_device_relation(f'u-{user_id}',tables['device_relation_table'])
         print(device_relation)
         for item1 in device_relation:
@@ -126,6 +111,4 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
 
         if device_id not in set(user_devices):
             return False
-    return {
-        'device_relation': device_relation
-    }
+    return True
