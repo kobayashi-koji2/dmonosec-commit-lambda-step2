@@ -136,6 +136,7 @@ def lambda_handler(event, context):
             print(f'最新のデバイス順序:{device_order_update}')
             res = db.update_device_order(device_order_update,user_id,tables['user_table'])
             print('tried device order update')
+            device_order = device_order_update
         else:
             print('passed device order update')
         
@@ -174,8 +175,9 @@ def lambda_handler(event, context):
         # 6 デバイス一覧生成
         ##################
         order = 1
-        device_list,device_info_list,group_name_list = [],[],[]
-        for item1 in device_order_update:
+        device_list,device_info_list = [],[]
+        for item1 in device_order:
+            group_name_list = []
             #デバイス情報取得
             device_info = ddb.get_device_info(item1, tables['device_table'])
             if len(device_info['Items']) == 1:
