@@ -147,18 +147,10 @@ def update_group_info(
     relation_list = db.get_device_relation(
         "g-" + group_id, device_relation_table, sk_prefix="d-"
     )
-    print("relation_list")
-    print(relation_list)
     device_list_old = [relation["key2"][2:] for relation in relation_list]
 
     # グループから削除されたデバイス
     removed_devices = set(device_list_old) - set(device_list)
-    print("device_list_old")
-    print(device_list_old)
-    print("device_list")
-    print(device_list)
-    print("removed_devices")
-    print(removed_devices)
     for remove_device_id in removed_devices:
         remove_device = {
             "Delete": {
