@@ -40,15 +40,6 @@ def validate(event, tables):
             'messege':'トークンの検証に失敗しました。'
         }
     #1.3 ユーザー権限確認
-    '''
-    account_info = db.get_account_info(user_id,tables['account_table'])
-    if len(account_info['Items']) == 0:
-        return {
-            'code':'9999',
-            'messege':'アカウント情報が存在しません。'
-        }
-    account_id = account_info['Items'][0]['account_id']
-    '''
     #モノセコムユーザ管理テーブル取得
     user_info = db.get_user_info_by_user_id(user_id,tables['user_table'])
     if "Item" not in user_info:
@@ -84,11 +75,6 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     contract_id_list = []
     # 2.1 デバイスID一覧取得
     accunt_devices = contract_info['Item']['contract_data']['device_list']
-    user_type = 'worker'
-    print(device_id)
-    print(accunt_devices)
-    print(user_type)
-    print(user_id)
     # 2.2 デバイス操作権限チェック
     if device_id not in accunt_devices:
         return False
