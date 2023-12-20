@@ -155,7 +155,7 @@ def terminal_check(body,device_id,device_type,tables):
 #入力チェック
 #画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
-    out_range_list, null_list, invalid_format_list, invalid_data_type = [],[],[],[]
+    out_range_list, null_list, invalid_format_list, invalid_data_type_list = [],[],[],[]
     
     #文字数の制限
     #デバイス名、接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
@@ -171,6 +171,7 @@ def input_check(param):
         'do_on_icon':{1, 30},
         'do_off_name':{0, 10},
         'do_off_icon':{1, 30},
+        'do_time':{0, 5}
     }
     
     #桁数の制限
@@ -191,12 +192,18 @@ def input_check(param):
         'state_icon8'
     ]
     
+    #特定の文字列に一致
     str_format = {
         'di_on_icon': icon_list,
         'di_off_icon': icon_list,
         'do_on_icon': icon_list,
         'do_off_icon' : icon_list,
-        'do_control': ['open','close','toggle'],
+        'do_control': ['open','close','toggle']
+    }
+    
+    #正規表現
+    regex ={
+        'do_time': re.compile(r'^[0-2][0-9]:[0-5][0-9]$') #hh:mm形式
     }
 
     #dict型の全要素を探索して入力値をチェック
@@ -217,11 +224,13 @@ def input_check(param):
                             print(f'Key:{key}  value:{value} - reason:文字数の制限を超えています。')
                             out_range_list.append(key)
                     #文字列フォーマット
-                    if key in str_format:
-                        valid_strings = str_format[key]
-                        if value not in valid_strings:
+                    if key in str_format and value not in str_format[key]:
                             print(f'Key:{key}  value:{value} - reason:文字列の形式が不正です。')
                             invalid_format_list.append(key)
+                    #正規表現
+                    if key in regex and not regex[key].match(value):
+                        print(f'Key:{key}  value:{value} - reason:文字列の形式が不正です。')
+                        invalid_format_list.append(key)
                 #数値
                 elif isinstance(value, (int, float)):
                     #データ型
@@ -242,6 +251,8 @@ def input_check(param):
         return out_range_list
 
     out_range_list = check_dict_value(param)
-    if len(out_range_list)==0 and len(invalid_format_list)==0:
+    if len(out_range_list)==0\
+        and len(invalid_format_list)==0\
+        and len(invalid_data_type_list)==0:
         return True
     return False
