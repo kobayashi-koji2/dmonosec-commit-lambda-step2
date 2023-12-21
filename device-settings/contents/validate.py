@@ -203,7 +203,7 @@ def input_check(param):
     
     #正規表現
     regex ={
-        'do_time': re.compile(r'^[0-2][0-9]:[0-5][0-9]$') #hh:mm形式
+        'do_time': re.compile(r'^(?:[01]\d|2[0-3]):[0-5]\d$') #hh:mm形式 00:00から23:59
     }
 
     #dict型の全要素を探索して入力値をチェック
