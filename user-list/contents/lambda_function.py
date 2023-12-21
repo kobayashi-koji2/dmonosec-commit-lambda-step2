@@ -57,16 +57,20 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
-        user = validate_result["user_info"]
+        login_user = validate_result["user_info"]
 
         user_list = []
         try:
-            contract_info = db.get_contract_info(user["contract_id"], contract_table)
+            contract_info = db.get_contract_info(
+                login_user["contract_id"], contract_table
+            )
             for user_id in (
                 contract_info.get("Item", {})
                 .get("contract_data", {})
                 .get("user_list", {})
             ):
+                user_info = db.get_user_info_by_user_id(user_id, user_table)
+                user = user_info["Item"]
                 account_info = db.get_account_info_by_account_id(
                     user.get("account_id"), account_table
                 )
