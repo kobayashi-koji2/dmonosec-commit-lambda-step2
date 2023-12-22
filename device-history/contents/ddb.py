@@ -63,42 +63,16 @@ def get_hist_list(hist_list_table_table, params):
     sortkeyExpression = None
     if params["history_start_datetime"] and params["history_end_datetime"]:
         sortkeyExpression = Key("event_datetime").between(
-            Decimal(
-                int(
-                    datetime.strptime(
-                        params["history_start_datetime"], DATE_FORMAT
-                    ).timestamp()
-                )
-                * 1000
-            ),
-            Decimal(
-                int(
-                    datetime.strptime(
-                        params["history_end_datetime"], DATE_FORMAT
-                    ).timestamp()
-                )
-                * 1000
-                + 999
-            ),
+            Decimal(params["history_start_datetime"] * 1000),
+            Decimal(params["history_end_datetime"] * 1000 + 999),
         )
     elif params["history_start_datetime"]:
         sortkeyExpression = Key("event_datetime").gte(
-            Decimal(
-                int(
-                    datetime.strptime(
-                        params["history_start_datetime"], DATE_FORMAT
-                    ).timestamp()
-                )
-                * 1000
-            )
+            Decimal(int(params["history_start_datetime"]) * 1000)
         )
     elif params["history_end_datetime"]:
         sortkeyExpression = Key("event_datetime").lte(
-            Decimal(
-                int(datetime.strptime(params["history_end_datetime"], DATE_FORMAT))
-                * 1000
-                + 999
-            )
+            Decimal(int(params["history_end_datetime"]) * 1000 + 999)
         )
     hist_list = []
     for device_id in params["device_list"]:

@@ -18,16 +18,9 @@ import validate
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
 
 parameter = None
 logger = logging.getLogger()
-
-
-def epochmsec_to_str(epochmsec):
-    utc_datetime = datetime.fromtimestamp(float(epochmsec / 1000), tz=timezone.utc)
-    jst_datetime = utc_datetime.astimezone(ZoneInfo("Asia/Tokyo"))
-    return f"{jst_datetime:%Y/%m/%d %H:%M:%S}"
 
 
 def create_history_message(hist):
@@ -115,8 +108,8 @@ def create_response(request_params, hist_list):
     for hist in hist_list:
         res_hist_list.append(
             {
-                "event_datetime": epochmsec_to_str(hist["event_datetime"]),
-                "recv_datetime": epochmsec_to_str(hist["recv_datetime"]),
+                "event_datetime": int(hist["event_datetime"] / 1000),
+                "recv_datetime": int(hist["recv_datetime"] / 1000),
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
                 "device_imei": hist["hist_data"].get("imei"),

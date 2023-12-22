@@ -10,9 +10,6 @@ import convert
 logger = logging.getLogger()
 
 
-DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
-
-
 def get_user_device_list(user_id, device_relation_table):
     device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
     print(device_relation_list)
@@ -69,14 +66,14 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
 
     if params["history_start_datetime"]:
         try:
-            datetime.strptime(params["history_start_datetime"], DATE_FORMAT)
+            datetime.fromtimestamp(params["history_start_datetime"])
         except ValueError:
             print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         try:
-            datetime.strptime(params["history_end_datetime"], DATE_FORMAT)
+            datetime.fromtimestamp(params["history_end_datetime"])
         except ValueError:
             print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
