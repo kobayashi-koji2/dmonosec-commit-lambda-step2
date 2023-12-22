@@ -37,7 +37,7 @@ def validate(event, contract_table, user_table):
     # 入力値チェック
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
-    path_params = event.get("pathParameters", {})
+    path_params = event.get("pathParameters") or {}
 
     contract_res = db.get_contract_info(user["contract_id"], contract_table)
     if "Item" not in contract_res:
