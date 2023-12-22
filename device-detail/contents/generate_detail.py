@@ -41,7 +41,7 @@ def get_device_detail(device_info,device_state,group_info_list):
     return device_detail
     
 def terminal_info_fmt(terminal_settings,device_state):
-    di_list,do_list,do_timer_list,terminal_info = [],[],[],[]
+    di_list,do_list,terminal_info = [],[],[]
     for item in terminal_settings.get('di_list',{}):
         di_no = item['di_no']
         key = f'di{di_no}_state'
@@ -56,12 +56,13 @@ def terminal_info_fmt(terminal_settings,device_state):
         })
 
     for item in terminal_settings.get('do_list',{}):
+        do_timer_list = []
         do_no = item['do_no']
         key = f'do{do_no}_state'
         for timer_item in item.get('do_timer_list',{}):
             do_timer_list.append({
-                'do_onoff_control': timer_item.get('do_onoff_control',{}),
-                'do_time': timer_item.get('do_time',{})
+                'do_onoff_control': timer_item.get('do_onoff_control',''),
+                'do_time': timer_item.get('do_time','')
             })
         do_list.append({
             'do_no': do_no,
