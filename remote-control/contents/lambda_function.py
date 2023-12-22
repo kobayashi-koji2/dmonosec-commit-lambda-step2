@@ -20,7 +20,7 @@ parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 ENDPOINT_URL = os.environ["endpoint_url"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
-LAMBDA_TIMEOUT_CHECK = "lmonosc-lambda-remote-control-timeout-check"
+LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
 # 正常レスポンス内容
 respons = {
     "statusCode": 200,
