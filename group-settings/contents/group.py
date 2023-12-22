@@ -30,12 +30,11 @@ def create_group_info(
     # グループ管理テーブル新規登録用オブジェクト作成
     #################################################
     item = {
-        "group_id": group_id,  #
+        "group_id": group_id,
         "group_data": {
             "config": {
+                "contract_id": contract.get("contract_id"),
                 "group_name": group_name,
-                "device_list": device_list,
-                "user_list": [],
             }
         },
     }
