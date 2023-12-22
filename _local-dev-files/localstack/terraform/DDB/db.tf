@@ -541,8 +541,8 @@ resource "aws_dynamodb_table" "cnt_hist" {
 }
 
 #接点出力制御応答テーブル
-resource "aws_dynamodb_table" "remote_control" {
-  name           = "${var.global_name}-ddb-t-monosec-remote-control"
+resource "aws_dynamodb_table" "remote_controls" {
+  name           = "${var.global_name}-ddb-t-monosec-remote-controls"
   hash_key       = "device_req_no"
   range_key      = "req_datetime"
   stream_enabled = "false"
