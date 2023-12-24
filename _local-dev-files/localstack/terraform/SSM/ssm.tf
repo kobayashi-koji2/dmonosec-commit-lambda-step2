@@ -13,9 +13,8 @@ resource "aws_ssm_parameter" "dynamodb_table_name"{
         NOTIFICATION_LIST_TABLE = "${var.notification_list_table_name}"
         PRE_REGISTER_DEVICE_TABLE = "${var.pre_register_devices_table_name}"
         CNT_HIST_TABLE   = "${var.cnt_hist_table_name}"
-        REMOTE_CONTROLS_TABLE = "${var.remote_controls_name}"
+        REMOTE_CONTROL_TABLE = "${var.remote_control_name}"
         DEVICE_RELATION_TABLE = "${var.device_relation_name}"
-        REQ_NO_COUNTER_TABLE = "${var.req_no_counter_name}"
   }) 
   description = "DynamoDB Table Name"
   data_type = "text"

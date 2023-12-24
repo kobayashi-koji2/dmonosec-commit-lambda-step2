@@ -99,7 +99,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
             return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
 
     # 権限チェック（作業者）
-    if user["user_type"] != "admin":
+    if user["user_type"] != "admin" and user["user_type"] != "sub_admin":
         user_device_list = get_user_device_list(user["user_id"], device_relation_table)
         for device_id in params["device_list"]:
             if device_id not in user_device_list:
