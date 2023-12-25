@@ -18,7 +18,6 @@ logger = logging.getLogger()
 # 環境変数
 parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-ENDPOINT_URL = os.environ["endpoint_url"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
 # 正常レスポンス内容
@@ -31,7 +30,11 @@ respons = {
     "body": "",
 }
 # AWSリソース定義
-dynamodb = boto3.resource("dynamodb",region_name=AWS_DEFAULT_REGION,endpoint_url=ENDPOINT_URL)
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name=AWS_DEFAULT_REGION,
+    endpoint_url=os.environ.get("endpoint_url")
+)
 iot = boto3.client("iot-data",region_name=AWS_DEFAULT_REGION)
 aws_lambda = boto3.client("lambda",region_name=AWS_DEFAULT_REGION)
 

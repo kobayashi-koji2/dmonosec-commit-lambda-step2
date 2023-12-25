@@ -15,7 +15,6 @@ logger = logging.getLogger()
 # 環境変数
 parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-ENDPOINT_URL = os.environ["endpoint_url"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 # 正常レスポンス内容
 respons = {
@@ -27,7 +26,11 @@ respons = {
     "body": "",
 }
 # AWSリソース定義
-dynamodb = boto3.resource("dynamodb",region_name=AWS_DEFAULT_REGION,endpoint_url=ENDPOINT_URL)
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name=AWS_DEFAULT_REGION,
+    endpoint_url=os.environ.get("endpoint_url")
+)
 
 def lambda_handler(event, context):
     try:
