@@ -55,7 +55,7 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
             device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
             req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROLS_TABLE"])
+            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             parameter = None
             res_body = {"code": "9999", "message": e}
@@ -236,7 +236,7 @@ def lambda_handler(event, context):
         email_address = val_result["account_info"]["email_address"]
         put_items = [{
             "Put": {
-                "TableName": parameter["REMOTE_CONTROLS_TABLE"],
+                "TableName": parameter["REMOTE_CONTROL_TABLE"],
                 "Item": {
                     "device_req_no": {"S": device_req_no},
                     "req_datetime": {"N": str(int(time.time() * 1000))},
