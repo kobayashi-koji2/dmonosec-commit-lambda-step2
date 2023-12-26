@@ -63,8 +63,8 @@ def get_hist_list(hist_list_table_table, params):
     sortkeyExpression = None
     if params["history_start_datetime"] and params["history_end_datetime"]:
         sortkeyExpression = Key("event_datetime").between(
-            Decimal(params["history_start_datetime"] * 1000),
-            Decimal(params["history_end_datetime"] * 1000 + 999),
+            Decimal(int(params["history_start_datetime"]) * 1000),
+            Decimal(int(params["history_end_datetime"]) * 1000 + 999),
         )
     elif params["history_start_datetime"]:
         sortkeyExpression = Key("event_datetime").gte(

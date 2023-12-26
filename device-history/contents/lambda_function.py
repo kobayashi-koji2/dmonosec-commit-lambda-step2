@@ -124,8 +124,8 @@ def create_response(request_params, hist_list):
     return {
         "code": "0000",
         "history": {
-            "history_start_datetime": request_params["history_start_datetime"],
-            "history_end_datetime": request_params["history_end_datetime"],
+            "history_start_datetime": int(request_params["history_start_datetime"]),
+            "history_end_datetime": int(request_params["history_end_datetime"]),
             "event_type_list": request_params["event_type_list"],
             "history_list": res_hist_list,
         },
