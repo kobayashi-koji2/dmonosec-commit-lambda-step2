@@ -92,3 +92,7 @@ awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-req-no-counter-2 -
 # t-monosec-remote-controls
 ### remote-controlテスト用
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-remote-controls --item '{"do_no": {"N": "2"},"control_exec_email_address": {"S": "sts03858+worker@design.secom.co.jp"},"device_id": {"S": "510a3458-9b5d-7999-9811-e23526d1531d"},"contract_id": {"S": "a322ae61-9763-c168-b2b2-1794ca906724"},"control": {"S": "close"},"req_datetime": {"N": "1703138511555"},"link_di_no": {"S": "2"},"iccid": {"S": "0126e4a3-9938-7faf-64ba-6615c4ea017a"},"device_req_no": {"S": "0126e4a3-9938-7faf-64ba-6615c4ea017a-0x01"},"event_datetime": {"N": "1703138511555"},"control_trigger": {"S": "manual_control"},"control_exec_user_name": {"S": "斉藤 作業者"},"recv_datetime": {"N": "1703138511581"}}'
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-remote-controls --item '{"device_req_no": {"S": "39011acf-c9ff-42c4-8fd4-eae7367f8875-0x01"},"event_datetime": {"N": "1703514796000"},"device_id": {"S": "869411fe-200a-4d2d-9eeb-7506e49c0a50"},"req_datetime": {"N": "1703514797000"},"link_di_no": {"N": "2"},"iccid": {"S": "39011acf-c9ff-42c4-8fd4-eae7367f8875"},"recv_datetime": {"N": "1703514797000"}}'
+
+# t-monosec-cnt-hist-2
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-cnt-hist-2 --item '{"cnt_hist_id": {"N": "123456"},"simid": {"S": "39011acf-c9ff-42c4-8fd4-eae7367f8875"},"event_datetime": {"N": "1703514798000"},"recv_datetime": {"N": "1703514799000"},"di_trigger": {"N": "2"}}'

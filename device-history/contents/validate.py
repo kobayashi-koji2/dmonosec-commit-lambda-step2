@@ -53,11 +53,13 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
 
     # 入力値ェック
     query_params = event.get("queryStringParameters", {})
+    multi_query_params = event.get("multiValueQueryStringParameters", {})
+
     params = {
         "history_start_datetime": query_params.get("history_start_datetime"),
         "history_end_datetime": query_params.get("history_end_datetime"),
-        "event_type_list": query_params.get("event_type_list", []),
-        "device_list": query_params.get("device_list", []),
+        "event_type_list": multi_query_params.get("event_type_list[]", []),
+        "device_list": multi_query_params.get("device_list[]", []),
     }
     print(params)
 
@@ -66,14 +68,14 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
 
     if params["history_start_datetime"]:
         try:
-            datetime.fromtimestamp(params["history_start_datetime"])
+            datetime.fromtimestamp(int(params["history_start_datetime"]))
         except ValueError:
             print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         try:
-            datetime.fromtimestamp(params["history_end_datetime"])
+            datetime.fromtimestamp(int(params["history_end_datetime"]))
         except ValueError:
             print(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
@@ -81,7 +83,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
     if (
         params["history_start_datetime"]
         and params["history_end_datetime"]
-        and params["history_start_datetime"] > params["history_end_datetime"]
+        and int(params["history_start_datetime"]) > int(params["history_end_datetime"])
     ):
         return {"code": "9999", "message": "パラメータが不正です"}
 

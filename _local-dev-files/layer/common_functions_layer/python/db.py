@@ -1,11 +1,10 @@
-import os
 import json
+import os
 import traceback
-
-import boto3
-from boto3.dynamodb.conditions import Key, Attr
 from operator import itemgetter
 
+import boto3
+from boto3.dynamodb.conditions import Attr, Key
 
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client(
@@ -52,9 +51,7 @@ def get_device_relation(pk, table, **kwargs):
 
         # PK検索
         else:
-            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get(
-                "Items", {}
-            )
+            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get("Items", {})
 
     return response
 
@@ -86,9 +83,7 @@ def get_user_info_by_user_id(user_id, table):
 
 # アカウント情報取得
 def get_account_info(pk, table):
-    response = table.query(
-        IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk)
-    )
+    response = table.query(IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk))
     return response
 
 
@@ -172,3 +167,11 @@ def update_device_order(device_order, user_id, user_table):
         ExpressionAttributeNames=expression_attribute_name,
     )
     return ""
+
+
+def get_remote_control(device_req_no, remote_control_table):
+    remote_control_list = remote_control_table.query(
+        KeyConditionExpression=Key("device_req_no").eq(device_req_no),
+        ScanIndexForward=False,
+    ).get("Items")
+    return remote_control_list[0] if remote_control_list else None

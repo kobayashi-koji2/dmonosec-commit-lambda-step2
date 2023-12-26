@@ -1,10 +1,10 @@
 version: '3'
 services:
   app:
-    container_name: schedule-control
+    container_name: remote-control-state-change
     build:
       context: ../
-      dockerfile: ./schedule-control/Dockerfile
+      dockerfile: ./remote-control-state-change/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
@@ -12,7 +12,6 @@ services:
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
-      - LAMBDA_TIMEOUT_CHECK=lmonosc-lambda-remote-control-timeout-check
     volumes:
       - ../_local-dev-files/layer/common_functions_layer:/opt
       - ./contents:/var/task

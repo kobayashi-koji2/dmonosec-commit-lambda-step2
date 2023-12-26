@@ -22,7 +22,7 @@ def validate(event, user_table):
     if decoded_idtoken == False:
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     user_id = decoded_idtoken["cognito:username"]
-    user_info = db.get_user_info(user_id, user_table)
+    user_info = db.get_user_info_by_user_id(user_id, user_table)
     if not "Item" in user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
     
@@ -38,12 +38,12 @@ def validate(event, user_table):
     if not isinstance(device_list, list):
         return {"code": "9999", "messege": "パラメータが不正です。"}
 
+    ### 「device_id」の必須チェック
+    if len(body["device_list"]) == 0:
+        return {"code": "9999", "messege": "パラメータが不正です。"}
     for item in device_list:
-        ### 「device_id」の必須チェック
-        if "device_id" not in item.keys():
-            return {"code": "9999", "messege": "パラメータが不正です。"}
         ### 「device_id」の型チェック
-        if not isinstance(item["device_id"], str):
+        if not isinstance(item, str):
             return {"code": "9999", "messege": "パラメータが不正です。"}
 
     return {

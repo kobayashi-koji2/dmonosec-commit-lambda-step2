@@ -63,7 +63,7 @@ def lambda_handler(event, context):
 
         # デバイス表示順序更新
         body = val_result["req_body"]
-        af_device_list = [i["device_id"] for i in body["device_list"]]
+        af_device_list = body["device_list"]
         af_user_data = user_info["user_data"]
         af_user_data["config"]["device_order"] = af_device_list
         af_user_data = convert.to_dynamo_format(af_user_data)
