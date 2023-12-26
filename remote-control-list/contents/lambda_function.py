@@ -123,7 +123,7 @@ def lambda_handler(event, context):
         res_body = {
             "code": "0000",
             "message": "",
-            "remoto_control_list": results
+            "remote_control_list": results
         }
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
