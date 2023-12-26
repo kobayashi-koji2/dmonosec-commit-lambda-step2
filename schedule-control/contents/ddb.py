@@ -1,13 +1,9 @@
-import os
 import decimal
 
 from boto3.dynamodb.conditions import Key, Attr
 
 # layer
 import convert
-
-AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
-ENDPOINT_URL = os.environ["endpoint_url"]
 
 def get_device_info_available(table):
     response = table.scan(
