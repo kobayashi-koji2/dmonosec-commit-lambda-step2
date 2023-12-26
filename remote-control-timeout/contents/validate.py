@@ -57,19 +57,17 @@ def validate(
         return {"code": "9999", "message": "グループの操作権限がありません。"}
 
     # 入力値チェック
-    path_params = event.get("pathParameters") or {}
-
     contract_res = db.get_contract_info(user["contract_id"], contract_table)
     if "Item" not in contract_res:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
     contract = contract_res["Item"]
 
-    if "device_req_no" not in path_params:
+    body_params = json.loads(event.get("body", "{}"))
+    if "device_req_no" not in body_params:
         return {"code": "9999", "message": "パラメータが不正です"}
 
-    remote_control = ddb.get_remote_control_info(
-        path_params["device_req_no"], remote_controls_table
-    )
+    device_req_no = body_params.get("device_req_no")
+    remote_control = ddb.get_remote_control_info(device_req_no, remote_controls_table)
     if not remote_control:
         return {"code": "9999", "message": "端末要求番号が存在しません。"}
 
@@ -84,7 +82,7 @@ def validate(
             return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
 
     params = {
-        "device_req_no": path_params["device_req_no"],
+        "device_req_no": device_req_no,
     }
 
     return {

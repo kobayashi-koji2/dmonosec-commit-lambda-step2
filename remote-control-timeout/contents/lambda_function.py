@@ -62,24 +62,28 @@ def lambda_handler(event, context):
             remote_controls_table,
         )
         if validate_result["code"] != "0000":
-            return {
-                "statusCode": 200,
-                "headers": res_headers,
-                "body": json.dumps(validate_result, ensure_ascii=False),
-            }
+            raise Exception(json.dumps(validate_result))
 
         remote_control = validate_result["remote_control"]
+
+        link_di_no = True if remote_control["link_di_no"]
+
         req_datetime = remote_control["req_datetime"]
         limit_datetime = req_datetime + 10000  # 10秒
-        while (
-            not remote_control.get("control_result")
-            and time.time() <= limit_datetime / 1000
-        ):
-            time.sleep(1)
-            print(time.time())
-            remote_control = ddb.get_remote_control_info(
-                remote_control["device_req_no"], remote_controls_table
-            )
+        if time.time() <= limit_datetime / 1000:
+            time.sleep(limit_datetime / 1000 - time.time())
+
+        remote_control = ddb.get_remote_control_info(
+            remote_control["device_req_no"], remote_controls_table
+        )
+        if remote_control.get("control_result") == "0":
+            # 正常
+            pass
+        else:
+            # タイムアウト
+            # TODO メール通知？
+            # TODO 履歴レコード作成？
+            pass
 
         control_result = "0" if remote_control.get("control_result") == "0" else "1"
         print(f"result:{control_result}")
@@ -102,10 +106,4 @@ def lambda_handler(event, context):
         print(e)
         print(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
-        return {
-            "statusCode": 500,
-            "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
-        }
+        raise Exception(json.dumps(res_body))
