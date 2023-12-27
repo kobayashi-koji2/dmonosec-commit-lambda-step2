@@ -112,6 +112,7 @@ def create_response(request_params, hist_list):
                 "recv_datetime": int(hist["recv_datetime"] / 1000),
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
+                "group_list": hist["hist_data"].get("group_list"),
                 "device_imei": hist["hist_data"].get("imei"),
                 "event_type": hist["hist_data"].get("event_type"),
                 "history_message": create_history_message(hist["hist_data"]),

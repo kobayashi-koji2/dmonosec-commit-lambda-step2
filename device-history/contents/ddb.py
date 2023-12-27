@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 import boto3
-from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Key, Attr
 from operator import itemgetter
 from decimal import Decimal
 
@@ -79,6 +79,9 @@ def get_hist_list(hist_list_table_table, params):
         res = hist_list_table_table.query(
             IndexName="event_datetime_index",
             KeyConditionExpression=Key("device_id").eq(device_id) & sortkeyExpression,
+            FilterExpression=Attr("hist_data.event_type").is_in(
+                params["event_type_list"]
+            ),
         )
         hist_list.extend(res["Items"])
     print(hist_list)
