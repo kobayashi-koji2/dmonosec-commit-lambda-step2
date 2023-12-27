@@ -51,7 +51,7 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
             device_state_table = dynamodb.Table(parameter["STATE_TABLE"])
             req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROLS_TABLE"])
+            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             parameter = None
             res_body = {"code": "9999", "message": e}
