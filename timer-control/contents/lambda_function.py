@@ -77,13 +77,14 @@ def lambda_handler(event, context):
 
         ### 2. 接点出力制御要求
         for device_info in device_info_list:
+            print("--- device_info", end=": ")
+            print(device_info)
             device_id = device_info["device_id"]
             contract_id = device_info["device_data"]["param"]["contract_id"]
             icc_id = device_info["device_data"]["param"]["iccid"]
             do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
 
             for do_info in do_list:
-                print("-----")
                 # タイマー設定チェック
                 checked_timer_do_info = __check_timer_settings(do_info, dt_now)
                 if not checked_timer_do_info:
@@ -232,7 +233,6 @@ def __check_timer_settings(do_info, dt_now):
     """
     - タイマー設定のある接点出力情報かどうかを確認する。
     """
-    print("start: __check_timer_settings()")
     result = None
     s_format = "%H:%M"
 
@@ -256,7 +256,6 @@ def __check_return_di_state(do_info, device_id, device_state_table):
     2. 紐づく接点入力端子番号の指定がない場合
         処理対象外としてスキップする。
     """
-    print("start: __check_return_di_state()")
     result = None
 
     if ("do_di_return" in do_info) and do_info["do_di_return"]:
@@ -268,11 +267,14 @@ def __check_return_di_state(do_info, device_id, device_state_table):
         print("device_state_info", end=": ")
         print(device_state_info)
 
-        # タイマーのON/OFF制御と接点入力状態の値が一致する接点出力情報を抽出
+        # タイマーのON/OFF制御と接点入力状態の値が一致するなら処理対象外
         col_name = "di" + str(do_info["do_di_return"]) + "_state"
         if do_info["do_onoff_control"] != device_state_info[col_name]:
             result = do_info
+        else:
+            print(f"Not processed because the values of do_onoff_control and {col_name} match")
     else:
+        print("Not processed because do_di_return is not set")
         pass
 
     return True, result
@@ -287,7 +289,6 @@ def __check_under_control(
     2. 要求番号が設定されていない場合
         - 要求番号テーブルへnum:0のレコードを作成する。
     """
-    print("start: __check_return_di_state()")
     result = None
 
     req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
@@ -310,7 +311,8 @@ def __check_under_control(
 
         # 制御中判定
         if "recv_datetime" not in remote_control_latest:
-            return False, result
+            print("Not processed because recv_datetime exists in remote_control_latest (judged as under control)")
+            return True, result
 
         # 要求番号生成（アトミックカウンタをインクリメントし、要求番号を取得）
         req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
