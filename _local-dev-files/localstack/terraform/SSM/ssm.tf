@@ -5,6 +5,7 @@ resource "aws_ssm_parameter" "dynamodb_table_name"{
         IMEI_TABLE       = "${var.imei_table_name}"
         ICCID_TABLE      = "${var.iccid_table_name}"
         CONTRACT_TABLE   = "${var.contract_table_name}"
+        OPERATOR_TABLE   = "${var.operator_table_name}"
         USER_TABLE       = "${var.user_table_name}"
         DEVICE_TABLE     = "${var.device_table_name}"
         GROUP_TABLE      = "${var.group_table_name}"
@@ -17,6 +18,26 @@ resource "aws_ssm_parameter" "dynamodb_table_name"{
         DEVICE_RELATION_TABLE = "${var.device_relation_name}"
   }) 
   description = "DynamoDB Table Name"
+  data_type = "text"
+  tier      = "Standard"
+  type      = "String"
+  tags      = var.tags
+}
+
+resource "aws_ssm_parameter" "soracom_authkey"{
+  name      = "${var.global_name}-ssm-soracom-authkey-${var.num}"
+  value     = "${var.soracom_authkey}" 
+  description = "Soracom AuthKey"
+  data_type = "text"
+  tier      = "Standard"
+  type      = "String"
+  tags      = var.tags
+}
+
+resource "aws_ssm_parameter" "soracom_secret"{
+  name      = "${var.global_name}-ssm-soracom-secret-${var.num}"
+  value     = "${var.soracom_secret}" 
+  description = "Soracom Secret"
   data_type = "text"
   tier      = "Standard"
   type      = "String"
