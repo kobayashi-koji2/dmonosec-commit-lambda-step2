@@ -202,7 +202,6 @@ def lambda_handler(event, context):
 
                 # タイムアウト判定Lambda呼び出し
                 payload = {
-                    "headers": event["headers"],
                     "body": {"device_req_no": device_req_no}
                 }
                 lambda_invoke_result = aws_lambda.invoke(
