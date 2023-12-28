@@ -55,7 +55,7 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
             device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
             req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROLS_TABLE"])
+            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             parameter = None
             res_body = {"code": "9999", "message": e}
@@ -193,7 +193,7 @@ def lambda_handler(event, context):
         topic = "cmd/" + icc_id
         # 接点出力_制御状態・接点出力_制御時間を判定
         do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-        do_info = [do for do in do_list if do["do_no"] == do_no][0]
+        do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
         do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
         if do_info["do_control"] == "open":
             do_control = "0x00"
@@ -236,7 +236,7 @@ def lambda_handler(event, context):
         email_address = val_result["account_info"]["email_address"]
         put_items = [{
             "Put": {
-                "TableName": parameter["REMOTE_CONTROLS_TABLE"],
+                "TableName": parameter["REMOTE_CONTROL_TABLE"],
                 "Item": {
                     "device_req_no": {"S": device_req_no},
                     "req_datetime": {"N": str(int(time.time() * 1000))},

@@ -416,7 +416,7 @@ resource "aws_dynamodb_table" "operation_log" {
 }
 
 #通知履歴テーブル
-resource "aws_dynamodb_table" "notification_list" {
+resource "aws_dynamodb_table" "notification_hist" {
   name           = "${var.global_name}-ddb-t-monosec-notification-hist"
   hash_key       = "notification_hist_id"
   stream_enabled = "false"
@@ -506,7 +506,7 @@ resource "aws_dynamodb_table" "cnt_hist" {
 
   attribute {
     name = "cnt_hist_id"
-    type = "N"
+    type = "S"
   }
 
   attribute {
