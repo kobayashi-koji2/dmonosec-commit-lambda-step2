@@ -14,13 +14,11 @@ import db
 import ssm
 
 
-logger = logging.getLogger()
-
-# 環境変数
 parameter = None
+logger = logging.getLogger()
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
+
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-ENDPOINT_URL = os.environ["endpoint_url"]
-AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 
 # レスポンスヘッダー
 response_headers = {
@@ -28,13 +26,9 @@ response_headers = {
     "Access-Control-Allow-Origin": "*",
 }
 
-# AWSリソース定義
-dynamodb = boto3.resource("dynamodb", region_name=AWS_DEFAULT_REGION, endpoint_url=ENDPOINT_URL)
-
 
 def lambda_handler(event, context):
     try:
-        print(event)
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
@@ -85,6 +79,7 @@ def lambda_handler(event, context):
         # 通信制御情報取得
         user_id = user_info["user_id"]
         device_req_no = event["pathParameters"]["device_req_no"]
+        print(f"device_req_no: {device_req_no}")
         remote_control = db.get_remote_control(device_req_no, remote_control_table)
 
         print(f"remote_control: {remote_control}")

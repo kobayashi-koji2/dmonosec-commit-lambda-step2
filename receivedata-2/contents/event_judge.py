@@ -37,7 +37,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 		'event_datetime': event_info['event_datetime'],
 		'recv_datetime'	: recv_data['recv_datetime'],
 		'hist_data'	: {
-			'device_name': device_info['device_data']['param']['config']['device_name'],
+			'device_name': device_info['device_data']['config']['device_name'],
 			'group_list': group_list,
 			'imei': device_info['imei'],
 			'event_type': event_info['event_type']
@@ -50,7 +50,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 	# 接点入力部
 	if event_info['event_type'] == "di_change":
 		terminal_no = event_info['terminal_no']
-		for di_list in device_info['device_data']['param']['config']['terminal_settings']['di_list']:
+		for di_list in device_info['device_data']['config']['terminal_settings']['di_list']:
 			if int(di_list['di_no']) == int(terminal_no):
 				terminal_name = di_list['di_name']
 				if event_info['di_state'] == 0:
@@ -65,7 +65,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 	# 接点出力部
 	elif event_info['event_type'] == "do_change":
 		terminal_no = event_info['terminal_no']
-		for do_list in device_info['device_data']['param']['config']['terminal_settings']['do_list']:
+		for do_list in device_info['device_data']['config']['terminal_settings']['do_list']:
 			if int(do_list['do_no']) == int(terminal_no):
 				terminal_name = do_list['do_name']
 				if event_info['do_state'] == 0:
@@ -85,14 +85,14 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 	elif event_info['event_type'] in ["manual_control", "on_timer_control", "off_timer_control"]:
 		if "link_di_no" in event_info:
 			hist_list_data['hist_data']['link_terminal_no'] = event_info['link_di_no']
-			for di_list in device_info['device_data']['param']['config']['terminal_settings']['di_list']:
+			for di_list in device_info['device_data']['config']['terminal_settings']['di_list']:
 				if int(di_list['di_no']) == int(event_info['link_di_no']):
 					di_terminal_name = di_list['di_name']
 					break;
 			hist_list_data['hist_data']['link_terminal_name'] = di_terminal_name
 			hist_list_data['hist_data']['control_trigger'] = event_info['control_trigger']
 			hist_list_data['hist_data']['terminal_no'] = int(event_info['do_no'])
-			for do_list in device_info['device_data']['param']['config']['terminal_settings']['do_list']:
+			for do_list in device_info['device_data']['config']['terminal_settings']['do_list']:
 				if int(do_list['do_no']) == int(event_info['do_no']):
 					do_terminal_name = do_list['do_name']
 					break;
@@ -105,7 +105,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 				hist_list_data['hist_data']['timer_time'] = event_info['timer_time']
 		else:
 			hist_list_data['hist_data']['control_trigger'] = event_info['control_trigger']
-			for do_list in device_info['device_data']['param']['config']['terminal_settings']['do_list']:
+			for do_list in device_info['device_data']['config']['terminal_settings']['do_list']:
 				if int(do_list['do_no']) == int(event_info['do_no']):
 					terminal_name = do_list['do_name']
 					break;

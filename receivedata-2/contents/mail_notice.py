@@ -7,6 +7,7 @@ import json
 import logging
 from datetime import datetime
 
+"""
 MONOSC_MAIL_FROM = os.environ["MONOSC_MAIL_FROM"]
 OCCURRENCE_FLAG_ON = os.environ["OCCURRENCE_FLAG_ON"]
 DI_MAIL_TEMPLATE = os.environ["DI_MAIL_TEMPLATE"]
@@ -21,11 +22,12 @@ FW_UPDATE_ABNORMALITY_OCCURRENCE_MAIL_TEMPLATE = os.environ["FW_UPDATE_ABNORMALI
 FW_UPDATE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE = os.environ["FW_UPDATE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE"]
 TURN_ON_MAIL_TEMPLATE = os.environ["TURN_ON_MAIL_TEMPLATE"]
 REMOTE_CONTROL_MAIL_TEMPLATE = os.environ["REMOTE_CONTROL_MAIL_TEMPLATE"]
+"""
 
 logger = logging.getLogger()
 
 def diNameToState(terminal_state_name, device_info):
-	di_list = device_info['device_data']['param']['config']['terminal_settings']['di_list']
+	di_list = device_info['device_data']['config']['terminal_settings']['di_list']
 	for di in di_list:
 		if di['di_on_name'] == terminal_state_name:
 			di_state = 1
@@ -37,7 +39,7 @@ def diNameToState(terminal_state_name, device_info):
 
 
 def doNameToState(terminal_state_name, device_info):
-	do_list = device_info['device_data']['param']['config']['terminal_settings']['do_list']
+	do_list = device_info['device_data']['config']['terminal_settings']['do_list']
 	for do in do_list:
 		if do['do_on_name'] == terminal_state_name:
 			do_state = 1
@@ -50,13 +52,13 @@ def doNameToState(terminal_state_name, device_info):
 
 def mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table):
 	logger.debug(f'mailNotice開始 hist_list={hist_list} device_info={device_info}')
-
+	"""
 	# 通知設定チェック
-	if device_info['device_data']['param']['config']['notification_settings'] is None or\
-		  len(device_info['device_data']['param']['config']['notification_settings']) == 0:
+	if device_info['device_data']['config']['notification_settings'] is None or\
+		  len(device_info['device_data']['config']['notification_settings']) == 0:
 		# 通知設定が存在しない場合、通知無し応答
 		return hist_list
-	notification_settings_list = device_info['device_data']['param']['config']['notification_settings']
+	notification_settings_list = device_info['device_data']['config']['notification_settings']
 
 	remote_control_list = ["manual_control", "on_timer_control", "off_timer_control"]
 	# メール通知設定チェック
@@ -164,6 +166,6 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
 
 				# 履歴一覧編集
 				hist_data[i]['hist_data']['notification_hist_id'] = notice_hist_info['notification_hist_id']
-
+	"""
 	logger.debug(f'mailNotice終了 hist_list={hist_list}')
 	return hist_list

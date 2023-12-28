@@ -20,6 +20,7 @@ pre_register_devices_table_name = "lmonosc-ddb-t-monosec-pre-register-devices"
 cnt_hist_table_name = "lmonosc-ddb-t-monosec-cnt-hist-2"
 remote_control_name = "lmonosc-ddb-t-monosec-remote-controls"
 device_relation_name = "lmonosc-ddb-t-monosec-device-relation"
+req_no_counter_table = "lmonosc-ddb-t-monosec-req-no-counter-2"
 soracom_authkey = "lmonosc-ssm-soracom-authkey-2"
 soracom_secret = "lmonosc-ssm-soracom-secret-2"
 

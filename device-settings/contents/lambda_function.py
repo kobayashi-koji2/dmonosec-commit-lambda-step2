@@ -6,6 +6,8 @@ import logging
 import re
 import ddb
 from botocore.exceptions import ClientError
+import traceback
+from decimal import Decimal
 
 # layer
 import db
@@ -14,119 +16,138 @@ import ssm
 
 parameter = None
 logger = logging.getLogger()
-dynamodb = boto3.resource('dynamodb')
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
-SSM_KEY_TABLE_NAME = os.environ['SSM_KEY_TABLE_NAME']
+SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
+
 
 def lambda_handler(event, context):
     try:
-        res_headers = {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        }
-        #コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
+        res_headers = {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}
+        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print('try ssm get parameter')
+            print("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print('tried ssm get parameter')
+            print("tried ssm get parameter")
         else:
-            print('passed ssm get parameter')
+            print("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
-                'user_table' : dynamodb.Table(parameter.get('USER_TABLE')),
-                'device_table' : dynamodb.Table(parameter.get('DEVICE_TABLE')),
-                'group_table': dynamodb.Table(parameter.get('GROUP_TABLE')),
+                "user_table": dynamodb.Table(parameter.get("USER_TABLE")),
+                "device_table": dynamodb.Table(parameter.get("DEVICE_TABLE")),
+                "group_table": dynamodb.Table(parameter.get("GROUP_TABLE")),
                 #'device_state_table' : dynamodb.Table(parameter.get('STATE_TABLE')),
                 #'account_table' : dynamodb.Table(parameter.get('ACCOUNT_TABLE')),
-                'contract_table' : dynamodb.Table(parameter.get('CONTRACT_TABLE')),
-                'device_relation_table' : dynamodb.Table(parameter.get('DEVICE_RELATION_TABLE'))
+                "contract_table": dynamodb.Table(parameter.get("CONTRACT_TABLE")),
+                "device_relation_table": dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE")),
             }
         except KeyError as e:
             parameter = None
-            body = {'code':'9999','message':e}
+            body = {"code": "9999", "message": e}
             return {
-                'statusCode':500,
-                'headers':res_headers,
-                'body':json.dumps(body,ensure_ascii=False)
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(body, ensure_ascii=False),
             }
-        #パラメータチェック
+        # パラメータチェック
         validate_result = validate.validate(event, tables)
-        if validate_result['code']!='0000':
+        if validate_result["code"] != "0000":
             return {
-                'statusCode': 200,
-                'headers': res_headers,
-                'body': json.dumps(validate_result, ensure_ascii=False)
+                "statusCode": 200,
+                "headers": res_headers,
+                "body": json.dumps(validate_result, ensure_ascii=False),
             }
-        #デバイス設定更新
-        body = validate_result['body']
-        device_id = validate_result['device_id']
-        imei = body['device_imei']
+        # デバイス設定更新
+        body = validate_result["body"]
+        device_id = validate_result["device_id"]
+        imei = body["device_imei"]
         convert_param = convert.float_to_decimal(body)
-        print(f'デバイスID:{device_id}')
-        print(f'IMEI:{imei}')
+        print(f"デバイスID:{device_id}")
+        print(f"IMEI:{imei}")
         try:
-            ddb.update_device_settings(device_id,imei,convert_param, tables['device_table'])
-        except ClientError as e: 
-            print(f'デバイス設定更新エラー e={e}')
-            res_body = {
-                'code':'9999',
-                'message':'デバイス設定の更新に失敗しました。'
-            }
+            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
+        except ClientError as e:
+            print(f"デバイス設定更新エラー e={e}")
+            res_body = {"code": "9999", "message": "デバイス設定の更新に失敗しました。"}
             return {
-                'statusCode':500,
-                'headers':res_headers,
-                'body': json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(
+                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                ),
             }
         else:
             # デバイス設定取得
-            device_info = ddb.get_device_info_by_id_imei(device_id, imei , tables['device_table'])['Item']
-            device_info_param = device_info.get('device_data',{}).get('param',{})
-            device_info_config = device_info.get('device_data',{}).get('config',{})
+            device_info = ddb.get_device_info_by_id_imei(device_id, imei, tables["device_table"])[
+                "Item"
+            ]
+            device_info_param = device_info.get("device_data", {}).get("param", {})
+            device_info_config = device_info.get("device_data", {}).get("config", {})
 
-            #グループ情報取得
+            # グループ情報取得
             group_list = []
-            device_group_relation = db.get_device_relation(f'd-{device_id}',tables['device_relation_table'],sk_prefix='g-',gsi_name='key2_index')
+            device_group_relation = db.get_device_relation(
+                f"d-{device_id}",
+                tables["device_relation_table"],
+                sk_prefix="g-",
+                gsi_name="key2_index",
+            )
             for item1 in device_group_relation:
-                item1 = item1['key1']
-                group_info = db.get_group_info(re.sub('^g-', '', item1), tables['group_table'])
-                if 'Item' in group_info:
-                    group_list.append({
-                        'group_id': group_info['Item']['group_id'],
-                        'group_name': group_info['Item']['group_data']['config']['group_name']
-                    })
+                item1 = item1["key1"]
+                group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
+                if "Item" in group_info:
+                    group_list.append(
+                        {
+                            "group_id": group_info["Item"]["group_id"],
+                            "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                        }
+                    )
 
-        res_body = {
-            'code':'0000',
-            'message':'',
-            'device_id': device_info['device_id'],
-            'device_name': device_info_config.get('device_name',''),
-            'device_code': device_info_param.get('device_code',''),
-            'device_iccid': device_info_param.get('iccid',''),
-            'device_imei': device_info['imei'],
-            'device_type':device_info['device_type'],
-            'group_list':group_list,
-            'di_list':device_info_config.get('terminal_settings',{}).get('di_list',{}),
-            'do_list':device_info_config.get('terminal_settings',{}).get('do_list',{}),
-            'do_timer_list':device_info_config.get('terminal_settings',{}).get('do_timer_list',{}),
-            'ai_list':device_info_config.get('terminal_settings',{}).get('ai_list',{})
-        }
-        print(f'レスポンス:{res_body}')
+        res_body = num_to_str(
+            {
+                "code": "0000",
+                "message": "",
+                "device_id": device_info["device_id"],
+                "device_name": device_info_config.get("device_name", ""),
+                "device_code": device_info_param.get("device_code", ""),
+                "device_iccid": device_info_param.get("iccid", ""),
+                "device_imei": device_info["imei"],
+                "device_type": device_info["device_type"],
+                "group_list": group_list,
+                "di_list": device_info_config.get("terminal_settings", {}).get("di_list", {}),
+                "do_list": device_info_config.get("terminal_settings", {}).get("do_list", {}),
+                "do_timer_list": device_info_config.get("terminal_settings", {}).get(
+                    "do_timer_list", {}
+                ),
+                "ai_list": device_info_config.get("terminal_settings", {}).get("ai_list", {}),
+            }
+        )
+        print(f"レスポンス:{res_body}")
         return {
-            'statusCode': 200,
-            'headers': res_headers,
-            'body': json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
+            "statusCode": 200,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
         print(e)
-        res_body = {
-            'code':'9999',
-            'message':'予期しないエラーが発生しました。'
-        }
+        print(traceback.format_exc())
+        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
-            'statusCode': 500,
-            'headers': res_headers,
-            'body': json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
+            "statusCode": 500,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
+
+
+def num_to_str(obj):
+    if isinstance(obj, dict):
+        return {key: num_to_str(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [num_to_str(item) for item in obj]
+    elif isinstance(obj, (int, float, Decimal)):
+        return str(obj)
+    else:
+        return obj
