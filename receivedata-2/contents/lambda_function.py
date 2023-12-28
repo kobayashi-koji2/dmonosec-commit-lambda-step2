@@ -18,7 +18,6 @@ INITIAL_LAMBDA_NAME = os.environ["INITIAL_LAMBDA_NAME"]
 
 parameter = None
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
 
 
 def lambda_handler(event, context):
@@ -55,7 +54,8 @@ def lambda_handler(event, context):
 
         # 受信データ取り出し
         Payload = base64.standard_b64decode(event['payload'])
-        szSimid = context.client_context.custom['simId']
+        # szSimid = context.client_context.custom['simId']
+        szSimid = "1234567890123456789"
         logger.info(f'Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}')
 
         # 入力データチェック
@@ -67,19 +67,24 @@ def lambda_handler(event, context):
                 return bytes([2])
 
         # ICCID情報取得
+        device_id = None
+        device_info = None
+        stray_flag = True
         iccid_info = ddb.get_iccid_info(szSimid, iccid_table)
-        logger.debug(f'iccid_info={iccid_info}')
-        device_id = iccid_info['device_id']
-
-        # デバイス情報取得
-        device_info = ddb.get_device_info(device_id, device_table)
-        logger.debug(f'device_info={device_info}')
-        if device_info is None or len(device_info) == 0:
-            return bytes([1])
+        if iccid_info is None or len(iccid_info) == 0:
+            logger.debug(f'未登録デバイス szSimid={szSimid}')
+        else:
+            stray_flag = False
+            logger.debug(f'iccid_info={iccid_info}')
+            device_id = iccid_info['device_id']
+            device_info = ddb.get_device_info(device_id, device_table)
+            logger.debug(f'device_info={device_info}')
+            if device_info is None or len(device_info) == 0:
+                return bytes([1])
 
         # データ解析・登録
         try:
-            res = commandParser(szSimid, szRecvDatetime, Payload, device_info, hist_table,
+            res = commandParser(szSimid, szRecvDatetime, Payload, device_info, stray_flag, hist_table,
                                 hist_list_table, state_table, group_table, notification_hist_table,
                                 device_relation_table, user_table, account_table, remote_control_table)
         except Exception as e:
@@ -89,7 +94,7 @@ def lambda_handler(event, context):
         ##################
         # 初期受信処理
         ##################
-        if device_info['contract_state'] == 0:
+        if (not stray_flag) and (device_info['contract_state'] == 0):
             # パラメータ設定
             input_event = {
                 "iccid": szSimid

@@ -23,7 +23,7 @@ def signed_hex2int( signed_hex, digit ):
 	return signed_int
 
 
-def commandParser(szSimid, szRecvDatetime, Payload, device_info, hist_table,
+def commandParser(szSimid, szRecvDatetime, Payload, device_info, stray_flag, hist_table,
 				  hist_list_table, state_table, group_table, notification_hist_table,
 				  device_relation_table, user_table, account_table, remote_control_table):
 	logger.debug(f'commandParser開始 szSimid={szSimid}, szRecvDatetime={szRecvDatetime}, Payload={Payload}')
@@ -160,19 +160,20 @@ def commandParser(szSimid, szRecvDatetime, Payload, device_info, hist_table,
 		}
 
 
-    # 現状態取得
-	device_id = device_info['device_id']
-	device_current_state = ddb.get_device_state(device_id, state_table)
-	logger.debug(f'device_current_state={device_current_state}')
+	if not stray_flag:
+		# 現状態取得
+		device_id = device_info['device_id']
+		device_current_state = ddb.get_device_state(device_id, state_table)
+		logger.debug(f'device_current_state={device_current_state}')
 
-	# イベント判定 履歴一覧、現状態作成
-	hist_list, current_state_info = eventJudge(recv_data, device_current_state, device_info,
-											   device_relation_table, group_table, remote_control_table)
-	logger.debug(f'hist_list={hist_list}, current_state_info={current_state_info}')
+		# イベント判定 履歴一覧、現状態作成
+		hist_list, current_state_info = eventJudge(recv_data, device_current_state, device_info,
+												device_relation_table, group_table, remote_control_table)
+		logger.debug(f'hist_list={hist_list}, current_state_info={current_state_info}')
 
-	# メール通知
-	# hist_list = mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table)
-	logger.debug(f'hist_list2={hist_list}')
+		# メール通知
+		# hist_list = mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table)
+		logger.debug(f'hist_list2={hist_list}')
 
     # DB登録データ編集
     # 履歴情報テーブル
@@ -183,14 +184,15 @@ def commandParser(szSimid, szRecvDatetime, Payload, device_info, hist_table,
 		logger.debug(f'接点出力制御応答テーブル dbItem={recv_data}')
 		ddb.update_control_res(recv_data, remote_control_table)
 
-    # 履歴一覧テーブル
-	logger.debug(f'履歴一覧 dbItem={hist_list}')
-	ddb.put_cnt_hist_list(hist_list, hist_list_table)
+	if not stray_flag:
+		# 履歴一覧テーブル
+		logger.debug(f'履歴一覧 dbItem={hist_list}')
+		ddb.put_cnt_hist_list(hist_list, hist_list_table)
 
-	# 現状態テーブル
-	if (hist_flg):
-		logger.debug(f'現状態テーブル dbItem={current_state_info}')
-		ddb.update_current_state(current_state_info, state_table)
+		# 現状態テーブル
+		if (hist_flg):
+			logger.debug(f'現状態テーブル dbItem={current_state_info}')
+			ddb.update_current_state(current_state_info, state_table)
 
 	logger.debug('commandParser終了')
 	return bytes([1])
