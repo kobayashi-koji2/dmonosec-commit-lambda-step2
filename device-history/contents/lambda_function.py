@@ -156,7 +156,7 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(
                 parameter.get("DEVICE_RELATION_TABLE")
             )
-            hist_list_table_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
+            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
         except KeyError as e:
             parameter = None
             body = {"code": "9999", "message": e}
@@ -184,7 +184,7 @@ def lambda_handler(event, context):
         try:
             # 履歴取得
             hist_list = ddb.get_hist_list(
-                hist_list_table_table, validate_result["request_params"]
+                hist_list_table, validate_result["request_params"]
             )
             response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:

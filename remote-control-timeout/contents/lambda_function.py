@@ -45,6 +45,10 @@ def lambda_handler(event, context):
             remote_controls_table = dynamodb.Table(
                 parameter.get("REMOTE_CONTROL_TABLE")
             )
+            cnt_hist_table = dynamodb.Table(parameter.get("CNT_HIST_TABLE"))
+            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
+            device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
+            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
         except KeyError as e:
             parameter = None
             body = {"code": "9999", "message": e}
@@ -66,42 +70,62 @@ def lambda_handler(event, context):
 
         remote_control = validate_result["remote_control"]
 
-        link_di_no = True if remote_control["link_di_no"]
+        link_di_no = remote_control["link_di_no"]
 
         req_datetime = remote_control["req_datetime"]
         limit_datetime = req_datetime + 10000  # 10秒
         if time.time() <= limit_datetime / 1000:
+            # タイムアウト時間まで待機
             time.sleep(limit_datetime / 1000 - time.time())
 
         remote_control = ddb.get_remote_control_info(
             remote_control["device_req_no"], remote_controls_table
         )
-        if remote_control.get("control_result") == "0":
-            # 正常
-            pass
-        else:
+        if remote_control.get("control_result") is None:
             # タイムアウト
-            # TODO メール通知？
-            # TODO 履歴レコード作成？
-            pass
+            # TODO メール通知
 
-        control_result = "0" if remote_control.get("control_result") == "0" else "1"
-        print(f"result:{control_result}")
+            # 履歴レコード作成
+            ddb.put_hist_list(
+                remote_control,
+                None,
+                "timeout_response",
+                hist_list_table,
+                device_table,
+                group_table,
+                device_relation_table,
+            )
+            return
 
-        res_body = {
-            "code": "0000",
-            "message": "",
-            "device_req_no": validate_result["request_params"]["device_req_no"],
-            "control_result": control_result,
-        }
+        if link_di_no is not None:
+            # 接点入力紐づけ設定あり
+            recv_datetime = remote_control["recv_datetime"]
+            limit_datetime = recv_datetime + 20000  # 20秒
+            if time.time() <= limit_datetime / 1000:
+                # タイムアウト時間まで待機
+                time.sleep(limit_datetime / 1000 - time.time())
 
-        return {
-            "statusCode": 200,
-            "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
-        }
+        cnt_hist_list = ddb.get_cnt_hist(
+            remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
+        )
+        if not [
+            cnt_hist
+            for cnt_hist in cnt_hist_list
+            if cnt_hist.get("di_trigger") == link_di_no
+        ]:
+            # TODO メール通知
+
+            # 履歴レコード作成
+            ddb.put_hist_list(
+                remote_control,
+                None,
+                "timeout_status",
+                hist_list_table,
+                device_table,
+                group_table,
+                device_relation_table,
+            )
+
     except Exception as e:
         print(e)
         print(traceback.format_exc())
