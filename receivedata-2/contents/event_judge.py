@@ -217,7 +217,7 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
 
 	# デバイス状態（バッテリーニアエンド）
 	elif event_info['event_type'] == "battery_near":
-		current_state_info['battery_near'] = event_info['occurrence_flag']
+		current_state_info['battery_near_state'] = event_info['occurrence_flag']
 		current_state_info['battery_near_last_change_datetime'] = event_datetime
 
 	# デバイス状態（機器異常）
