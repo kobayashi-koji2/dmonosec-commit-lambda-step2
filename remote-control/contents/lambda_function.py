@@ -1,8 +1,10 @@
 import logging
 import os
 import json
+import re
 import time
 import traceback
+import uuid
 
 import boto3
 
@@ -56,6 +58,8 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
             req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
             remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
+            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
+            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
         except KeyError as e:
             parameter = None
             res_body = {"code": "9999", "message": e}
@@ -70,6 +74,8 @@ def lambda_handler(event, context):
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
+        user_name = val_result["account_info"]["user_data"]["config"]["user_name"]
+        email_address = val_result["account_info"]["email_address"]
 
         ### 2. デバイス捜査権限チェック（共通）
         # デバイスID一覧取得
@@ -158,7 +164,12 @@ def lambda_handler(event, context):
             print(remote_control_latest)
 
             # 制御中判定
-            if "recv_datetime" not in remote_control_latest:
+            if ("recv_datetime" not in remote_control_latest) or (remote_control_latest["recv_datetime"] == 0):
+                print("Not processed because recv_datetime exists in remote_control_latest (judged as under control)")
+                __register_hist_info(
+                        device_info, do_no, user_name, email_address,
+                        group_table, device_relation_table, hist_list_table
+                )
                 res_body = {"code": "9999", "message": "他のユーザー操作、タイマーまたは連動により制御中"}
                 respons["body"] = json.dumps(res_body, ensure_ascii=False)
                 return respons
@@ -221,19 +232,17 @@ def lambda_handler(event, context):
         print(payload)
 
         # AWS Iot Core へメッセージ送信
-        iot_result = iot.publish(
-            topic=topic,
-            qos=0,
-            payload=json.dumps(payload, ensure_ascii=False)
-        )
-        print("iot_result", end=": ")
-        print(iot_result)
+        # iot_result = iot.publish(
+        #     topic=topic,
+        #     qos=0,
+        #     payload=json.dumps(payload, ensure_ascii=False)
+        # )
+        # print("iot_result", end=": ")
+        # print(iot_result)
 
         # 要求データを接点出力制御応答TBLへ登録
         device_req_no = icc_id + "-" + req_no
         do_di_return = convert.decimal_default_proc(do_info["do_di_return"])
-        user_name = val_result["account_info"]["user_data"]["config"]["user_name"]
-        email_address = val_result["account_info"]["email_address"]
         put_items = [{
             "Put": {
                 "TableName": parameter["REMOTE_CONTROL_TABLE"],
@@ -260,17 +269,17 @@ def lambda_handler(event, context):
             return respons
 
         ### 8. タイムアウト判定Lambda呼び出し
-        payload = {
-            "headers": event["headers"],
-            "body": {"device_req_no": device_req_no}
-        }
-        lambda_invoke_result = aws_lambda.invoke(
-            FunctionName = LAMBDA_TIMEOUT_CHECK,
-            InvocationType="Event",
-            Payload = json.dumps(payload, ensure_ascii=False)
-        )
-        print("lambda_invoke_result", end=": ")
-        print(lambda_invoke_result)
+        # payload = {
+        #     "headers": event["headers"],
+        #     "body": {"device_req_no": device_req_no}
+        # }
+        # lambda_invoke_result = aws_lambda.invoke(
+        #     FunctionName = LAMBDA_TIMEOUT_CHECK,
+        #     InvocationType="Event",
+        #     Payload = json.dumps(payload, ensure_ascii=False)
+        # )
+        # print("lambda_invoke_result", end=": ")
+        # print(lambda_invoke_result)
 
         ### 9. メッセージ応答
         res_body = {
@@ -287,3 +296,84 @@ def lambda_handler(event, context):
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
+
+
+def __register_hist_info(
+    device_info, do_no, user_name, email_address,
+    group_table, device_relation_table, hist_list_table
+):
+    """
+    - 要求番号が設定されており、接点出力端子が制御中の場合
+        履歴情報一覧へ実施しなかったことを登録する
+    """
+    result = None
+    do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+    do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
+
+    # グループ情報取得
+    group_list = list()
+    pk = "d-" + device_info["device_id"]
+    group_device_list = db.get_device_relation(pk, device_relation_table, sk_prefix="g-", gsi_name="key2_index")
+    if len(group_device_list) != 0:
+        group_id_list = [
+            re.sub("^g-", "", group_device_info["key1"])
+            for group_device_info in group_device_list
+        ]
+        for group_id in group_id_list:
+            group_info = db.get_group_info(group_id, group_table)
+            if not "Item" in group_info:
+                res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
+                respons["statusCode"] = 500
+                respons["body"] = json.dumps(result, ensure_ascii=False)
+                return respons
+            print("group_info", end=": ")
+            print(group_info)
+            group_list.append(
+                {
+                    "group_id": group_info["Item"]["group_id"],
+                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"]
+                }   
+            )
+    else:
+        print("The group containing the device did not exist.")
+        group_list.append({"group_id": "", "group_name": ""})
+
+    # メール通知
+    notification_hist_id = ""
+    # 12月の段階ではスキップ
+
+    # 履歴情報登録
+    item = {
+        "device_id": device_info["device_id"],
+        "hist_id": str(uuid.uuid4()),
+        "event_datetime": int(time.time() * 1000),
+        "hist_data": {
+            "device_name": device_info["device_data"]["config"]["device_name"],
+            "group_list": group_list,
+            "imei": device_info["imei"],
+            "event_type": "manual_control",
+            "terminal_no": int(do_info["do_no"]),
+            "terminal_name": do_info["do_name"],
+            "control_exec_user_name": user_name,
+            "control_exec_email_address": email_address,
+            "notification_hist_id": notification_hist_id,
+            "control_result": "not_excuted_done",
+        }
+    }
+    item = convert.dict_dynamo_format(item)
+    put_items = [{
+        "Put": {
+            "TableName": hist_list_table.name,
+            "Item": item,
+        }
+    }]
+    result = db.execute_transact_write_item(put_items)
+    if not result:
+        res_body = {"code": "9999", "message": "履歴一覧情報への書き込みに失敗しました。"}
+        respons["statusCode"] = 500
+        respons["body"] = json.dumps(res_body, ensure_ascii=False)
+        return respons
+    print("put_items", end=": ")
+    print(put_items)
+
+    return True, result
