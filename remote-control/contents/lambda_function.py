@@ -233,13 +233,13 @@ def lambda_handler(event, context):
         print(payload)
 
         # AWS Iot Core へメッセージ送信
-        # iot_result = iot.publish(
-        #     topic=topic,
-        #     qos=0,
-        #     payload=json.dumps(payload, ensure_ascii=False)
-        # )
-        # print("iot_result", end=": ")
-        # print(iot_result)
+        iot_result = iot.publish(
+            topic=topic,
+            qos=0,
+            payload=json.dumps(payload, ensure_ascii=False)
+        )
+        print("iot_result", end=": ")
+        print(iot_result)
 
         # 要求データを接点出力制御応答TBLへ登録
         device_req_no = icc_id + "-" + req_no
@@ -270,17 +270,17 @@ def lambda_handler(event, context):
             return respons
 
         ### 8. タイムアウト判定Lambda呼び出し
-        # payload = {
-        #     "headers": event["headers"],
-        #     "body": {"device_req_no": device_req_no}
-        # }
-        # lambda_invoke_result = aws_lambda.invoke(
-        #     FunctionName = LAMBDA_TIMEOUT_CHECK,
-        #     InvocationType="Event",
-        #     Payload = json.dumps(payload, ensure_ascii=False)
-        # )
-        # print("lambda_invoke_result", end=": ")
-        # print(lambda_invoke_result)
+        payload = {
+            "headers": event["headers"],
+            "body": {"device_req_no": device_req_no}
+        }
+        lambda_invoke_result = aws_lambda.invoke(
+            FunctionName = LAMBDA_TIMEOUT_CHECK,
+            InvocationType="Event",
+            Payload = json.dumps(payload, ensure_ascii=False)
+        )
+        print("lambda_invoke_result", end=": ")
+        print(lambda_invoke_result)
 
         ### 9. メッセージ応答
         res_body = {
