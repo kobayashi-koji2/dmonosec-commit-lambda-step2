@@ -16,6 +16,7 @@ variable pre_register_devices_table_name {}
 variable cnt_hist_table_name {}
 variable remote_control_name {}
 variable device_relation_name {}
+variable req_no_counter_table {}
 variable soracom_authkey {}
 variable soracom_secret {}
 
