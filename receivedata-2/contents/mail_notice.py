@@ -7,6 +7,7 @@ import json
 import logging
 from datetime import datetime
 
+"""
 MONOSC_MAIL_FROM = os.environ["MONOSC_MAIL_FROM"]
 OCCURRENCE_FLAG_ON = os.environ["OCCURRENCE_FLAG_ON"]
 DI_MAIL_TEMPLATE = os.environ["DI_MAIL_TEMPLATE"]
@@ -21,6 +22,7 @@ FW_UPDATE_ABNORMALITY_OCCURRENCE_MAIL_TEMPLATE = os.environ["FW_UPDATE_ABNORMALI
 FW_UPDATE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE = os.environ["FW_UPDATE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE"]
 TURN_ON_MAIL_TEMPLATE = os.environ["TURN_ON_MAIL_TEMPLATE"]
 REMOTE_CONTROL_MAIL_TEMPLATE = os.environ["REMOTE_CONTROL_MAIL_TEMPLATE"]
+"""
 
 logger = logging.getLogger()
 
@@ -50,7 +52,7 @@ def doNameToState(terminal_state_name, device_info):
 
 def mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table):
 	logger.debug(f'mailNotice開始 hist_list={hist_list} device_info={device_info}')
-
+	"""
 	# 通知設定チェック
 	if device_info['device_data']['param']['config']['notification_settings'] is None or\
 		  len(device_info['device_data']['param']['config']['notification_settings']) == 0:
@@ -164,6 +166,6 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
 
 				# 履歴一覧編集
 				hist_data[i]['hist_data']['notification_hist_id'] = notice_hist_info['notification_hist_id']
-
+	"""
 	logger.debug(f'mailNotice終了 hist_list={hist_list}')
 	return hist_list
