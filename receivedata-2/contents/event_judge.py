@@ -148,11 +148,11 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
 			'ai2_last_update_datetime': recv_data['recv_datetime'],
 			'ai1_threshold_last_update_datetime': recv_data['recv_datetime'],
 			'ai2_threshold_last_update_datetime': recv_data['recv_datetime'],
-			'signal_status': 0,
-			'battery_near_status': 0,
+			'signal_state': 0,
+			'battery_near_state': 0,
 			'device_abnormality': 0,
 			'parameter_abnormality': 0,
-			'fw_abnormality': 0,
+			'fw_update_abnormality': 0,
 			'di1_state': int(di_list[0]),
 			'di2_state': int(di_list[1]),
 			'di3_state': int(di_list[2]),
@@ -217,27 +217,27 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
 
 	# デバイス状態（バッテリーニアエンド）
 	elif event_info['event_type'] == "battery_near":
-		current_state_info['battery_near_status'] = event_info['occurrence_flag']
+		current_state_info['battery_near'] = event_info['occurrence_flag']
 		current_state_info['battery_near_last_change_datetime'] = event_datetime
 
 	# デバイス状態（機器異常）
 	elif event_info['event_type'] == "device_abnormality":
-		current_state_info['device_abnormality_status'] = event_info['occurrence_flag']
+		current_state_info['device_abnormality'] = event_info['occurrence_flag']
 		current_state_info['device_abnormality_last_change_datetime'] = event_datetime
 
 	# デバイス状態（パラメータ異常）
 	elif event_info['event_type'] == "parameter_abnormality":
-		current_state_info['parameter_abnormality_status'] = event_info['occurrence_flag']
+		current_state_info['parameter_abnormality'] = event_info['occurrence_flag']
 		current_state_info['parameter_abnormality_last_change_datetime'] = event_datetime
 
 	# デバイス状態（FW更新異常）
 	elif event_info['event_type'] == "fw_update_abnormality":
-		current_state_info['fw_update_abnormality_status'] = event_info['occurrence_flag']
+		current_state_info['fw_update_abnormality'] = event_info['occurrence_flag']
 		current_state_info['fw_update_abnormality_last_change_datetime'] = event_datetime
 
 	# 電波状態
-	elif event_info['event_type'] == "signal_status":
-		current_state_info['signal_status'] = event_info['signal_status']
+	elif event_info['event_type'] == "signal_state":
+		current_state_info['signal_state'] = event_info['signal_state']
 		current_state_info['signal_last_change_datetime'] = event_datetime
 
 	logger.debug(f'updateCurrentStateInfo終了 current_state_info={current_state_info}')
@@ -344,7 +344,7 @@ def eventJudge(recv_data, device_current_state, device_info, device_relation_tab
 		event_info['event_datetime'] = recv_data['event_datetime']
 		hist_battery_near = recv_data['device_state'] & check_digit
 		if not init_state_flg:
-			current_battery_near = device_current_state['battery_near_status']
+			current_battery_near = device_current_state['battery_near_state']
 
 		if (init_state_flg) or (not init_state_flg and hist_battery_near != current_battery_near):
 			if hist_battery_near == check_digit:
@@ -407,7 +407,7 @@ def eventJudge(recv_data, device_current_state, device_info, device_relation_tab
 		event_info['event_datetime'] = recv_data['event_datetime']
 		hist_fw_update_abnormality = recv_data['device_state'] & check_digit
 		if not init_state_flg:
-			current_fw_update_abnormality = device_current_state['fw_abnormality']
+			current_fw_update_abnormality = device_current_state['fw_update_abnormality']
 
 		if (init_state_flg) or (not init_state_flg and hist_fw_update_abnormality != current_fw_update_abnormality):
 			if hist_fw_update_abnormality == check_digit:
@@ -432,18 +432,20 @@ def eventJudge(recv_data, device_current_state, device_info, device_relation_tab
 
 	# 電波状態
 	if recv_data['message_type'] in ["0001", "0011", "0012"]:
-		hist_signal_status = signalStateJedge(recv_data['rssi'], recv_data['sinr'])
+		hist_signal_state = signalStateJedge(recv_data['rssi'], recv_data['sinr'])
 		event_info = {}
-		event_info['event_type'] = "signal_status"
+		event_info['event_type'] = "signal_state"
 		event_info['event_datetime'] = recv_data['event_datetime']
-		event_info['signal_status'] = hist_signal_status
-		if (init_state_flg) or (not init_state_flg and hist_signal_status != device_current_state['signal_status']):
+		event_info['signal_state'] = hist_signal_state
+		if (init_state_flg) or (not init_state_flg and hist_signal_state != device_current_state['signal_state']):
 			current_state_info = updateCurrentStateInfo(current_state_info, event_info, event_datetime)
 
 	# 遠隔制御（接点出力制御応答）
 	if recv_data['message_type'] in ["8002"]:
 		event_info = {}
 		remote_control_info = ddb.get_remote_control_info(recv_data['device_req_no'], remote_control_table)
+		if remote_control_info is None:
+			return hist_list, current_state_info
 		logger.debug(f'remote_control_info={remote_control_info}')
 		event_info['event_datetime'] = remote_control_info['req_datetime']
 		event_info['do_no'] = remote_control_info['do_no']
