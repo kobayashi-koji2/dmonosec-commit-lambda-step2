@@ -54,8 +54,7 @@ def lambda_handler(event, context):
 
         # 受信データ取り出し
         Payload = base64.standard_b64decode(event['payload'])
-        # szSimid = context.client_context.custom['simId']
-        szSimid = "1234567890123456789"
+        szSimid = context.client_context.custom['simId']
         logger.info(f'Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}')
 
         # 入力データチェック
