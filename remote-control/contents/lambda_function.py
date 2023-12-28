@@ -205,12 +205,13 @@ def lambda_handler(event, context):
         # 接点出力_制御状態・接点出力_制御時間を判定
         do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
         do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
-        do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
         if do_info["do_control"] == "open":
             do_control = "0x00"
+            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
             do_control_time = format(do_specified_time, "#04x")
         elif do_info["do_control"] == "close":
             do_control = "0x01"
+            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
             do_control_time = format(do_specified_time, "#04x")
         elif do_info["do_control"] == "toggle":
             do_control = "0x10"
