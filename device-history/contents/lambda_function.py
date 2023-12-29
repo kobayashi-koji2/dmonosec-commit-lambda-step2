@@ -109,7 +109,9 @@ def create_response(request_params, hist_list):
         res_hist_list.append(
             {
                 "event_datetime": int(hist["event_datetime"] / 1000),
-                "recv_datetime": int(hist["recv_datetime"] / 1000),
+                "recv_datetime": int(hist["recv_datetime"] / 1000)
+                if hist.get("recv_datetime")
+                else None,
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
                 "group_list": hist["hist_data"].get("group_list"),
