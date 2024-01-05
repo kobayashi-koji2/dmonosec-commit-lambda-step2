@@ -151,7 +151,7 @@ def lambda_handler(event, context):
 
             # 最新制御情報取得
             latest_req_num = convert.decimal_default_proc(req_no_count_info["num"])
-            latest_req_no = format(latest_req_num % 65535, "#04x")
+            latest_req_no = re.sub("^0x", "", format(latest_req_num % 65535, "#010x"))
             device_req_no = icc_id + "-" + latest_req_no
             remote_control_latest = ddb.get_remote_control_latest(device_req_no, do_no, remote_controls_table)
             if len(remote_control_latest) == 0:
@@ -176,7 +176,6 @@ def lambda_handler(event, context):
 
             ### 6. 要求番号生成（アトミックカウンタをインクリメントし、端末要求番号を生成）
             req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
-            req_no = format(req_num % 65535, "#04x")
 
         else:
             ### 6. 要求番号生成（カウント0 のレコード作成し、カウント0 の端末要求番号を生成）
@@ -197,7 +196,7 @@ def lambda_handler(event, context):
                 respons["statusCode"] = 500
                 respons["body"] = json.dumps(res_body, ensure_ascii=False)
                 return respons
-            req_no = format(req_num % 65535, "#04x")
+        req_no = re.sub("^0x", "", format(req_num % 65535, "#010x"))
 
         ### 7. 接点出力制御要求
         # 接点出力制御要求メッセージを生成
@@ -206,37 +205,44 @@ def lambda_handler(event, context):
         do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
         do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
         if do_info["do_control"] == "open":
-            do_control = "0x00"
+            do_control = "00"
             do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
-            do_control_time = format(do_specified_time, "#04x")
+            do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
         elif do_info["do_control"] == "close":
-            do_control = "0x01"
+            do_control = "01"
             do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
-            do_control_time = format(do_specified_time, "#04x")
+            do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
         elif do_info["do_control"] == "toggle":
-            do_control = "0x10"
-            do_control_time = "0x0000"
+            do_control = "10"
+            do_control_time = "0000"
         else:
             res_body = {"code": "9999", "message": "接点出力_制御方法の値が不正です。"}
             respons["statusCode"] = 500
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons
+
         payload = {
-            "Message_Length": "0x000C",
-            "Message_type": "0x8002",
+            "Message_Length": "000C",
+            "Message_type": "8002",
             "Req_No": req_no,
-            "DO_No": format(do_no, "#04x"),
+            "DO_No": format(do_no, "#02"),
             "DO_Control": do_control,
             "DO_ControlTime": do_control_time
         }
         print("Iot Core Message", end=": ")
         print(payload)
 
+        pubhex = "".join(payload.values())
+        # pubhex = "000C80020000000001100000"
+        print("Iot Core Message(hexadecimal)", end=": ")
+        print(pubhex)
+
         # AWS Iot Core へメッセージ送信
         iot_result = iot.publish(
             topic=topic,
             qos=0,
-            payload=json.dumps(payload, ensure_ascii=False)
+            retain=False,
+            payload=bytes.fromhex(pubhex)
         )
         print("iot_result", end=": ")
         print(iot_result)
@@ -255,7 +261,7 @@ def lambda_handler(event, context):
                     "control": {"S": do_info["do_control"]},
                     "control_trigger": {"S": "manual_control"},
                     "do_no": {"N": str(do_no)},
-                    "link_di_no": {"S": str(do_di_return)},
+                    "link_di_no": {"N": str(do_di_return)},
                     "iccid": {"S": icc_id},
                     "control_exec_user_name": {"S": user_name},
                     "control_exec_email_address": {"S": email_address},
