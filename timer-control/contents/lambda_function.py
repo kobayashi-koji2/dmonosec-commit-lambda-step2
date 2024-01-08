@@ -149,7 +149,7 @@ def lambda_handler(event, context):
                 checked_under_control_info = result
 
                 # 端末向け要求番号生成
-                req_no = format(checked_under_control_info["req_num"] % 65535, "#04x")
+                req_no = re.sub("^0x", "", format(checked_under_control_info["req_num"] % 65535, "#010x"))
 
                 # 接点出力制御要求メッセージを生成
                 topic = "cmd/" + icc_id
@@ -157,14 +157,14 @@ def lambda_handler(event, context):
                 do_specified_time = int(do_info["do_specified_time"])
 
                 if do_info["do_control"] == "open":
-                    do_control = "0x00"
-                    do_control_time = format(do_specified_time, "#04x")
+                    do_control = "00"
+                    do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
                 elif do_info["do_control"] == "close":
-                    do_control = "0x01"
-                    do_control_time = format(do_specified_time, "#04x")
+                    do_control = "01"
+                    do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
                 elif do_info["do_control"] == "toggle":
-                    do_control = "0x10"
-                    do_control_time = "0x0000"
+                    do_control = "10"
+                    do_control_time = "0000"
                 else:
                     res_body = {"code": "9999", "message": "接点出力_制御方法の値が不正です。"}
                     respons["statusCode"] = 500
@@ -172,21 +172,25 @@ def lambda_handler(event, context):
                     return respons
 
                 payload = {
-                    "Message_Length": "0x000C",
-                    "Message_type": "0x8002",
+                    "Message_Length": "000C",
+                    "Message_type": "8002",
                     "Req_No": req_no,
-                    "DO_No": format(do_no, "#04x"),
+                    "DO_No": format(do_no, "#02"),
                     "DO_Control": do_control,
                     "DO_ControlTime": do_control_time
                 }
                 print("Iot Core Message", end=": ")
                 print(payload)
+                pubhex = "".join(payload.values())
+                print("Iot Core Message(hexadecimal)", end=": ")
+                print(pubhex)
 
                 # AWS Iot Core へメッセージ送信
                 iot_result = iot.publish(
                     topic=topic,
                     qos=0,
-                    payload=json.dumps(payload, ensure_ascii=False)
+                    retain=False,
+                    payload=bytes.fromhex(pubhex)
                 )
                 print("iot_result", end=": ")
                 print(iot_result)
@@ -335,7 +339,7 @@ def __check_under_control(
         print(req_no_count_info)
 
         # 最新制御情報取得
-        latest_req_no = format(int(req_no_count_info["num"]) % 65535, "#04x")
+        latest_req_no = re.sub("^0x", "", format(int(req_no_count_info["num"]) % 65535, "#010x"))
         device_req_no = icc_id + "-" + latest_req_no
         remote_control_latest = ddb.get_remote_control_latest(
             device_req_no, do_info["do_no"], remote_controls_table
