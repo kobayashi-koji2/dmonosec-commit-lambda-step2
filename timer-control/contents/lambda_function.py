@@ -67,6 +67,7 @@ def lambda_handler(event, context):
         ### 1. スケジュール設定チェック
         # 現在時刻の保持(1分ごとに実行)
         dt_now = datetime.now()
+        # dt_now = datetime(2022, 12, 31, 1, 0, 30, 1000)
         if dt_now.tzname != "JST":
             dt_now = dt_now + timedelta(hours=+9)
         print("now_time", end=": ")
@@ -220,7 +221,7 @@ def lambda_handler(event, context):
                             "control": {"S": do_info["do_control"]},
                             "control_trigger": {"S": control_trigger},
                             "do_no": {"N": str(do_no)},
-                            "link_di_no": {"N": do_di_return},
+                            "link_di_no": {"N": str(do_di_return)},
                             "iccid": {"S": icc_id}
                         },
                     }
