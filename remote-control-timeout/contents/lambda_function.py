@@ -76,7 +76,7 @@ def lambda_handler(event, context):
         limit_datetime = req_datetime + 10000  # 10秒
         if time.time() <= limit_datetime / 1000:
             # タイムアウト時間まで待機
-            time.sleep(limit_datetime / 1000 - time.time())
+            time.sleep(float(limit_datetime) / 1000 - time.time())
 
         remote_control = ddb.get_remote_control_info(
             remote_control["device_req_no"], remote_controls_table
@@ -103,7 +103,7 @@ def lambda_handler(event, context):
             limit_datetime = recv_datetime + 20000  # 20秒
             if time.time() <= limit_datetime / 1000:
                 # タイムアウト時間まで待機
-                time.sleep(limit_datetime / 1000 - time.time())
+                time.sleep(float(limit_datetime) / 1000 - time.time())
 
         cnt_hist_list = ddb.get_cnt_hist(
             remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
