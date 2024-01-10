@@ -43,26 +43,24 @@ aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            print("parameter already exists. pass get_ssm_parameter")
-
+        ### 0. DynamoDBの操作オブジェクト生成
         try:
-            account_table = dynamodb.Table(parameter["ACCOUNT_TABLE"])
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            contract_table = dynamodb.Table(parameter["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-            device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-            req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
-            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
-            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            device_relation_table = dynamodb.Table(
+                ssm.table_names["DEVICE_RELATION_TABLE"]
+            )
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+            req_no_counter_table = dynamodb.Table(
+                ssm.table_names["REQ_NO_COUNTER_TABLE"]
+            )
+            remote_controls_table = dynamodb.Table(
+                ssm.table_names["REMOTE_CONTROL_TABLE"]
+            )
+            hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
+            group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
-            parameter = None
             res_body = {"code": "9999", "message": e}
             respons["statusCode"] = 500
             return respons
@@ -204,7 +202,7 @@ def lambda_handler(event, context):
             write_items = [
                 {
                     "Put": {
-                        "TableName": parameter["REQ_NO_COUNTER_TABLE"],
+                        "TableName": ssm.table_names["REQ_NO_COUNTER_TABLE"],
                         "Item": {"simid": {"S": icc_id}, "num": {"N": str(req_num)}},
                     }
                 }
@@ -273,7 +271,7 @@ def lambda_handler(event, context):
         put_items = [
             {
                 "Put": {
-                    "TableName": parameter["REMOTE_CONTROL_TABLE"],
+                    "TableName": ssm.table_names["REMOTE_CONTROL_TABLE"],
                     "Item": {
                         "device_req_no": {"S": device_req_no},
                         "req_datetime": {"N": str(int(time.time() * 1000))},

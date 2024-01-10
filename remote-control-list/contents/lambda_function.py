@@ -30,25 +30,19 @@ respons = {
 dynamodb = boto3.resource(
     "dynamodb",
     region_name=AWS_DEFAULT_REGION,
-    endpoint_url=os.environ.get("endpoint_url")
+    endpoint_url=os.environ.get("endpoint_url"),
 )
+
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            print("parameter already exists. pass get_ssm_parameter")
-
-        account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
-        user_table = dynamodb.Table(parameter["USER_TABLE"])
-        device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-        contract_table = dynamodb.Table(parameter["CONTRACT_TABLE"])
-        device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-        device_state_table = dynamodb.Table(parameter["STATE_TABLE"])
+        ### 0. DynamoDBの操作オブジェクト生成
+        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+        device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+        contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+        device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+        device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
 
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
@@ -70,7 +64,9 @@ def lambda_handler(event, context):
         device_id_list = list()
         if user_info["user_type"] in ("worker", "referrer"):
             print("In case of worker/referee")
-            device_id_list = __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_table)
+            device_id_list = __get_device_id_in_case_of_worker_or_referee(
+                user_info, device_relation_table
+            )
 
         ### 3. デバイスID取得（管理者・副管理者の場合）
         if user_info["user_type"] in ("admin", "sub_admin"):
@@ -91,18 +87,24 @@ def lambda_handler(event, context):
             device_info = db.get_device_info(device_id, device_table)
             print("device_info", end=": ")
             print(device_info)
-            
+
             if device_info is not None:
                 # 現状態情報取得
-                state_info = db.get_device_state(device_id, device_state_table).get("Item")
+                state_info = db.get_device_state(device_id, device_state_table).get(
+                    "Item"
+                )
                 print("state_info", end=": ")
                 print(state_info)
                 device_imei = device_info["imei"]
                 device_name = device_info["device_data"]["config"]["device_name"]
                 # 接点出力一覧
-                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+                do_list = device_info["device_data"]["config"]["terminal_settings"][
+                    "do_list"
+                ]
                 # 接点入力一覧
-                di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
+                di_list = device_info["device_data"]["config"]["terminal_settings"][
+                    "di_list"
+                ]
 
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
                 for do_info in do_list:
@@ -112,7 +114,7 @@ def lambda_handler(event, context):
                         device_imei,
                         do_info,
                         di_list,
-                        state_info
+                        state_info,
                     )
                     results.append(res_item)
 
@@ -120,11 +122,7 @@ def lambda_handler(event, context):
         results = __decimal_to_integer_or_float(results)
         print("results", end=": ")
         print(results)
-        res_body = {
-            "code": "0000",
-            "message": "",
-            "remote_control_list": results
-        }
+        res_body = {"code": "0000", "message": "", "remote_control_list": results}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
@@ -142,18 +140,14 @@ def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_tabl
     quary_item = "u-" + user_info["user_id"]
     kwargs = {"sk_prefix": "g-"}
     device_relation_results = db.get_device_relation(
-        quary_item,
-        device_relation_table,
-        **kwargs
+        quary_item, device_relation_table, **kwargs
     )
     print("device_relation[g-]", end=": ")
     print(device_relation_results)
     for group_id in device_relation_results:
         kwargs = {"sk_prefix": "d-"}
         device_relation_results = db.get_device_relation(
-            group_id["key2"],
-            device_relation_table,
-            **kwargs
+            group_id["key2"], device_relation_table, **kwargs
         )
         device_id_list += [item["key2"] for item in device_relation_results]
         print("device_relation[g-d-]", end=": ")
@@ -162,9 +156,7 @@ def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_tabl
     # ユーザーIDに紐づくデバイスIDを取得（デバイス関係TBL）
     kwargs = {"sk_prefix": "d-"}
     device_relation_results = db.get_device_relation(
-        quary_item,
-        device_relation_table,
-        **kwargs
+        quary_item, device_relation_table, **kwargs
     )
     print("device_relation[d-]", end=": ")
     print(device_relation_results)
@@ -176,7 +168,9 @@ def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_tabl
     return device_id_list
 
 
-def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info):
+def __generate_response_items(
+    device_id, device_name, device_imei, do_info, di_list, state_info
+):
     results_item = dict()
     results_item["device_id"] = device_id
     results_item["device_name"] = device_name
@@ -199,17 +193,17 @@ def __generate_response_items(device_id, device_name, device_imei, do_info, di_l
         results_item["di_state_icon"] = ""
     else:
         di_info = list(
-            filter(lambda i : i["di_no"] == do_info["do_di_return"], di_list)
+            filter(lambda i: i["di_no"] == do_info["do_di_return"], di_list)
         )[0]
         di_number = di_info["di_no"]
         results_item["di_no"] = di_number
-        
+
         # 接点入力名が未設定の場合「接点入力{接点入力端子番号}」で設定
         if not di_info["di_name"]:
             results_item["di_name"] = "接点入力" + str(di_number)
         else:
             results_item["di_name"] = di_info["di_name"]
-        
+
         # 「接点入力状態名称・接点入力状態アイコン」は現状態TBLの「接点入力{接点入力端子番号}_現状態」に対応する値を設定
         if state_info[f"di{di_number}_state"] == 0:
             results_item["di_state_name"] = di_info["di_off_name"]

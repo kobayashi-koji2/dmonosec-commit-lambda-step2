@@ -25,26 +25,22 @@ logger = logging.getLogger()
 
 def lambda_handler(event, context):
     try:
-        res_headers = {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            print("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            print("tried ssm get parameter")
-        else:
-            print("passed ssm get parameter")
+        res_headers = {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        }
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
-                "user_table": dynamodb.Table(parameter.get("USER_TABLE")),
-                "device_table": dynamodb.Table(parameter.get("DEVICE_TABLE")),
-                "group_table": dynamodb.Table(parameter.get("GROUP_TABLE")),
-                "device_state_table": dynamodb.Table(parameter.get("STATE_TABLE")),
-                "account_table": dynamodb.Table(parameter.get("ACCOUNT_TABLE")),
-                "contract_table": dynamodb.Table(parameter.get("CONTRACT_TABLE")),
-                "device_relation_table": dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE")),
+                "user_table": dynamodb.Table(ssm.table_names["USER_TABLE"]),
+                "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
+                "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
+                "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
+                "account_table": dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"]),
+                "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
+                "device_relation_table": dynamodb.Table(
+                    ssm.table_names["DEVICE_RELATION_TABLE"]
+                ),
             }
         except KeyError as e:
             parameter = None
@@ -73,7 +69,9 @@ def lambda_handler(event, context):
         ##################
         try:
             # 4.1 デバイス設定取得
-            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+            device_info = ddb.get_device_info(device_id, tables["device_table"]).get(
+                "Items", {}
+            )
             if len(device_info) == 0:
                 res_body = {"code": "9999", "message": "デバイス情報が存在しません。"}
                 return {
@@ -92,9 +90,9 @@ def lambda_handler(event, context):
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             # 4.2 デバイス現状態取得
-            device_state = db.get_device_state(device_id, tables["device_state_table"]).get(
-                "Item", {}
-            )
+            device_state = db.get_device_state(
+                device_id, tables["device_state_table"]
+            ).get("Item", {})
             # 4.3 グループ情報取得
             group_info_list = []
             device_group_relation = db.get_device_relation(
@@ -106,12 +104,16 @@ def lambda_handler(event, context):
             print(device_group_relation)
             for item1 in device_group_relation:
                 item1 = item1["key1"]
-                group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
+                group_info = db.get_group_info(
+                    re.sub("^g-", "", item1), tables["group_table"]
+                )
                 if "Item" in group_info:
                     group_info_list.append(group_info["Item"])
             # 4.4 デバイス詳細情報生成
             res_body = num_to_str(
-                generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
+                generate_detail.get_device_detail(
+                    device_info[0], device_state, group_info_list
+                )
             )
         except ClientError as e:
             print(e)
@@ -125,7 +127,9 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
+            "body": json.dumps(
+                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+            ),
         }
     except Exception as e:
         print(e)

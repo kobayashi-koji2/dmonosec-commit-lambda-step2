@@ -35,29 +35,29 @@ respons = {
 dynamodb = boto3.resource(
     "dynamodb",
     region_name=AWS_DEFAULT_REGION,
-    endpoint_url=os.environ.get("endpoint_url")
+    endpoint_url=os.environ.get("endpoint_url"),
 )
-iot = boto3.client("iot-data",region_name=AWS_DEFAULT_REGION)
-aws_lambda = boto3.client("lambda",region_name=AWS_DEFAULT_REGION)
+iot = boto3.client("iot-data", region_name=AWS_DEFAULT_REGION)
+aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
+
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            print("parameter already exists. pass get_ssm_parameter")
-
+        ### 0. DynamoDBの操作オブジェクト生成
         try:
-            device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-            device_state_table = dynamodb.Table(parameter["STATE_TABLE"])
-            req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
-            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
-            device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+            device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
+            req_no_counter_table = dynamodb.Table(
+                ssm.table_names["REQ_NO_COUNTER_TABLE"]
+            )
+            remote_controls_table = dynamodb.Table(
+                ssm.table_names["REMOTE_CONTROL_TABLE"]
+            )
+            hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
+            device_relation_table = dynamodb.Table(
+                ssm.table_names["DEVICE_RELATION_TABLE"]
+            )
+            group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
             parameter = None
             res_body = {"code": "9999", "message": e}
@@ -89,14 +89,21 @@ def lambda_handler(event, context):
             device_id = device_info["device_id"]
             contract_id = device_info["device_data"]["param"]["contract_id"]
             icc_id = device_info["device_data"]["param"]["iccid"]
-            do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-            di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
+            do_list = device_info["device_data"]["config"]["terminal_settings"][
+                "do_list"
+            ]
+            di_list = device_info["device_data"]["config"]["terminal_settings"][
+                "di_list"
+            ]
 
             for do_info in do_list:
                 # タイマー設定チェック
                 checked_timer_do_info = __check_timer_settings(do_info, dt_now)
                 if not checked_timer_do_info:
-                    print(f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info", end=": ")
+                    print(
+                        f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info",
+                        end=": ",
+                    )
                     print(do_info)
                     continue
 
@@ -111,21 +118,34 @@ def lambda_handler(event, context):
                 if result == 1:
                     error_flg, result = __register_hist_info(
                         "__check_return_di_state",
-                        device_info, do_info, di_list,
-                        group_table, device_relation_table, hist_list_table
+                        device_info,
+                        do_info,
+                        di_list,
+                        group_table,
+                        device_relation_table,
+                        hist_list_table,
                     )
-                    print(f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info", end=": ")
+                    print(
+                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info",
+                        end=": ",
+                    )
                     print(do_info)
                     continue
                 elif not result:
-                    print(f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info", end=": ")
+                    print(
+                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info",
+                        end=": ",
+                    )
                     print(do_info)
                     continue
                 checked_di_state_info = result
 
                 # 制御中判定
                 error_flg, result = __check_under_control(
-                    checked_di_state_info, icc_id, req_no_counter_table, remote_controls_table
+                    checked_di_state_info,
+                    icc_id,
+                    req_no_counter_table,
+                    remote_controls_table,
                 )
                 if not error_flg:
                     respons["statusCode"] = 500
@@ -133,24 +153,39 @@ def lambda_handler(event, context):
                     return respons
                 if result == 1:
                     error_flg, result = __register_hist_info(
-                        "__check_under_control", device_info, do_info, di_list,
-                        group_table, device_relation_table, hist_list_table
+                        "__check_under_control",
+                        device_info,
+                        do_info,
+                        di_list,
+                        group_table,
+                        device_relation_table,
+                        hist_list_table,
                     )
                     if not error_flg:
                         respons["statusCode"] = 500
                         respons["body"] = json.dumps(result, ensure_ascii=False)
                         return respons
-                    print(f"[__check_under_control(): FALSE] device_id: {device_id}, do_info", end=": ")
+                    print(
+                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info",
+                        end=": ",
+                    )
                     print(do_info)
                     continue
                 elif not result:
-                    print(f"[__check_under_control(): FALSE] device_id: {device_id}, do_info", end=": ")
+                    print(
+                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info",
+                        end=": ",
+                    )
                     print(do_info)
                     continue
                 checked_under_control_info = result
 
                 # 端末向け要求番号生成
-                req_no = re.sub("^0x", "", format(checked_under_control_info["req_num"] % 65535, "#010x"))
+                req_no = re.sub(
+                    "^0x",
+                    "",
+                    format(checked_under_control_info["req_num"] % 65535, "#010x"),
+                )
 
                 # 接点出力制御要求メッセージを生成
                 topic = "cmd/" + icc_id
@@ -159,10 +194,14 @@ def lambda_handler(event, context):
 
                 if do_info["do_control"] == "open":
                     do_control = "00"
-                    do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
+                    do_control_time = re.sub(
+                        "^0x", "", format(do_specified_time, "#06x")
+                    )
                 elif do_info["do_control"] == "close":
                     do_control = "01"
-                    do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
+                    do_control_time = re.sub(
+                        "^0x", "", format(do_specified_time, "#06x")
+                    )
                 elif do_info["do_control"] == "toggle":
                     do_control = "10"
                     do_control_time = "0000"
@@ -178,7 +217,7 @@ def lambda_handler(event, context):
                     "Req_No": req_no,
                     "DO_No": format(do_no, "#02"),
                     "DO_Control": do_control,
-                    "DO_ControlTime": do_control_time
+                    "DO_ControlTime": do_control_time,
                 }
                 print("Iot Core Message", end=": ")
                 print(payload)
@@ -188,10 +227,7 @@ def lambda_handler(event, context):
 
                 # AWS Iot Core へメッセージ送信
                 iot_result = iot.publish(
-                    topic=topic,
-                    qos=0,
-                    retain=False,
-                    payload=bytes.fromhex(pubhex)
+                    topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex)
                 )
                 print("iot_result", end=": ")
                 print(iot_result)
@@ -209,23 +245,25 @@ def lambda_handler(event, context):
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(res_body, ensure_ascii=False)
                     return respons
-                
-                put_items = [{
-                    "Put": {
-                        "TableName": remote_controls_table.name,
-                        "Item": {
-                            "device_req_no": {"S": device_req_no},
-                            "req_datetime": {"N": str(int(time.time() * 1000))},
-                            "device_id": {"S": device_id},
-                            "contract_id": {"S": contract_id},
-                            "control": {"S": do_info["do_control"]},
-                            "control_trigger": {"S": control_trigger},
-                            "do_no": {"N": str(do_no)},
-                            "link_di_no": {"N": str(do_di_return)},
-                            "iccid": {"S": icc_id}
-                        },
+
+                put_items = [
+                    {
+                        "Put": {
+                            "TableName": remote_controls_table.name,
+                            "Item": {
+                                "device_req_no": {"S": device_req_no},
+                                "req_datetime": {"N": str(int(time.time() * 1000))},
+                                "device_id": {"S": device_id},
+                                "contract_id": {"S": contract_id},
+                                "control": {"S": do_info["do_control"]},
+                                "control_trigger": {"S": control_trigger},
+                                "do_no": {"N": str(do_no)},
+                                "link_di_no": {"N": str(do_di_return)},
+                                "iccid": {"S": icc_id},
+                            },
+                        }
                     }
-                }]
+                ]
                 result = db.execute_transact_write_item(put_items)
                 if not result:
                     res_body = {"code": "9999", "message": "接点出力制御応答情報への書き込みに失敗しました。"}
@@ -236,22 +274,17 @@ def lambda_handler(event, context):
                 print(put_items)
 
                 # タイムアウト判定Lambda呼び出し
-                payload = {
-                    "body": {"device_req_no": device_req_no}
-                }
+                payload = {"body": {"device_req_no": device_req_no}}
                 lambda_invoke_result = aws_lambda.invoke(
-                    FunctionName = LAMBDA_TIMEOUT_CHECK,
+                    FunctionName=LAMBDA_TIMEOUT_CHECK,
                     InvocationType="Event",
-                    Payload = json.dumps(payload, ensure_ascii=False)
+                    Payload=json.dumps(payload, ensure_ascii=False),
                 )
                 print("lambda_invoke_result", end=": ")
                 print(lambda_invoke_result)
 
         ### 3. メッセージ応答
-        res_body = {
-            "code": "0000",
-            "message": ""
-        }
+        res_body = {"code": "0000", "message": ""}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
@@ -290,7 +323,7 @@ def __check_return_di_state(do_info, device_id, device_state_table):
             1. タイマーのON_OFF制御と紐づく接点入力端子の現状態の値が一致しない場合
                 処理続行する。
             2. タイマーのON_OFF制御と紐づく接点入力端子の現状態の値が一致する場合
-                履歴情報を登録して処理対象外としてスキップする。                
+                履歴情報を登録して処理対象外としてスキップする。
     2. 紐づく接点入力端子番号の指定がない場合
         処理対象外としてスキップする。
     """
@@ -310,7 +343,9 @@ def __check_return_di_state(do_info, device_id, device_state_table):
         if do_info["do_timer"]["do_onoff_control"] != device_state_info[col_name]:
             result = do_info
         else:
-            print(f"Not processed because the values of do_onoff_control and {col_name} match")
+            print(
+                f"Not processed because the values of do_onoff_control and {col_name} match"
+            )
             result = 1
     else:
         print("Not processed because do_di_return is not set")
@@ -319,16 +354,14 @@ def __check_return_di_state(do_info, device_id, device_state_table):
     return True, result
 
 
-def __check_under_control(
-        do_info, icc_id, req_no_counter_table, remote_controls_table
-    ):
+def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls_table):
     """
     1. 要求番号が設定されている場合
         最新の制御情報を確認し、接点出力端子が制御中なのかどうか判定する。
             1. 制御中以外の場合
                 処理続行する。
             2. 制御中の場合
-                履歴情報を登録して処理対象外としてスキップする。                
+                履歴情報を登録して処理対象外としてスキップする。
     2. 要求番号が設定されていない場合
         要求番号テーブルへnum:0のレコードを作成する。
     """
@@ -340,7 +373,9 @@ def __check_under_control(
         print(req_no_count_info)
 
         # 最新制御情報取得
-        latest_req_no = re.sub("^0x", "", format(int(req_no_count_info["num"]) % 65535, "#010x"))
+        latest_req_no = re.sub(
+            "^0x", "", format(int(req_no_count_info["num"]) % 65535, "#010x")
+        )
         device_req_no = icc_id + "-" + latest_req_no
         remote_control_latest = ddb.get_remote_control_latest(
             device_req_no, do_info["do_no"], remote_controls_table
@@ -353,27 +388,30 @@ def __check_under_control(
         print(remote_control_latest)
 
         # 制御中判定
-        if ("recv_datetime" not in remote_control_latest) or (remote_control_latest["recv_datetime"] == 0):
-            print("Not processed because recv_datetime exists in remote_control_latest (judged as under control)")
+        if ("recv_datetime" not in remote_control_latest) or (
+            remote_control_latest["recv_datetime"] == 0
+        ):
+            print(
+                "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
+            )
             return True, 1
 
         # 要求番号生成（アトミックカウンタをインクリメントし、要求番号を取得）
         req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
         result = do_info
         result["req_num"] = int(req_num)
-    
+
     else:
         print("req_no_count_info did not exist. Put req_no_count_info to table")
-        req_num = 0 
-        write_items = [{
-            "Put": {
-                "TableName": req_no_counter_table.name,
-                "Item": {
-                    "simid": {"S": icc_id},
-                    "num": {"N": str(req_num)}
-                },
+        req_num = 0
+        write_items = [
+            {
+                "Put": {
+                    "TableName": req_no_counter_table.name,
+                    "Item": {"simid": {"S": icc_id}, "num": {"N": str(req_num)}},
+                }
             }
-        }]
+        ]
         result = db.execute_transact_write_item(write_items)
         if not result:
             res_body = {"code": "9999", "message": "要求番号カウンタ情報への書き込みに失敗しました。"}
@@ -386,8 +424,12 @@ def __check_under_control(
 
 def __register_hist_info(
     flg,
-    device_info, do_info, di_list,
-    group_table, device_relation_table, hist_list_table
+    device_info,
+    do_info,
+    di_list,
+    group_table,
+    device_relation_table,
+    hist_list_table,
 ):
     """
     1. 紐づく接点入力端子番号の指定があり、その出力端子の現状態ステータスがタイマーのON_OFF制御の値と一致する場合
@@ -400,7 +442,9 @@ def __register_hist_info(
     # グループ情報取得
     group_list = list()
     pk = "d-" + device_info["device_id"]
-    group_device_list = db.get_device_relation(pk, device_relation_table, sk_prefix="g-", gsi_name="key2_index")
+    group_device_list = db.get_device_relation(
+        pk, device_relation_table, sk_prefix="g-", gsi_name="key2_index"
+    )
     if len(group_device_list) != 0:
         group_id_list = [
             re.sub("^g-", "", group_device_info["key1"])
@@ -416,8 +460,10 @@ def __register_hist_info(
             group_list.append(
                 {
                     "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"]
-                }   
+                    "group_name": group_info["Item"]["group_data"]["config"][
+                        "group_name"
+                    ],
+                }
             )
     else:
         print("The group containing the device did not exist.")
@@ -428,7 +474,9 @@ def __register_hist_info(
     # 12月の段階ではスキップ
 
     do_di_return = do_info["do_di_return"]
-    link_terminal_name = [di["di_name"] for di in di_list if di["di_no"] == do_di_return][0]
+    link_terminal_name = [
+        di["di_name"] for di in di_list if di["di_no"] == do_di_return
+    ][0]
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
         event_type = "off_timer_control"
@@ -460,15 +508,17 @@ def __register_hist_info(
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
         "event_datetime": int(time.time() * 1000),
-        "hist_data": hist_data
+        "hist_data": hist_data,
     }
     item = convert.dict_dynamo_format(item)
-    put_items = [{
-        "Put": {
-            "TableName": hist_list_table.name,
-            "Item": item,
+    put_items = [
+        {
+            "Put": {
+                "TableName": hist_list_table.name,
+                "Item": item,
+            }
         }
-    }]
+    ]
     result = db.execute_transact_write_item(put_items)
     if not result:
         res_body = {"code": "9999", "message": "履歴一覧情報への書き込みに失敗しました。"}

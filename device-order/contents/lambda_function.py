@@ -29,21 +29,15 @@ respons = {
 dynamodb = boto3.resource(
     "dynamodb",
     region_name=AWS_DEFAULT_REGION,
-    endpoint_url=os.environ.get("endpoint_url")
+    endpoint_url=os.environ.get("endpoint_url"),
 )
+
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            print("parameter already exists. pass get_ssm_parameter")
-
-        account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
-        user_table = dynamodb.Table(parameter["USER_TABLE"])
+        ### 0. DynamoDBの操作オブジェクト生成
+        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
 
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
@@ -71,12 +65,10 @@ def lambda_handler(event, context):
             {
                 "Update": {
                     "TableName": parameter["USER_TABLE"],
-                    "Key": {
-                        "user_id": {"S": user_info["user_id"]}
-                    },
+                    "Key": {"user_id": {"S": user_info["user_id"]}},
                     "UpdateExpression": "set #s = :s",
-                    "ExpressionAttributeNames": {"#s" : "user_data"},
-                    "ExpressionAttributeValues": {":s" : af_user_data}
+                    "ExpressionAttributeNames": {"#s": "user_data"},
+                    "ExpressionAttributeValues": {":s": af_user_data},
                 }
             }
         ]
@@ -84,11 +76,7 @@ def lambda_handler(event, context):
         result = db.execute_transact_write_item(transact_items)
 
         ### 3. メッセージ応答
-        res_body = {
-            "code": "0000",
-            "message": "",
-            "device_list": body["device_list"]
-        }
+        res_body = {"code": "0000", "message": "", "device_list": body["device_list"]}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:

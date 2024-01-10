@@ -23,26 +23,20 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 def lambda_handler(event, context):
     try:
-        res_headers = {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            print("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            print("tried ssm get parameter")
-        else:
-            print("passed ssm get parameter")
+        res_headers = {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        }
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
-                "user_table": dynamodb.Table(parameter.get("USER_TABLE")),
-                "device_table": dynamodb.Table(parameter.get("DEVICE_TABLE")),
-                "group_table": dynamodb.Table(parameter.get("GROUP_TABLE")),
-                #'device_state_table' : dynamodb.Table(parameter.get('STATE_TABLE')),
-                #'account_table' : dynamodb.Table(parameter.get('ACCOUNT_TABLE')),
-                "contract_table": dynamodb.Table(parameter.get("CONTRACT_TABLE")),
-                "device_relation_table": dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE")),
+                "user_table": dynamodb.Table(ssm.table_names["USER_TABLE"]),
+                "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
+                "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
+                "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
+                "device_relation_table": dynamodb.Table(
+                    ssm.table_names["DEVICE_RELATION_TABLE"]
+                ),
             }
         except KeyError as e:
             parameter = None
@@ -68,7 +62,9 @@ def lambda_handler(event, context):
         print(f"デバイスID:{device_id}")
         print(f"IMEI:{imei}")
         try:
-            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
+            ddb.update_device_settings(
+                device_id, imei, convert_param, tables["device_table"]
+            )
         except ClientError as e:
             print(f"デバイス設定更新エラー e={e}")
             res_body = {"code": "9999", "message": "デバイス設定の更新に失敗しました。"}
@@ -81,9 +77,9 @@ def lambda_handler(event, context):
             }
         else:
             # デバイス設定取得
-            device_info = ddb.get_device_info_by_id_imei(device_id, imei, tables["device_table"])[
-                "Item"
-            ]
+            device_info = ddb.get_device_info_by_id_imei(
+                device_id, imei, tables["device_table"]
+            )["Item"]
             device_info_param = device_info.get("device_data", {}).get("param", {})
             device_info_config = device_info.get("device_data", {}).get("config", {})
 
@@ -97,12 +93,16 @@ def lambda_handler(event, context):
             )
             for item1 in device_group_relation:
                 item1 = item1["key1"]
-                group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
+                group_info = db.get_group_info(
+                    re.sub("^g-", "", item1), tables["group_table"]
+                )
                 if "Item" in group_info:
                     group_list.append(
                         {
                             "group_id": group_info["Item"]["group_id"],
-                            "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                            "group_name": group_info["Item"]["group_data"]["config"][
+                                "group_name"
+                            ],
                         }
                     )
 
@@ -117,19 +117,27 @@ def lambda_handler(event, context):
                 "device_imei": device_info["imei"],
                 "device_type": device_info["device_type"],
                 "group_list": group_list,
-                "di_list": device_info_config.get("terminal_settings", {}).get("di_list", {}),
-                "do_list": device_info_config.get("terminal_settings", {}).get("do_list", {}),
+                "di_list": device_info_config.get("terminal_settings", {}).get(
+                    "di_list", {}
+                ),
+                "do_list": device_info_config.get("terminal_settings", {}).get(
+                    "do_list", {}
+                ),
                 "do_timer_list": device_info_config.get("terminal_settings", {}).get(
                     "do_timer_list", {}
                 ),
-                "ai_list": device_info_config.get("terminal_settings", {}).get("ai_list", {}),
+                "ai_list": device_info_config.get("terminal_settings", {}).get(
+                    "ai_list", {}
+                ),
             }
         )
         print(f"レスポンス:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
+            "body": json.dumps(
+                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+            ),
         }
     except Exception as e:
         print(e)
@@ -138,7 +146,9 @@ def lambda_handler(event, context):
         return {
             "statusCode": 500,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
+            "body": json.dumps(
+                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+            ),
         }
 
 

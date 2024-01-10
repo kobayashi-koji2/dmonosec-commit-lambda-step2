@@ -26,24 +26,15 @@ def lambda_handler(event, context):
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         }
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            print("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            print("tried ssm get parameter")
-        else:
-            print("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
-            contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
-            device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             device_relation_table = dynamodb.Table(
-                parameter.get("DEVICE_RELATION_TABLE")
+                ssm.table_names["DEVICE_RELATION_TABLE"]
             )
         except KeyError as e:
             parameter = None
@@ -71,10 +62,10 @@ def lambda_handler(event, context):
                 "contract-dummy",  # TODO ログイン時の契約IDを指定
                 validate_result["contract_info"],
                 account_table,
-                parameter.get("ACCOUNT_TABLE"),
-                parameter.get("USER_TABLE"),
-                parameter.get("CONTRACT_TABLE"),
-                parameter.get("DEVICE_RELATION_TABLE"),
+                ssm.table_names["ACCOUNT_TABLE"],
+                ssm.table_names["USER_TABLE"],
+                ssm.table_names["CONTRACT_TABLE"],
+                ssm.table_names["DEVICE_RELATION_TABLE"],
             )
             # TODO 招待メール送信？
 
@@ -85,9 +76,9 @@ def lambda_handler(event, context):
                 account_table,
                 user_table,
                 device_relation_table,
-                parameter.get("ACCOUNT_TABLE"),
-                parameter.get("USER_TABLE"),
-                parameter.get("DEVICE_RELATION_TABLE"),
+                ssm.table_names["ACCOUNT_TABLE"],
+                ssm.table_names["USER_TABLE"],
+                ssm.table_names["DEVICE_RELATION_TABLE"],
             )
 
         if not result[0]:
