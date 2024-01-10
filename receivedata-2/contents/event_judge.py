@@ -99,7 +99,8 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 			hist_list_data['hist_data']['terminal_name'] = do_terminal_name
 			hist_list_data['hist_data']['control_exec_user_name'] = event_info['control_exec_user_name']
 			hist_list_data['hist_data']['control_exec_user_email_address'] = event_info['control_exec_user_email_address']
-			hist_list_data['hist_data']['cntrol_result'] = event_info['cntrol_result']
+			hist_list_data['hist_data']['control'] = event_info['control']
+			hist_list_data['hist_data']['control_result'] = event_info['control_result']
 			hist_list_data['hist_data']['device_req_no'] = event_info['device_req_no']
 			if event_info['event_type'] in ["on_timer_control", "off_timer_control"]:
 				hist_list_data['hist_data']['timer_time'] = event_info['timer_time']
@@ -112,7 +113,8 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
 			hist_list_data['hist_data']['terminal_no'] = int(event_info['do_no'])
 			hist_list_data['hist_data']['control_exec_user_name'] = event_info['control_exec_user_name']
 			hist_list_data['hist_data']['control_exec_user_email_address'] = event_info['control_exec_user_email_address']
-			hist_list_data['hist_data']['cntrol_result'] = event_info['cntrol_result']
+			hist_list_data['hist_data']['control'] = event_info['control']
+			hist_list_data['hist_data']['control_result'] = event_info['control_result']
 			hist_list_data['hist_data']['device_req_no'] = event_info['device_req_no']
 			if event_info['event_type'] in ["on_timer_control", "off_timer_control"]:
 				hist_list_data['hist_data']['timer_time'] = event_info['timer_time']
@@ -449,15 +451,16 @@ def eventJudge(recv_data, device_current_state, device_info, device_relation_tab
 		logger.debug(f'remote_control_info={remote_control_info}')
 		event_info['event_datetime'] = remote_control_info['req_datetime']
 		event_info['do_no'] = remote_control_info['do_no']
+		event_info['control'] = remote_control_info['control']
 		event_info['control_exec_user_name'] = remote_control_info['control_exec_user_name']
 		event_info['control_exec_user_email_address'] = remote_control_info['control_exec_user_email_address']
 		event_info['control_trigger'] = remote_control_info['control_trigger']
 		event_info['event_type'] = remote_control_info['control_trigger']
 		event_info['device_req_no'] = recv_data['device_req_no']
-		if recv_data['cntrol_result'] == 0:
-			event_info['cntrol_result'] = "success"
+		if recv_data['control_result'] == 0:
+			event_info['control_result'] = "success"
 		else:
-			event_info['cntrol_result'] = "failure"
+			event_info['control_result'] = "failure"
 
 		# 制御トリガー判定
 		if remote_control_info['control_trigger'] in ["on_timer_control", "off_timer_control"]:
@@ -476,16 +479,17 @@ def eventJudge(recv_data, device_current_state, device_info, device_relation_tab
 			if di_trigger[list_di_no] == "1":
 				event_info['event_datetime'] = remote_control_info['req_datetime']
 				event_info['do_no'] = remote_control_info['do_no']
+				event_info['control'] = remote_control_info['control']
 				event_info['control_exec_user_name'] = remote_control_info['control_exec_user_name']
 				event_info['control_exec_user_email_address'] = remote_control_info['control_exec_user_email_address']
 				event_info['link_di_no'] = remote_control_info['link_di_no']
 				event_info['device_req_no'] = remote_control_info['device_req_no']
 				event_info['control_trigger'] = remote_control_info['control_trigger']
 				event_info['event_type'] = remote_control_info['control_trigger']
-				if remote_control_info['cntrol_result'] == 0:
-					event_info['cntrol_result'] = "success"
+				if remote_control_info['control_result'] == 0:
+					event_info['control_result'] = "success"
 				else:
-					event_info['cntrol_result'] = "failure"
+					event_info['control_result'] = "failure"
 
 				# 制御トリガー判定
 				if remote_control_info['control_trigger'] in ["on_timer_control", "off_timer_control"]:

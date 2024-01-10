@@ -153,7 +153,7 @@ def commandParser(szSimid, szRecvDatetime, Payload, device_info, stray_flag, his
 			'power_voltage': nVolt,
 			'rssi': nRssi,
 			'sinr': nSinr,
-			'cntrol_result': nControlResult,
+			'control_result': nControlResult,
 			'device_state': nState,
 			'do_state': format(nDOState, '08b'),
 			'iccid': szSimid,
