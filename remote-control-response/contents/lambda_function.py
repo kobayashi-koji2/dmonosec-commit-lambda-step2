@@ -67,14 +67,14 @@ def lambda_handler(event, context):
         remote_control = validate_result["remote_control"]
         req_datetime = remote_control["req_datetime"]
         limit_datetime = req_datetime + 10000  # 10秒
-        while not remote_control.get("cntrol_result") and time.time() <= limit_datetime / 1000:
+        while not remote_control.get("control_result") and time.time() <= limit_datetime / 1000:
             time.sleep(1)
             logger.info(time.time())
             remote_control = ddb.get_remote_control_info(
                 remote_control["device_req_no"], remote_controls_table
             )
 
-        control_result = "0" if remote_control.get("cntrol_result") == 0 else "1"
+        control_result = "0" if remote_control.get("control_result") == 0 else "1"
         logger.info(f"result:{control_result}")
 
         res_body = {
