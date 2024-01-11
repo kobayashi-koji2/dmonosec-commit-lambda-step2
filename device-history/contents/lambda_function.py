@@ -32,10 +32,8 @@ def create_history_message(hist):
     msg = ""
     # 接点入力変化
     if hist["event_type"] == "di_change":
-        link_terminal_name = hist.get(
-            "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
-        )
-        msg = f"【接点入力変化】\n{link_terminal_name}が{hist['link_terminal_state_name']}に変化しました。"
+        terminal_name = hist.get("terminal_name", "接点入力" + str(hist.get("terminal_no", "")))
+        msg = f"【接点入力変化】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
 
     # 接点出力変化
     elif hist["event_type"] == "do_change":
