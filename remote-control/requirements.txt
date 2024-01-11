@@ -1,1 +1,1 @@
-python-jose
+aws-lambda-powertools

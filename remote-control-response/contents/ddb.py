@@ -1,8 +1,12 @@
 import json
 
+from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 import decimal
+
+
+logger = Logger()
 
 
 # 接点出力制御応答取得

@@ -13,7 +13,6 @@ services:
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
     volumes:
-      - ../_local-dev-files/layer/common_functions_layer:/opt
       - ./contents:/var/task
     ports:
       - 9000:8080

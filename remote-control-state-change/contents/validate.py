@@ -1,10 +1,10 @@
-import logging
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 # パラメータチェック

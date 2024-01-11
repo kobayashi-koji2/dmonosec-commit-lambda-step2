@@ -1,17 +1,18 @@
 import json
-import logging
+
+from aws_lambda_powertools import Logger
 
 import db
 import convert
 import ddb
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 # TODO 履歴取得のvalidate.pyからコピー 要共通化
 def get_user_device_list(user_id, device_relation_table):
     device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
-    print(device_relation_list)
+    logger.info(device_relation_list)
     user_device_list = []
     for relation in device_relation_list:
         relation_id = relation["key2"]
@@ -30,9 +31,7 @@ def get_user_device_list(user_id, device_relation_table):
 
 
 # パラメータチェック
-def validate(
-    event, contract_table, user_table, device_relation_table, remote_controls_table
-):
+def validate(event, contract_table, user_table, device_relation_table, remote_controls_table):
     headers = event.get("headers", {})
     if not headers:
         return {"code": "9999", "messege": "リクエストパラメータが不正です。"}
@@ -41,7 +40,7 @@ def validate(
 
     try:
         decoded_idtoken = convert.decode_idtoken(event)
-        print("idtoken:", decoded_idtoken)
+        logger.info("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
         logger.error(e)

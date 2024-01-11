@@ -1,4 +1,3 @@
-import logging
 import os
 import json
 import re
@@ -6,6 +5,7 @@ import time
 import traceback
 import uuid
 
+from aws_lambda_powertools import Logger
 import boto3
 
 # layer
@@ -15,7 +15,7 @@ import db
 import convert
 import ddb
 
-logger = logging.getLogger()
+logger = Logger()
 
 # 環境変数
 parameter = None
@@ -49,7 +49,7 @@ def lambda_handler(event, context):
             ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(ssm_params)
         else:
-            print("parameter already exists. pass get_ssm_parameter")
+            logger.info("parameter already exists. pass get_ssm_parameter")
 
         try:
             account_table = dynamodb.Table(parameter["ACCOUNT_TABLE"])
@@ -71,7 +71,7 @@ def lambda_handler(event, context):
         # 入力情報のバリデーションチェック
         val_result = validate.validate(event, account_table, user_table)
         if val_result["code"] != "0000":
-            print("Error in validation check of input information.")
+            logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
@@ -88,8 +88,8 @@ def lambda_handler(event, context):
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons
         contract_info = contract_info["Item"]
-        print("contract_info", end=": ")
-        print(contract_info)
+        logger.info("contract_info", end=": ")
+        logger.info(contract_info)
         device_list = contract_info["contract_data"]["device_list"]
 
         # デバイス操作権限チェック
@@ -106,27 +106,21 @@ def lambda_handler(event, context):
         if user_info["user_type"] == "worker":
             pk = "u-" + user_info["user_id"]
             relation_info = db.get_device_relation(pk, device_relation_table)
-            print("device_relation", end=": ")
-            print(relation_info)
-            relation_d = [
-                i["key2"] for i in relation_info if i["key2"].startswith("d-")
-            ]
-            relation_g = [
-                i["key2"] for i in relation_info if i["key2"].startswith("g-")
-            ]
+            logger.info("device_relation", end=": ")
+            logger.info(relation_info)
+            relation_d = [i["key2"] for i in relation_info if i["key2"].startswith("d-")]
+            relation_g = [i["key2"] for i in relation_info if i["key2"].startswith("g-")]
 
             # グル―プにも紐づいている場合、そのグループに紐づくデバイスを取得
             if len(relation_g) != 0:
                 for pk in relation_g:
                     relation_info = db.get_device_relation(pk, device_relation_table)
-                    print("device_relation[g-]", end=": ")
-                    print(relation_info)
+                    logger.info("device_relation[g-]", end=": ")
+                    logger.info(relation_info)
                     relation_d += [i["key2"] for i in relation_info]
-            device_id_list = [
-                i.replace("d-", "", 1) for i in list(dict.fromkeys(relation_d))
-            ]
-            print("device_id_list", end=": ")
-            print(device_id_list)
+            device_id_list = [i.replace("d-", "", 1) for i in list(dict.fromkeys(relation_d))]
+            logger.info("device_id_list", end=": ")
+            logger.info(device_id_list)
 
             if device_id not in device_id_list:
                 res_body = {"code": "9999", "message": "デバイスの操作権限がありません。"}
@@ -137,17 +131,15 @@ def lambda_handler(event, context):
             pass
 
         ### 4. 制御情報取得
-        device_info = ddb.get_device_info_other_than_unavailable(
-            device_id, device_table
-        )
+        device_info = ddb.get_device_info_other_than_unavailable(device_id, device_table)
         if len(device_info) == 0:
             res_body = {"code": "9999", "message": "デバイス情報が存在しません。"}
             respons["statusCode"] = 500
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons
         device_info = device_info[0]
-        print("device_info", end=": ")
-        print(device_info)
+        logger.info("device_info", end=": ")
+        logger.info(device_info)
 
         ### 5. 制御中判定
         # 要求番号取得
@@ -155,8 +147,8 @@ def lambda_handler(event, context):
         do_no = int(val_result["path_params"]["do_no"])
         req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
         if req_no_count_info:
-            print("req_no_count_info", end=": ")
-            print(req_no_count_info)
+            logger.info("req_no_count_info", end=": ")
+            logger.info(req_no_count_info)
 
             # 最新制御情報取得
             latest_req_num = convert.decimal_default_proc(req_no_count_info["num"])
@@ -171,14 +163,14 @@ def lambda_handler(event, context):
                 respons["body"] = json.dumps(res_body, ensure_ascii=False)
                 return respons
             remote_control_latest = remote_control_latest[0]
-            print("remote_control_latest", end=": ")
-            print(remote_control_latest)
+            logger.info("remote_control_latest", end=": ")
+            logger.info(remote_control_latest)
 
             # 制御中判定
             if ("recv_datetime" not in remote_control_latest) or (
                 remote_control_latest["recv_datetime"] == 0
             ):
-                print(
+                logger.info(
                     "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
                 )
                 __register_hist_info(
@@ -199,7 +191,7 @@ def lambda_handler(event, context):
 
         else:
             ### 6. 要求番号生成（カウント0 のレコード作成し、カウント0 の端末要求番号を生成）
-            print("req_no_count_info did not exist. Put req_no_count_info to table")
+            logger.info("req_no_count_info did not exist. Put req_no_count_info to table")
             req_num = 0
             write_items = [
                 {
@@ -225,15 +217,11 @@ def lambda_handler(event, context):
         do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
         if do_info["do_control"] == "open":
             do_control = "00"
-            do_specified_time = convert.decimal_default_proc(
-                do_info["do_specified_time"]
-            )
+            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
             do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
         elif do_info["do_control"] == "close":
             do_control = "01"
-            do_specified_time = convert.decimal_default_proc(
-                do_info["do_specified_time"]
-            )
+            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
             do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
         elif do_info["do_control"] == "toggle":
             do_control = "10"
@@ -252,20 +240,18 @@ def lambda_handler(event, context):
             "DO_Control": do_control,
             "DO_ControlTime": do_control_time,
         }
-        print("Iot Core Message", end=": ")
-        print(payload)
+        logger.info("Iot Core Message", end=": ")
+        logger.info(payload)
 
         pubhex = "".join(payload.values())
         # pubhex = "000C80020000000001100000"
-        print("Iot Core Message(hexadecimal)", end=": ")
-        print(pubhex)
+        logger.info("Iot Core Message(hexadecimal)", end=": ")
+        logger.info(pubhex)
 
         # AWS Iot Core へメッセージ送信
-        iot_result = iot.publish(
-            topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex)
-        )
-        print("iot_result", end=": ")
-        print(iot_result)
+        iot_result = iot.publish(topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex))
+        logger.info("iot_result", end=": ")
+        logger.info(iot_result)
 
         # 要求データを接点出力制御応答TBLへ登録
         device_req_no = icc_id + "-" + req_no
@@ -307,16 +293,16 @@ def lambda_handler(event, context):
             InvocationType="Event",
             Payload=json.dumps(payload, ensure_ascii=False),
         )
-        print("lambda_invoke_result", end=": ")
-        print(lambda_invoke_result)
+        logger.info("lambda_invoke_result", end=": ")
+        logger.info(lambda_invoke_result)
 
         ### 9. メッセージ応答
         res_body = {"code": "0000", "message": "", "device_req_no": device_req_no}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
@@ -348,8 +334,7 @@ def __register_hist_info(
     )
     if len(group_device_list) != 0:
         group_id_list = [
-            re.sub("^g-", "", group_device_info["key1"])
-            for group_device_info in group_device_list
+            re.sub("^g-", "", group_device_info["key1"]) for group_device_info in group_device_list
         ]
         for group_id in group_id_list:
             group_info = db.get_group_info(group_id, group_table)
@@ -358,18 +343,16 @@ def __register_hist_info(
                 respons["statusCode"] = 500
                 respons["body"] = json.dumps(result, ensure_ascii=False)
                 return respons
-            print("group_info", end=": ")
-            print(group_info)
+            logger.info("group_info", end=": ")
+            logger.info(group_info)
             group_list.append(
                 {
                     "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"][
-                        "group_name"
-                    ],
+                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
                 }
             )
     else:
-        print("The group containing the device did not exist.")
+        logger.info("The group containing the device did not exist.")
         group_list.append({"group_id": "", "group_name": ""})
 
     # メール通知
@@ -409,7 +392,7 @@ def __register_hist_info(
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
-    print("put_items", end=": ")
-    print(put_items)
+    logger.info("put_items", end=": ")
+    logger.info(put_items)
 
     return True, result

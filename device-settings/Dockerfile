@@ -1,6 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.12
 
-COPY ./remote-control-state-change/requirements.txt  .
-RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+COPY ../_local-dev-files/layer/common_functions_layer/python /opt/python
+COPY ./device-settings/requirements.txt  .
+RUN  pip3 install -r requirements.txt --target /opt/python
 
 CMD ["lambda_function.lambda_handler"]

@@ -1,8 +1,8 @@
 import os
 import json
-import logging
 import traceback
 import boto3
+from aws_lambda_powertools import Logger
 
 # layer
 import ssm
@@ -10,7 +10,7 @@ import validate
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 # 環境変数
 parameter = None
@@ -27,10 +27,9 @@ respons = {
 }
 # AWSリソース定義
 dynamodb = boto3.resource(
-    "dynamodb",
-    region_name=AWS_DEFAULT_REGION,
-    endpoint_url=os.environ.get("endpoint_url")
+    "dynamodb", region_name=AWS_DEFAULT_REGION, endpoint_url=os.environ.get("endpoint_url")
 )
+
 
 def lambda_handler(event, context):
     try:
@@ -40,7 +39,7 @@ def lambda_handler(event, context):
             ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(ssm_params)
         else:
-            print("parameter already exists. pass get_ssm_parameter")
+            logger.info("parameter already exists. pass get_ssm_parameter")
 
         account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
         user_table = dynamodb.Table(parameter["USER_TABLE"])
@@ -49,7 +48,7 @@ def lambda_handler(event, context):
         # 入力情報のバリデーションチェック
         val_result = validate.validate(event, user_table)
         if val_result["code"] != "0000":
-            print("Error in validation check of input information.")
+            logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
@@ -71,29 +70,23 @@ def lambda_handler(event, context):
             {
                 "Update": {
                     "TableName": parameter["USER_TABLE"],
-                    "Key": {
-                        "user_id": {"S": user_info["user_id"]}
-                    },
+                    "Key": {"user_id": {"S": user_info["user_id"]}},
                     "UpdateExpression": "set #s = :s",
-                    "ExpressionAttributeNames": {"#s" : "user_data"},
-                    "ExpressionAttributeValues": {":s" : af_user_data}
+                    "ExpressionAttributeNames": {"#s": "user_data"},
+                    "ExpressionAttributeValues": {":s": af_user_data},
                 }
             }
         ]
-        print(transact_items)
+        logger.info(transact_items)
         result = db.execute_transact_write_item(transact_items)
 
         ### 3. メッセージ応答
-        res_body = {
-            "code": "0000",
-            "message": "",
-            "device_list": body["device_list"]
-        }
+        res_body = {"code": "0000", "message": "", "device_list": body["device_list"]}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)

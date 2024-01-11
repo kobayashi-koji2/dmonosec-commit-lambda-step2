@@ -1,49 +1,44 @@
 import json
 import boto3
-import logging
+
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
+
 
 # パラメータチェック
-def validate(event,tables):
+def validate(event, tables):
     try:
-        #1.1 入力情報チェック
+        # 1.1 入力情報チェック
         decoded_idtoken = convert.decode_idtoken(event)
-        #1.2 トークンからユーザー情報取得
-        user_id = decoded_idtoken['cognito:username']
-        #contract_id = decode_idtoken['contract_id'] #フェーズ2
-    except  Exception as e:
+        # 1.2 トークンからユーザー情報取得
+        user_id = decoded_idtoken["cognito:username"]
+        # contract_id = decode_idtoken['contract_id'] #フェーズ2
+    except Exception as e:
         logger.error(e)
-        return {
-            'code':'9999',
-            'messege':'トークンの検証に失敗しました。'
-        }
-    #1.3 ユーザー権限確認
-    '''
+        return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
+    # 1.3 ユーザー権限確認
+    """
     account_info = db.get_account_info(user_id,tables['account_table'])
-    print(account_info)
+    logger.info(account_info)
     if len(account_info['Items']) == 0:
         return {
             'code':'9999',
             'messege':'アカウント情報が存在しません。'
         }
     account_id = account_info['Items'][0]['account_id']
-    '''
-    #モノセコムユーザ管理テーブル取得
-    user_info = db.get_user_info_by_user_id(user_id,tables['user_table'])
+    """
+    # モノセコムユーザ管理テーブル取得
+    user_info = db.get_user_info_by_user_id(user_id, tables["user_table"])
     if "Item" not in user_info:
-        return {
-            'code':'9999',
-            'messege':'ユーザ情報が存在しません。'
-        }
-    contract_info = db.get_contract_info(user_info['Item']['contract_id'], tables['contract_table'])
+        return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
+    contract_info = db.get_contract_info(
+        user_info["Item"]["contract_id"], tables["contract_table"]
+    )
     if "Item" not in contract_info:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    return {
-        'code':'0000',
-        'user_info':user_info
-    }
+    return {"code": "0000", "user_info": user_info}

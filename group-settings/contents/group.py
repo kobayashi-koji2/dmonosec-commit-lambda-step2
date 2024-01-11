@@ -1,6 +1,12 @@
 import uuid
+
+from aws_lambda_powertools import Logger
+
 import db
 import convert
+
+
+logger = Logger()
 
 
 def generate_group_id():
@@ -143,9 +149,7 @@ def update_group_info(
     # デバイス管理テーブル更新用オブジェクト作成
     #################################################
     # グループ更新前のデバイス一覧
-    relation_list = db.get_device_relation(
-        "g-" + group_id, device_relation_table, sk_prefix="d-"
-    )
+    relation_list = db.get_device_relation("g-" + group_id, device_relation_table, sk_prefix="d-")
     device_list_old = [relation["key2"][2:] for relation in relation_list]
 
     # グループから削除されたデバイス
@@ -160,7 +164,7 @@ def update_group_info(
                 },
             }
         }
-        print(remove_device)
+        logger.info(remove_device)
         transact_items.append(remove_device)
 
     # グループに追加されたデバイス

@@ -1,6 +1,11 @@
+from aws_lambda_powertools import Logger
+
 # layer
 import db
 import convert
+
+logger = Logger()
+
 
 # パラメータチェック
 def validate(event, user_table):

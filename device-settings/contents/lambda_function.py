@@ -2,12 +2,12 @@ import json
 import boto3
 import validate
 import os
-import logging
 import re
 import ddb
 from botocore.exceptions import ClientError
 import traceback
 from decimal import Decimal
+from aws_lambda_powertools import Logger
 
 # layer
 import db
@@ -15,7 +15,7 @@ import convert
 import ssm
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
@@ -27,12 +27,12 @@ def lambda_handler(event, context):
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print("try ssm get parameter")
+            logger.info("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print("tried ssm get parameter")
+            logger.info("tried ssm get parameter")
         else:
-            print("passed ssm get parameter")
+            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
@@ -65,12 +65,12 @@ def lambda_handler(event, context):
         device_id = validate_result["device_id"]
         imei = body["device_imei"]
         convert_param = convert.float_to_decimal(body)
-        print(f"デバイスID:{device_id}")
-        print(f"IMEI:{imei}")
+        logger.info(f"デバイスID:{device_id}")
+        logger.info(f"IMEI:{imei}")
         try:
             ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
         except ClientError as e:
-            print(f"デバイス設定更新エラー e={e}")
+            logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"code": "9999", "message": "デバイス設定の更新に失敗しました。"}
             return {
                 "statusCode": 500,
@@ -125,15 +125,15 @@ def lambda_handler(event, context):
                 "ai_list": device_info_config.get("terminal_settings", {}).get("ai_list", {}),
             }
         )
-        print(f"レスポンス:{res_body}")
+        logger.info(f"レスポンス:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
             "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
