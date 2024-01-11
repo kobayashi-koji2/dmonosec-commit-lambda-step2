@@ -1,8 +1,13 @@
 import re
 
+from aws_lambda_powertools import Logger
+
 # layer
 import db
 import convert
+
+logger = Logger()
+
 
 # パラメータチェック
 def validate(event, account_table, user_table):
@@ -20,15 +25,15 @@ def validate(event, account_table, user_table):
     if not "Items" in account_info:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
     account_info = account_info["Items"][0]
-    print("account_info", end=": ")
-    print(account_info)
+    logger.info("account_info", end=": ")
+    logger.info(account_info)
 
     user_info = db.get_user_info_by_user_id(auth_id, user_table)
     if not "Item" in user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
     user_info = user_info["Item"]
-    print("user_info", end=": ")
-    print(user_info)
+    logger.info("user_info", end=": ")
+    logger.info(user_info)
 
     # 入力値チェック
     path_params = event.get("pathParameters", {})
@@ -41,10 +46,10 @@ def validate(event, account_table, user_table):
     if "do_no" not in path_params:
         return {"code": "9999", "messege": "パスパラメータが不正です。"}
     # デバイスIDの型チェック（半角英数字 & ハイフン）
-    if not re.compile(r'^[a-zA-Z0-9\-]+$').match(path_params["device_id"]):
+    if not re.compile(r"^[a-zA-Z0-9\-]+$").match(path_params["device_id"]):
         return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
     # 接点出力端子番号の型チェック（半角英数字）
-    if not re.compile(r'^[a-zA-Z0-9]+$').match(path_params["do_no"]):
+    if not re.compile(r"^[a-zA-Z0-9]+$").match(path_params["do_no"]):
         return {"code": "9999", "messege": "不正な接点出力端子番号が指定されています。"}
 
     return {

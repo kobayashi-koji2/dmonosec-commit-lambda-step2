@@ -2,20 +2,19 @@ import json
 import boto3
 import validate
 import os
-import logging
 import re
 import ddb
 from botocore.exceptions import ClientError
 import traceback
 from decimal import Decimal
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 import ssm
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
@@ -34,12 +33,9 @@ def lambda_handler(event, context):
                 "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
                 "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
-                "device_relation_table": dynamodb.Table(
-                    ssm.table_names["DEVICE_RELATION_TABLE"]
-                ),
+                "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -59,14 +55,12 @@ def lambda_handler(event, context):
         device_id = validate_result["device_id"]
         imei = body["device_imei"]
         convert_param = convert.float_to_decimal(body)
-        print(f"デバイスID:{device_id}")
-        print(f"IMEI:{imei}")
+        logger.info(f"デバイスID:{device_id}")
+        logger.info(f"IMEI:{imei}")
         try:
-            ddb.update_device_settings(
-                device_id, imei, convert_param, tables["device_table"]
-            )
+            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
         except ClientError as e:
-            print(f"デバイス設定更新エラー e={e}")
+            logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"code": "9999", "message": "デバイス設定の更新に失敗しました。"}
             return {
                 "statusCode": 500,
@@ -77,9 +71,9 @@ def lambda_handler(event, context):
             }
         else:
             # デバイス設定取得
-            device_info = ddb.get_device_info_by_id_imei(
-                device_id, imei, tables["device_table"]
-            )["Item"]
+            device_info = ddb.get_device_info_by_id_imei(device_id, imei, tables["device_table"])[
+                "Item"
+            ]
             device_info_param = device_info.get("device_data", {}).get("param", {})
             device_info_config = device_info.get("device_data", {}).get("config", {})
 
@@ -93,16 +87,12 @@ def lambda_handler(event, context):
             )
             for item1 in device_group_relation:
                 item1 = item1["key1"]
-                group_info = db.get_group_info(
-                    re.sub("^g-", "", item1), tables["group_table"]
-                )
+                group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
                 if "Item" in group_info:
                     group_list.append(
                         {
                             "group_id": group_info["Item"]["group_id"],
-                            "group_name": group_info["Item"]["group_data"]["config"][
-                                "group_name"
-                            ],
+                            "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
                         }
                     )
 
@@ -117,38 +107,28 @@ def lambda_handler(event, context):
                 "device_imei": device_info["imei"],
                 "device_type": device_info["device_type"],
                 "group_list": group_list,
-                "di_list": device_info_config.get("terminal_settings", {}).get(
-                    "di_list", {}
-                ),
-                "do_list": device_info_config.get("terminal_settings", {}).get(
-                    "do_list", {}
-                ),
+                "di_list": device_info_config.get("terminal_settings", {}).get("di_list", {}),
+                "do_list": device_info_config.get("terminal_settings", {}).get("do_list", {}),
                 "do_timer_list": device_info_config.get("terminal_settings", {}).get(
                     "do_timer_list", {}
                 ),
-                "ai_list": device_info_config.get("terminal_settings", {}).get(
-                    "ai_list", {}
-                ),
+                "ai_list": device_info_config.get("terminal_settings", {}).get("ai_list", {}),
             }
         )
-        print(f"レスポンス:{res_body}")
+        logger.info(f"レスポンス:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
 
 

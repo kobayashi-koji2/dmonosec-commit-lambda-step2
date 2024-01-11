@@ -1,9 +1,9 @@
 import json
 import os
 import boto3
-import logging
 import traceback
 
+from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
 
 import ssm
@@ -16,8 +16,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -33,11 +32,8 @@ def lambda_handler(event, context):
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
-            device_relation_table = dynamodb.Table(
-                ssm.table_names["DEVICE_RELATION_TABLE"]
-            )
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -65,8 +61,8 @@ def lambda_handler(event, context):
             )
             for relation in relation_list:
                 device_id = relation["key2"][2:]
-                print(device_id)
-                print(db.get_device_info(device_id, device_table))
+                logger.info(device_id)
+                logger.info(db.get_device_info(device_id, device_table))
                 device_info = db.get_device_info(device_id, device_table)
                 if not device_info:
                     continue
@@ -79,8 +75,8 @@ def lambda_handler(event, context):
                     }
                 )
         except ClientError as e:
-            print(e)
-            print(traceback.format_exc())
+            logger.info(e)
+            logger.info(traceback.format_exc())
             body = {"code": "9999", "message": "グループ一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
@@ -91,22 +87,18 @@ def lambda_handler(event, context):
             "code": "0000",
             "message": "",
             "group_id": group_info.get("group_id", {}),
-            "group_name": group_info.get("group_data", {})
-            .get("config", {})
-            .get("group_name", {}),
+            "group_name": group_info.get("group_data", {}).get("config", {}).get("group_name", {}),
             "device_list": device_list,
         }
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            )
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
             #'body':res_body
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,

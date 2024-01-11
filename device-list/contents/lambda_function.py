@@ -1,11 +1,11 @@
 import json
 import os
 import boto3
-import logging
 import ddb
 import validate
 import re
 from botocore.exceptions import ClientError
+from aws_lambda_powertools import Logger
 
 dynamodb = boto3.resource("dynamodb")
 from boto3.dynamodb.conditions import Key
@@ -18,12 +18,11 @@ import convert
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 region_name = os.environ.get("AWS_REGION")
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
-    print(region_name)
+    logger.info(region_name)
     try:
         res_headers = {
             "Content-Type": "application/json",
@@ -38,15 +37,10 @@ def lambda_handler(event, context):
                 "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
                 "account_table": dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
-                "pre_register_table": dynamodb.Table(
-                    ssm.table_names["PRE_REGISTER_DEVICE_TABLE"]
-                ),
-                "device_relation_table": dynamodb.Table(
-                    ssm.table_names["DEVICE_RELATION_TABLE"]
-                ),
+                "pre_register_table": dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"]),
+                "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -68,10 +62,10 @@ def lambda_handler(event, context):
         user_id = user_info["user_id"]
         user_type = user_info["user_type"]
         contract_id = user_info["contract_id"]
-        # print(user_id,user_type,contract_id)
-        print(f"ユーザ情報:{user_info}")
+        # logger.info(user_id,user_type,contract_id)
+        logger.info(f"ユーザ情報:{user_info}")
 
-        print(f"権限:{user_type}")
+        logger.info(f"権限:{user_type}")
         device_id_list = []
         ##################
         # 3 デバイスID一覧取得(権限が管理者・副管理者の場合)
@@ -87,9 +81,7 @@ def lambda_handler(event, context):
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             device_id_list = (
-                contract_info.get("Item", {})
-                .get("contract_data", {})
-                .get("device_list", [])
+                contract_info.get("Item", {}).get("contract_data", {}).get("device_list", [])
             )
 
         ##################
@@ -100,7 +92,7 @@ def lambda_handler(event, context):
             device_relation = db.get_device_relation(
                 f"u-{user_id}", tables["device_relation_table"]
             )
-            print(device_relation)
+            logger.info(device_relation)
             for item1 in device_relation:
                 item1 = item1["key2"]
                 # ユーザに紐づくデバイスIDを取得
@@ -122,29 +114,25 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        print(f"デバイスID:{device_id_list}")
+        logger.info(f"デバイスID:{device_id_list}")
 
         ##################
         # デバイス順序更新
         ##################
         # 順序取得
-        device_order = (
-            user_info.get("user_data", {}).get("config", {}).get("device_order", [])
-        )
-        print(f"デバイス順序:{device_order}")
+        device_order = user_info.get("user_data", {}).get("config", {}).get("device_order", [])
+        logger.info(f"デバイス順序:{device_order}")
         # 順序比較
         device_order_update = device_order_comparison(device_order, device_id_list)
         # 順序更新
         if device_order_update:
-            print("try device order update")
-            print(f"最新のデバイス順序:{device_order_update}")
-            res = db.update_device_order(
-                device_order_update, user_id, tables["user_table"]
-            )
-            print("tried device order update")
+            logger.info("try device order update")
+            logger.info(f"最新のデバイス順序:{device_order_update}")
+            res = db.update_device_order(device_order_update, user_id, tables["user_table"])
+            logger.info("tried device order update")
             device_order = device_order_update
         else:
-            print("passed device order update")
+            logger.info("passed device order update")
 
         ##################
         # グループ名一覧取得
@@ -162,14 +150,12 @@ def lambda_handler(event, context):
             # グループIDの抽出とprefixのトリミング
             for item2 in device_group_relation_res:
                 trimmed_prefix.append(re.sub("^g-", "", item2["key1"]))
-            print(f"グループ一覧:{trimmed_prefix}")
-            device_group_relation.append(
-                {"device_id": item1, "group_list": trimmed_prefix}
-            )
+            logger.info(f"グループ一覧:{trimmed_prefix}")
+            device_group_relation.append({"device_id": item1, "group_list": trimmed_prefix})
             all_groups += trimmed_prefix
         all_groups = set(all_groups)
-        print(f"デバイスグループ関連:{device_group_relation}")
-        print(f"重複のないグループID一覧:{all_groups}")
+        logger.info(f"デバイスグループ関連:{device_group_relation}")
+        logger.info(f"重複のないグループID一覧:{all_groups}")
 
         # グループ情報取得
         group_info_list = []
@@ -178,8 +164,8 @@ def lambda_handler(event, context):
             if "Item" in group_info:
                 group_info_list.append(group_info["Item"])
             else:
-                print(f"group information does not exist:{item}")
-        print(f"グループ情報:{group_info_list}")
+                logger.info(f"group information does not exist:{item}")
+        logger.info(f"グループ情報:{group_info_list}")
 
         ##################
         # 6 デバイス一覧生成
@@ -193,7 +179,7 @@ def lambda_handler(event, context):
             if len(device_info["Items"]) == 1:
                 device_info_list.append(device_info["Items"][0])
             elif len(device_info["Items"]) == 0:
-                print(f"device information does not exist:{item1}")
+                logger.info(f"device information does not exist:{item1}")
                 continue
             else:
                 res_body = {
@@ -208,53 +194,35 @@ def lambda_handler(event, context):
 
             # グループID参照
             filtered_device_group_relation = next(
-                (
-                    group
-                    for group in device_group_relation
-                    if group["device_id"] == item1
-                ),
-                {},
+                (group for group in device_group_relation if group["device_id"] == item1), {}
             ).get("group_list", [])
-            print(f"グループID参照:{filtered_device_group_relation}")
+            logger.info(f"グループID参照:{filtered_device_group_relation}")
             # グループ名参照
             for item2 in filtered_device_group_relation:
                 group_name_list.append(
-                    next(
-                        (
-                            group
-                            for group in group_info_list
-                            if group["group_id"] == item2
-                        ),
-                        {},
-                    )
+                    next((group for group in group_info_list if group["group_id"] == item2), {})
                     .get("group_data", {})
                     .get("config", {})
                     .get("group_name", "")
                 )
-            print(f"グループ名:{group_name_list}")
+            logger.info(f"グループ名:{group_name_list}")
             # デバイス現状態取得
-            device_state = db.get_device_state(item1, tables["device_state_table"]).get(
-                "Item", {}
-            )
+            device_state = db.get_device_state(item1, tables["device_state_table"]).get("Item", {})
             if "Item" not in device_state:
-                print(f"device current status information does not exist:{item1}")
+                logger.info(f"device current status information does not exist:{item1}")
 
             # デバイス一覧生成
             device_list.append(
                 {
                     "device_id": item1,
-                    "device_name": device_info["Items"][0]["device_data"]["config"][
-                        "device_name"
-                    ],
+                    "device_name": device_info["Items"][0]["device_data"]["config"]["device_name"],
                     "device_imei": device_info["Items"][0]["imei"],
                     "group_name_list": group_name_list,
                     "device_order": order,
                     "signal_status": device_state.get("signal_status", ""),
                     "battery_near_status": device_state.get("battery_near_status", ""),
                     "device_abnormality": device_state.get("device_abnormality", ""),
-                    "parameter_abnormality": device_state.get(
-                        "parameter_abnormality", ""
-                    ),
+                    "parameter_abnormality": device_state.get("parameter_abnormality", ""),
                     "fw_update_abnormality": device_state.get("fw_abnormality", ""),
                     "device_unhealthy": "",  # フェーズ2
                     "di_unhealthy": "",  # フェーズ2
@@ -281,16 +249,14 @@ def lambda_handler(event, context):
         elif user_type == "worker" or user_type == "referrer":
             res_body = {"code": "0000", "message": "", "device_list": device_list}
 
-        print(f"レスポンス:{res_body}")
+        logger.info(f"レスポンス:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
+        logger.info(e)
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
@@ -305,11 +271,11 @@ def device_order_comparison(device_order, device_id_list):
         return False
     if set(device_order) - set(device_id_list):
         diff1 = list(set(device_order) - set(device_id_list))
-        print(f"diff1:{diff1}")
+        logger.info(f"diff1:{diff1}")
         device_order = [item for item in device_order if item not in diff1]
     if set(device_id_list) - set(device_order):
         diff2 = list(set(device_id_list) - set(device_order))
-        print(f"diff2:{diff2}")
+        logger.info(f"diff2:{diff2}")
         device_order = device_order + diff2
-    print(device_order)
+    logger.info(device_order)
     return device_order

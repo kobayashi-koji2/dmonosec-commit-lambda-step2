@@ -1,8 +1,8 @@
 import json
-import logging
 import traceback
 import os
 
+from aws_lambda_powertools import Logger
 import boto3
 import ssm
 
@@ -11,7 +11,7 @@ import validate
 import ddb
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
-parameter = None
+logger = Logger()
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
@@ -26,11 +26,8 @@ def lambda_handler(event, context):
         try:
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(
-                ssm.table_names["DEVICE_RELATION_TABLE"]
-            )
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -39,7 +36,7 @@ def lambda_handler(event, context):
             }
         # パラメータチェック
         validate_result = validate.validate(event, contract_table, user_table)
-        print(validate_result)
+        logger.info(validate_result)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
@@ -65,19 +62,15 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }

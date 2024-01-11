@@ -1,12 +1,13 @@
 import json
 import boto3
-import logging
+
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 # パラメータチェック
@@ -25,7 +26,7 @@ def validate(event, user_table):
     user_info = db.get_user_info_by_user_id(user_id, user_table)
     if not "Item" in user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    
+
     # リクエストボディのバリデーション
     body = json.loads(event.get("body", {}))
     if not body:
@@ -50,5 +51,5 @@ def validate(event, user_table):
         "code": "0000",
         "user_info": user_info,
         "decoded_idtoken": decoded_idtoken,
-        "req_body":body
+        "req_body": body,
     }

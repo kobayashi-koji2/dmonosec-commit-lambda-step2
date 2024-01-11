@@ -4,8 +4,8 @@ import uuid
 import boto3
 import time
 import json
-import logging
 from datetime import datetime
+from aws_lambda_powertools import Logger
 
 """
 MONOSC_MAIL_FROM = os.environ["MONOSC_MAIL_FROM"]
@@ -24,35 +24,36 @@ TURN_ON_MAIL_TEMPLATE = os.environ["TURN_ON_MAIL_TEMPLATE"]
 REMOTE_CONTROL_MAIL_TEMPLATE = os.environ["REMOTE_CONTROL_MAIL_TEMPLATE"]
 """
 
-logger = logging.getLogger()
+logger = Logger()
+
 
 def diNameToState(terminal_state_name, device_info):
-	di_list = device_info['device_data']['config']['terminal_settings']['di_list']
-	for di in di_list:
-		if di['di_on_name'] == terminal_state_name:
-			di_state = 1
-			break
-		elif di['di_off_name'] == terminal_state_name:
-			di_state = 0
-			break
-	return di_state
+    di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
+    for di in di_list:
+        if di["di_on_name"] == terminal_state_name:
+            di_state = 1
+            break
+        elif di["di_off_name"] == terminal_state_name:
+            di_state = 0
+            break
+    return di_state
 
 
 def doNameToState(terminal_state_name, device_info):
-	do_list = device_info['device_data']['config']['terminal_settings']['do_list']
-	for do in do_list:
-		if do['do_on_name'] == terminal_state_name:
-			do_state = 1
-			break
-		elif do['do_off_name'] == terminal_state_name:
-			do_state = 0
-			break
-	return do_state
+    do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+    for do in do_list:
+        if do["do_on_name"] == terminal_state_name:
+            do_state = 1
+            break
+        elif do["do_off_name"] == terminal_state_name:
+            do_state = 0
+            break
+    return do_state
 
 
 def mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table):
-	logger.debug(f'mailNotice開始 hist_list={hist_list} device_info={device_info}')
-	"""
+    logger.debug(f"mailNotice開始 hist_list={hist_list} device_info={device_info}")
+    """
 	# 通知設定チェック
 	if device_info['device_data']['config']['notification_settings'] is None or\
 		  len(device_info['device_data']['config']['notification_settings']) == 0:
@@ -167,5 +168,5 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
 				# 履歴一覧編集
 				hist_data[i]['hist_data']['notification_hist_id'] = notice_hist_info['notification_hist_id']
 	"""
-	logger.debug(f'mailNotice終了 hist_list={hist_list}')
-	return hist_list
+    logger.debug(f"mailNotice終了 hist_list={hist_list}")
+    return hist_list

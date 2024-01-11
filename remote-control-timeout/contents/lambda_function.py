@@ -1,10 +1,10 @@
 import json
 import os
-import logging
 import traceback
 from decimal import Decimal
 import time
 
+from aws_lambda_powertools import Logger
 import boto3
 from botocore.exceptions import ClientError
 
@@ -13,8 +13,7 @@ import convert
 import ddb
 import validate
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
@@ -30,18 +29,13 @@ def lambda_handler(event, context):
         try:
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(
-                ssm.table_names["DEVICE_RELATION_TABLE"]
-            )
-            remote_controls_table = dynamodb.Table(
-                ssm.table_names["REMOTE_CONTROL_TABLE"]
-            )
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
             cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -100,9 +94,7 @@ def lambda_handler(event, context):
             remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
         )
         if not [
-            cnt_hist
-            for cnt_hist in cnt_hist_list
-            if cnt_hist.get("di_trigger") == link_di_no
+            cnt_hist for cnt_hist in cnt_hist_list if cnt_hist.get("di_trigger") == link_di_no
         ]:
             # TODO メール通知
 
@@ -118,7 +110,7 @@ def lambda_handler(event, context):
             )
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         raise Exception(json.dumps(res_body))

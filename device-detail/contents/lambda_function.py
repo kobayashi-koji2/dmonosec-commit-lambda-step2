@@ -5,10 +5,10 @@ import generate_detail
 import ddb
 import os
 import re
-import logging
 from botocore.exceptions import ClientError
 from decimal import Decimal
 import traceback
+from aws_lambda_powertools import Logger
 
 # layer
 import db
@@ -19,8 +19,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -38,12 +37,9 @@ def lambda_handler(event, context):
                 "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
                 "account_table": dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
-                "device_relation_table": dynamodb.Table(
-                    ssm.table_names["DEVICE_RELATION_TABLE"]
-                ),
+                "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -62,16 +58,14 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
         device_id = validate_result["device_id"]
-        print(f"デバイスID:{device_id}")
+        logger.info(f"デバイスID:{device_id}")
 
         ##################
         # 4 デバイス情報取得
         ##################
         try:
             # 4.1 デバイス設定取得
-            device_info = ddb.get_device_info(device_id, tables["device_table"]).get(
-                "Items", {}
-            )
+            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
             if len(device_info) == 0:
                 res_body = {"code": "9999", "message": "デバイス情報が存在しません。"}
                 return {
@@ -90,9 +84,9 @@ def lambda_handler(event, context):
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             # 4.2 デバイス現状態取得
-            device_state = db.get_device_state(
-                device_id, tables["device_state_table"]
-            ).get("Item", {})
+            device_state = db.get_device_state(device_id, tables["device_state_table"]).get(
+                "Item", {}
+            )
             # 4.3 グループ情報取得
             group_info_list = []
             device_group_relation = db.get_device_relation(
@@ -101,39 +95,33 @@ def lambda_handler(event, context):
                 sk_prefix="g-",
                 gsi_name="key2_index",
             )
-            print(device_group_relation)
+            logger.info(device_group_relation)
             for item1 in device_group_relation:
                 item1 = item1["key1"]
-                group_info = db.get_group_info(
-                    re.sub("^g-", "", item1), tables["group_table"]
-                )
+                group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
                 if "Item" in group_info:
                     group_info_list.append(group_info["Item"])
             # 4.4 デバイス詳細情報生成
             res_body = num_to_str(
-                generate_detail.get_device_detail(
-                    device_info[0], device_state, group_info_list
-                )
+                generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
             )
         except ClientError as e:
-            print(e)
+            logger.info(e)
             body = {"code": "9999", "message": "デバイス詳細の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
-        print(f"レスポンスボディ:{res_body}")
+        logger.info(f"レスポンスボディ:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,

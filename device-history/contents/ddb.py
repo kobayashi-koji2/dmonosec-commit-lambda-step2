@@ -1,12 +1,14 @@
 import json
 from datetime import datetime
 
+from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from operator import itemgetter
 from decimal import Decimal
 
 
+logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client("dynamodb", region_name="ap-northeast-1")
 
@@ -27,7 +29,7 @@ DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
 # - グループID :'g-'
 ###################################
 def get_user_device_group_table(pk, table, **kwargs):
-    print(f"pk:{pk}")
+    logger.info(f"pk:{pk}")
     if "gsi_name" in kwargs:
         # GSI PK & SK(識別子で始まる)検索
         if "sk_prefix" in kwargs:
@@ -51,9 +53,7 @@ def get_user_device_group_table(pk, table, **kwargs):
 
         # PK検索
         else:
-            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get(
-                "Items", {}
-            )
+            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get("Items", {})
 
     return response
 
@@ -79,10 +79,8 @@ def get_hist_list(hist_list_table_table, params):
         res = hist_list_table_table.query(
             IndexName="event_datetime_index",
             KeyConditionExpression=Key("device_id").eq(device_id) & sortkeyExpression,
-            FilterExpression=Attr("hist_data.event_type").is_in(
-                params["event_type_list"]
-            ),
+            FilterExpression=Attr("hist_data.event_type").is_in(params["event_type_list"]),
         )
         hist_list.extend(res["Items"])
-    print(hist_list)
+    logger.info(hist_list)
     return sorted(hist_list, key=lambda x: x["event_datetime"])

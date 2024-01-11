@@ -2,7 +2,10 @@ import os
 import secrets
 import string
 
+from aws_lambda_powertools import Logger
 import boto3
+
+logger = Logger()
 
 
 def get_random_password_string(length):

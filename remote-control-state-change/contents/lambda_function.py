@@ -1,9 +1,9 @@
 import json
-import logging
 import os
 import time
 import traceback
 
+from aws_lambda_powertools import Logger
 import boto3
 
 import ddb
@@ -14,8 +14,7 @@ import db
 import ssm
 
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
@@ -33,15 +32,10 @@ def lambda_handler(event, context):
         try:
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(
-                ssm.table_names["DEVICE_RELATION_TABLE"]
-            )
-            remote_control_table = dynamodb.Table(
-                ssm.table_names["REMOTE_CONTROL_TABLE"]
-            )
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
             cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -52,7 +46,7 @@ def lambda_handler(event, context):
         # 入力情報のバリデーションチェック
         validate_result = validate.validate(event, user_table)
         if validate_result["code"] != "0000":
-            print("Error in validation check of input information.")
+            logger.info("Error in validation check of input information.")
             return {
                 "statusCode": 200,
                 "headers": response_headers,
@@ -61,25 +55,23 @@ def lambda_handler(event, context):
 
         # トークンからユーザー情報取得
         user_info = validate_result["user_info"]
-        print(user_info)
+        logger.info(user_info)
 
         # 権限が参照者の場合はエラー
         if user_info["user_type"] == "referrer":
             return {
                 "statusCode": 200,
                 "headers": response_headers,
-                "body": json.dumps(
-                    {"code": "9999", "message": "権限がありません。"}, ensure_ascii=False
-                ),
+                "body": json.dumps({"code": "9999", "message": "権限がありません。"}, ensure_ascii=False),
             }
 
         # 通信制御情報取得
         user_id = user_info["user_id"]
         device_req_no = event["pathParameters"]["device_req_no"]
-        print(f"device_req_no: {device_req_no}")
+        logger.info(f"device_req_no: {device_req_no}")
         remote_control = db.get_remote_control(device_req_no, remote_control_table)
 
-        print(f"remote_control: {remote_control}")
+        logger.info(f"remote_control: {remote_control}")
 
         if remote_control is None:
             return {
@@ -93,10 +85,8 @@ def lambda_handler(event, context):
         device_id = remote_control["device_id"]
 
         # デバイス操作権限チェック（共通）
-        contract = db.get_contract_info(user_info["contract_id"], contract_table)[
-            "Item"
-        ]
-        print(f"contract: {contract}")
+        contract = db.get_contract_info(user_info["contract_id"], contract_table)["Item"]
+        logger.info(f"contract: {contract}")
         device_id_list_by_contract = contract["contract_data"]["device_list"]
 
         if device_id not in device_id_list_by_contract:
@@ -110,10 +100,8 @@ def lambda_handler(event, context):
 
         # デバイス操作権限チェック（管理者, 副管理者でない場合）
         if user_info["user_type"] not in ["admin", "sub_admin"]:
-            allowed_device_id_list = get_device_id_list_by_user_id(
-                user_id, device_relation_table
-            )
-            print(f"allowed_device_id_list: {allowed_device_id_list}")
+            allowed_device_id_list = get_device_id_list_by_user_id(user_id, device_relation_table)
+            logger.info(f"allowed_device_id_list: {allowed_device_id_list}")
 
             if device_id not in allowed_device_id_list:
                 return {
@@ -130,7 +118,7 @@ def lambda_handler(event, context):
         limit_datetime = recv_datetime + 20000  # 20秒
         control_result = "1"
 
-        print(int(time.time() * 1000))
+        logger.info(int(time.time() * 1000))
         while int(time.time() * 1000) <= limit_datetime:
             cnt_hist_list = ddb.get_cnt_hist_list_by_sim_id(
                 remote_control["iccid"],
@@ -138,7 +126,7 @@ def lambda_handler(event, context):
                 recv_datetime,
                 limit_datetime,
             )
-            print(f"cnt_hist_list: {cnt_hist_list}")
+            logger.info(f"cnt_hist_list: {cnt_hist_list}")
             for cnt_hist in cnt_hist_list:
                 if remote_control["link_di_no"] == cnt_hist["di_trigger"]:
                     control_result = "0"
@@ -164,8 +152,8 @@ def lambda_handler(event, context):
         }
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         return {
             "statusCode": 500,
             "headers": response_headers,

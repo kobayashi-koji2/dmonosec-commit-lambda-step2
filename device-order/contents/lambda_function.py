@@ -1,8 +1,8 @@
 import os
 import json
-import logging
 import traceback
 import boto3
+from aws_lambda_powertools import Logger
 
 # layer
 import ssm
@@ -10,10 +10,9 @@ import validate
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 # 環境変数
-parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 # 正常レスポンス内容
@@ -43,7 +42,7 @@ def lambda_handler(event, context):
         # 入力情報のバリデーションチェック
         val_result = validate.validate(event, user_table)
         if val_result["code"] != "0000":
-            print("Error in validation check of input information.")
+            logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
@@ -72,7 +71,7 @@ def lambda_handler(event, context):
                 }
             }
         ]
-        print(transact_items)
+        logger.info(transact_items)
         result = db.execute_transact_write_item(transact_items)
 
         ### 3. メッセージ応答
@@ -80,8 +79,8 @@ def lambda_handler(event, context):
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)

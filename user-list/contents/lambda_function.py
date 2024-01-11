@@ -1,9 +1,9 @@
 import json
 import os
 import boto3
-import logging
 import traceback
 
+from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
 
 import ssm
@@ -16,8 +16,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -32,7 +31,6 @@ def lambda_handler(event, context):
             account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -52,13 +50,9 @@ def lambda_handler(event, context):
 
         user_list = []
         try:
-            contract_info = db.get_contract_info(
-                login_user["contract_id"], contract_table
-            )
+            contract_info = db.get_contract_info(login_user["contract_id"], contract_table)
             for user_id in (
-                contract_info.get("Item", {})
-                .get("contract_data", {})
-                .get("user_list", {})
+                contract_info.get("Item", {}).get("contract_data", {}).get("user_list", {})
             ):
                 user_info = db.get_user_info_by_user_id(user_id, user_table)
                 user = user_info["Item"]
@@ -75,10 +69,10 @@ def lambda_handler(event, context):
                         "user_type": user.get("user_type"),
                     }
                 )
-                print(user_list)
+                logger.info(user_list)
         except ClientError as e:
-            print(e)
-            print(traceback.format_exc())
+            logger.info(e)
+            logger.info(traceback.format_exc())
             body = {"code": "9999", "message": "ユーザ一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
@@ -89,14 +83,12 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            )
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
             #'body':res_body
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,

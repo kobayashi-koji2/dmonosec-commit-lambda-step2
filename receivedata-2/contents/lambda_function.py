@@ -1,7 +1,6 @@
 import os
 import base64
 import boto3
-import logging
 import ddb
 import json
 import ssm
@@ -10,14 +9,14 @@ import traceback
 import validate
 from datetime import datetime
 from command_parser import commandParser
+from aws_lambda_powertools import Logger
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 INITIAL_LAMBDA_NAME = os.environ["INITIAL_LAMBDA_NAME"]
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -32,33 +31,23 @@ def lambda_handler(event, context):
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
-            notification_hist_table = dynamodb.Table(
-                ssm.table_names["NOTIFICATION_HIST_TABLE"]
-            )
-            device_relation_table = dynamodb.Table(
-                ssm.table_names["DEVICE_RELATION_TABLE"]
-            )
+            notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
-            remote_control_table = dynamodb.Table(
-                ssm.table_names["REMOTE_CONTROL_TABLE"]
-            )
+            remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             logger.error("KeyError")
             return bytes([3])
 
         # サーバー受信日時を取得
         now = datetime.now()
-        szRecvDatetime = int(time.mktime(now.timetuple()) * 1000) + int(
-            now.microsecond / 1000
-        )
+        szRecvDatetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
 
         # 受信データ取り出し
         Payload = base64.standard_b64decode(event["payload"])
         szSimid = context.client_context.custom["simId"]
-        logger.info(
-            f"Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}"
-        )
+        logger.info(f"Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}")
 
         # 入力データチェック
         vali_result = validate.validate(Payload, szSimid, szRecvDatetime, hist_table)
@@ -116,9 +105,7 @@ def lambda_handler(event, context):
 
             # 呼び出し
             boto3.client("lambda").invoke(
-                FunctionName=INITIAL_LAMBDA_NAME,
-                InvocationType="Event",
-                Payload=Payload,
+                FunctionName=INITIAL_LAMBDA_NAME, InvocationType="Event", Payload=Payload
             )
             logger.debug("initialreceive呼び出し")
 

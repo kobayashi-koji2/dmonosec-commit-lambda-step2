@@ -1,12 +1,12 @@
 import json
 import boto3
-import logging
 import traceback
+from aws_lambda_powertools import Logger
 
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 # パラメータチェック
@@ -19,11 +19,11 @@ def validate(event, user_table):
 
     try:
         decoded_idtoken = convert.decode_idtoken(event)
-        print("idtoken:", decoded_idtoken)
+        logger.info("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
         logger.error(e)
-        print(traceback.format_exc())
+        logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
     user_res = db.get_user_info_by_user_id(user_id, user_table)

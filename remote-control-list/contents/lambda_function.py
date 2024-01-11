@@ -1,9 +1,9 @@
-import logging
 import os
 import json
 import traceback
 from decimal import Decimal
 
+from aws_lambda_powertools import Logger
 import boto3
 
 # layer
@@ -11,10 +11,9 @@ import ssm
 import validate
 import db
 
-logger = logging.getLogger()
+logger = Logger()
 
 # 環境変数
-parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 # 正常レスポンス内容
@@ -48,14 +47,14 @@ def lambda_handler(event, context):
         # 入力情報のバリデーションチェック
         val_result = validate.validate(event, user_table)
         if val_result["code"] != "0000":
-            print("Error in validation check of input information.")
+            logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
         # トークンからユーザー情報取得
         user_info = val_result["user_info"]["Item"]
-        print("user_info", end=": ")
-        print(user_info)
+        logger.info("user_info", end=": ")
+        logger.info(user_info)
         # ユーザー権限確認
         # 1月まではいったん、ログインするユーザーIDとモノセコムユーザーIDは同じ認識で直接ユーザー管理より参照する形で実装
         # バリデーションチェックの処理の中でモノセコムユーザー管理より参照しているのでその値を使用
@@ -63,71 +62,60 @@ def lambda_handler(event, context):
         ### 2. デバイスID取得（作業者・参照者の場合）
         device_id_list = list()
         if user_info["user_type"] in ("worker", "referrer"):
-            print("In case of worker/referee")
+            logger.info("In case of worker/referee")
             device_id_list = __get_device_id_in_case_of_worker_or_referee(
                 user_info, device_relation_table
             )
 
         ### 3. デバイスID取得（管理者・副管理者の場合）
         if user_info["user_type"] in ("admin", "sub_admin"):
-            print("In case of admin/sub_admin")
+            logger.info("In case of admin/sub_admin")
             cotract_id = user_info["contract_id"]
             contract_info = db.get_contract_info(cotract_id, contract_table).get("Item")
-            print("contract_info", end=": ")
-            print(contract_info)
+            logger.info("contract_info", end=": ")
+            logger.info(contract_info)
             device_id_list = contract_info["contract_data"]["device_list"]
 
-        print("device_id_list", end=": ")
-        print(device_id_list)
+        logger.info("device_id_list", end=": ")
+        logger.info(device_id_list)
 
         ### 4. 遠隔制御一覧生成
         results = list()
         # デバイス情報取得
         for device_id in device_id_list:
             device_info = db.get_device_info(device_id, device_table)
-            print("device_info", end=": ")
-            print(device_info)
+            logger.info("device_info", end=": ")
+            logger.info(device_info)
 
             if device_info is not None:
                 # 現状態情報取得
-                state_info = db.get_device_state(device_id, device_state_table).get(
-                    "Item"
-                )
-                print("state_info", end=": ")
-                print(state_info)
+                state_info = db.get_device_state(device_id, device_state_table).get("Item")
+                logger.info("state_info", end=": ")
+                logger.info(state_info)
                 device_imei = device_info["imei"]
                 device_name = device_info["device_data"]["config"]["device_name"]
                 # 接点出力一覧
-                do_list = device_info["device_data"]["config"]["terminal_settings"][
-                    "do_list"
-                ]
+                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
                 # 接点入力一覧
-                di_list = device_info["device_data"]["config"]["terminal_settings"][
-                    "di_list"
-                ]
+                di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
 
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
                 for do_info in do_list:
                     res_item = __generate_response_items(
-                        device_id,
-                        device_name,
-                        device_imei,
-                        do_info,
-                        di_list,
-                        state_info,
+                        device_id, device_name, device_imei, do_info, di_list, state_info
                     )
                     results.append(res_item)
 
         ### 5. メッセージ応答
         results = __decimal_to_integer_or_float(results)
-        print("results", end=": ")
-        print(results)
+        logger.info("results", end=": ")
+        logger.info(results)
         res_body = {"code": "0000", "message": "", "remote_control_list": results}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
@@ -139,38 +127,32 @@ def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_tabl
     # ユーザーIDに紐づくグループIDからデバイスIDを取得（デバイス関係TBL）
     quary_item = "u-" + user_info["user_id"]
     kwargs = {"sk_prefix": "g-"}
-    device_relation_results = db.get_device_relation(
-        quary_item, device_relation_table, **kwargs
-    )
-    print("device_relation[g-]", end=": ")
-    print(device_relation_results)
+    device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
+    logger.info("device_relation[g-]", end=": ")
+    logger.info(device_relation_results)
     for group_id in device_relation_results:
         kwargs = {"sk_prefix": "d-"}
         device_relation_results = db.get_device_relation(
             group_id["key2"], device_relation_table, **kwargs
         )
         device_id_list += [item["key2"] for item in device_relation_results]
-        print("device_relation[g-d-]", end=": ")
-        print(device_relation_results)
+        logger.info("device_relation[g-d-]", end=": ")
+        logger.info(device_relation_results)
 
     # ユーザーIDに紐づくデバイスIDを取得（デバイス関係TBL）
     kwargs = {"sk_prefix": "d-"}
-    device_relation_results = db.get_device_relation(
-        quary_item, device_relation_table, **kwargs
-    )
-    print("device_relation[d-]", end=": ")
-    print(device_relation_results)
+    device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
+    logger.info("device_relation[d-]", end=": ")
+    logger.info(device_relation_results)
     device_id_list += [item["key2"] for item in device_relation_results]
     device_id_list = [i[2:] for i in list(dict.fromkeys(device_id_list))]
-    print("device_id_list", end=": ")
-    print(device_id_list)
+    logger.info("device_id_list", end=": ")
+    logger.info(device_id_list)
 
     return device_id_list
 
 
-def __generate_response_items(
-    device_id, device_name, device_imei, do_info, di_list, state_info
-):
+def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info):
     results_item = dict()
     results_item["device_id"] = device_id
     results_item["device_name"] = device_name
@@ -192,9 +174,7 @@ def __generate_response_items(
         results_item["di_state_name"] = ""
         results_item["di_state_icon"] = ""
     else:
-        di_info = list(
-            filter(lambda i: i["di_no"] == do_info["do_di_return"], di_list)
-        )[0]
+        di_info = list(filter(lambda i: i["di_no"] == do_info["do_di_return"], di_list))[0]
         di_number = di_info["di_no"]
         results_item["di_no"] = di_number
 

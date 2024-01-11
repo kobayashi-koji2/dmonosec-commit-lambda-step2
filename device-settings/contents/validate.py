@@ -1,14 +1,14 @@
 import json
 import boto3
 import ddb
-import logging
 import re
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 # パラメータチェック
@@ -23,12 +23,12 @@ def validate(event, tables):
 
     device_id = event["pathParameters"]["device_id"]
     body = json.loads(body)
-    print(f"device_id: {device_id}")
-    print(f"body: {body}")
+    logger.info(f"device_id: {device_id}")
+    logger.info(f"body: {body}")
 
     try:
         decoded_idtoken = convert.decode_idtoken(event)
-        print("idtoken:", decoded_idtoken)
+        logger.info("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
         logger.error(e)
@@ -51,9 +51,9 @@ def validate(event, tables):
     device_info = ddb.get_device_info_by_id_imei(
         device_id, body["device_imei"], tables["device_table"]
     )
-    print(f"device_id: {device_id}")
-    print(f"device_imei: {body['device_imei']}")
-    print(f"device_info: {device_info}")
+    logger.info(f"device_id: {device_id}")
+    logger.info(f"device_imei: {body['device_imei']}")
+    logger.info(f"device_info: {device_info}")
     if "Item" not in device_info:
         return {"code": "9999", "message": "デバイス情報が存在しません。"}
 
@@ -77,8 +77,8 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     contract_id_list = []
     # 2.1 デバイスID一覧取得
     accunt_devices = contract_info["Item"]["contract_data"]["device_list"]
-    print(f"ユーザID:{user_id}")
-    print(f"権限:{user_type}")
+    logger.info(f"ユーザID:{user_id}")
+    logger.info(f"権限:{user_type}")
     if device_id not in accunt_devices:
         return False
 
@@ -203,37 +203,37 @@ def input_check(param):
                         min_value, max_value = int_float_value_limits[key]
                         try:
                             if not float(min_value) <= float(value) <= float(max_value):
-                                print(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                                logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
                                 out_range_list.append(key)
                         except ValueError:
-                            print(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
                             invalid_data_type_list.append(key)
                     # 文字数
                     elif key in str_value_limits:
                         min_length, max_length = str_value_limits[key]
                         string_length = len(value)
                         if not min_length <= string_length <= max_length:
-                            print(f"Key:{key}  value:{value} - reason:文字数の制限を超えています。")
+                            logger.info(f"Key:{key}  value:{value} - reason:文字数の制限を超えています。")
                             out_range_list.append(key)
                     # 文字列フォーマット
                     if key in str_format and value not in str_format[key]:
-                        print(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                        logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
                         invalid_format_list.append(key)
                     # 正規表現
                     if key in regex and not regex[key].match(value):
-                        print(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                        logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
                         invalid_format_list.append(key)
                 # 数値
                 elif isinstance(value, (int, float)):
                     # データ型
                     if key in str_value_limits:
-                        print(f"Key:{key}  value:{value} - reason:データ型が不正です。")
+                        logger.info(f"Key:{key}  value:{value} - reason:データ型が不正です。")
                         invalid_data_type_list.append(key)
                     # 桁数
                     elif key in int_float_value_limits:
                         min_value, max_value = int_float_value_limits[key]
                         if not float(min_value) <= float(value) <= float(max_value):
-                            print(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                            logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
                             out_range_list.append(key)
                 else:
                     check_dict_value(value)

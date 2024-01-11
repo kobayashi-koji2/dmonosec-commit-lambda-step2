@@ -4,15 +4,14 @@ import ssm
 import json
 import boto3
 import traceback
-import logging
 from soracom_func import soracom_sim_terminate_api
+from aws_lambda_powertools import Logger
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def get_params(event):
@@ -34,8 +33,7 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             operator_table = dynamodb.Table(ssm.table_names["OPERATOR_TABLE"])
         except KeyError as e:
-            print("KeyError")
-            parameter = None
+            logger.info("KeyError")
             return -1
 
         # eventからパラメータ取得
@@ -83,12 +81,10 @@ def lambda_handler(event, context):
             logger.debug("旧SIM解約")
 
         # 初期受信日時更新
-        ddb.update_init_recv(
-            device_info["device_id"], device_info["imei"], device_table
-        )
+        ddb.update_init_recv(device_info["device_id"], device_info["imei"], device_table)
         return 0
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         return -1

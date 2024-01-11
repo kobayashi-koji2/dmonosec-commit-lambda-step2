@@ -1,12 +1,14 @@
 import time
+
+from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Key, Attr
+
+logger = Logger()
 
 
 # ICCID管理情報取得
 def get_iccid_info(sim_id, iccid_table):
-    iccid_list = iccid_table.query(
-        KeyConditionExpression=Key("iccid").eq(sim_id)
-    ).get("Items")
+    iccid_list = iccid_table.query(KeyConditionExpression=Key("iccid").eq(sim_id)).get("Items")
     return iccid_list[0] if iccid_list else None
 
 
@@ -21,9 +23,9 @@ def get_device_info(device_id, contract_state, device_table):
 
 # OPID情報取得
 def get_opid_info(operator_table):
-    opid_list = operator_table.query(
-        KeyConditionExpression=Key("service").eq("monosc")
-    ).get("Items")
+    opid_list = operator_table.query(KeyConditionExpression=Key("service").eq("monosc")).get(
+        "Items"
+    )
     return opid_list[0] if opid_list else None
 
 
@@ -31,24 +33,21 @@ def get_opid_info(operator_table):
 def update_init_recv(device_id, imei, device_table):
     contract_state = 1
     init_date = int(time.time() * 1000)
-    
+
     option = {
-        'Key': {
-            'device_id': device_id,
-            'imei': imei,
+        "Key": {
+            "device_id": device_id,
+            "imei": imei,
         },
-        'UpdateExpression': 'set #contract_state = :contract_state,\
-          #device_data.#param.#init_date = :init_date',
-        'ExpressionAttributeNames': {
-            '#contract_state': 'contract_state',
-            '#device_data': 'device_data',
-            '#param': 'param',
-            '#init_date': 'init_date'
+        "UpdateExpression": "set #contract_state = :contract_state,\
+          #device_data.#param.#init_date = :init_date",
+        "ExpressionAttributeNames": {
+            "#contract_state": "contract_state",
+            "#device_data": "device_data",
+            "#param": "param",
+            "#init_date": "init_date",
         },
-        'ExpressionAttributeValues': {
-            ':contract_state': contract_state,
-            ':init_date': init_date
-        }
+        "ExpressionAttributeValues": {":contract_state": contract_state, ":init_date": init_date},
     }
     device_table.update_item(**option)
 
@@ -59,21 +58,18 @@ def update_sim_stop(device_id, imei, device_table):
     del_date = int(time.time() * 1000)
 
     option = {
-        'Key': {
-            'device_id': device_id,
-            'imei': imei,
+        "Key": {
+            "device_id": device_id,
+            "imei": imei,
         },
-        'UpdateExpression': 'set #contract_state = :contract_state,\
-          #device_data.#param.#del_date = :del_date',
-        'ExpressionAttributeNames': {
-            '#contract_state': 'contract_state',
-            '#device_data': 'device_data',
-            '#param': 'param',
-            '#del_date': 'del_date'
+        "UpdateExpression": "set #contract_state = :contract_state,\
+          #device_data.#param.#del_date = :del_date",
+        "ExpressionAttributeNames": {
+            "#contract_state": "contract_state",
+            "#device_data": "device_data",
+            "#param": "param",
+            "#del_date": "del_date",
         },
-        'ExpressionAttributeValues': {
-            ':contract_state': contract_state,
-            ':del_date': del_date
-        }
+        "ExpressionAttributeValues": {":contract_state": contract_state, ":del_date": del_date},
     }
     device_table.update_item(**option)
