@@ -14,7 +14,6 @@ import db
 import ssm
 
 
-parameter = None
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
@@ -29,24 +28,14 @@ response_headers = {
 
 def lambda_handler(event, context):
     try:
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            logger.info("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            logger.info("tried ssm get parameter")
-        else:
-            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            contract_table = dynamodb.Table(parameter["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-            remote_control_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
-            cnt_hist_table = dynamodb.Table(parameter["CNT_HIST_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
+            cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,
@@ -119,7 +108,8 @@ def lambda_handler(event, context):
                     "statusCode": 200,
                     "headers": response_headers,
                     "body": json.dumps(
-                        {"code": "9999", "message": "端末の操作権限がありません。"}, ensure_ascii=False
+                        {"code": "9999", "message": "端末の操作権限がありません。"},
+                        ensure_ascii=False,
                     ),
                 }
 

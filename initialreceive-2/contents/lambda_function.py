@@ -11,7 +11,6 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
 logger = Logger()
 
 
@@ -28,23 +27,13 @@ def validate(params):
 
 def lambda_handler(event, context):
     try:
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            logger.info("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            logger.info("tried ssm get parameter")
-        else:
-            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
-            iccid_table = dynamodb.Table(parameter["ICCID_TABLE"])
-            device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-            operator_table = dynamodb.Table(parameter["OPERATOR_TABLE"])
+            iccid_table = dynamodb.Table(ssm.table_names["ICCID_TABLE"])
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+            operator_table = dynamodb.Table(ssm.table_names["OPERATOR_TABLE"])
         except KeyError as e:
             logger.info("KeyError")
-            parameter = None
             return -1
 
         # eventからパラメータ取得

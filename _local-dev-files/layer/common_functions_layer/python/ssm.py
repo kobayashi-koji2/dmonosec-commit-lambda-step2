@@ -1,4 +1,6 @@
 import os
+import json
+
 import boto3
 
 ssm = boto3.client(
@@ -23,3 +25,18 @@ def get_ssm_params(key):
         response = ssm.get_parameter(Name=key, WithDecryption=True)
         result = response["Parameter"]["Value"]
     return result
+
+
+##################################
+# 初期処理
+# SSMからテーブル名を取得して、モジュールとしてインポート可能にする
+##################################
+def _init():
+    ssm_key_table_name = os.environ.get("SSM_KEY_TABLE_NAME")
+    if ssm_key_table_name:
+        response = get_ssm_params(ssm_key_table_name)
+        global table_names
+        table_names = json.loads(response)
+
+
+_init()

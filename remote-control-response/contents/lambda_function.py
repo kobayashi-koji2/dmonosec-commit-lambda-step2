@@ -13,7 +13,6 @@ import convert
 import ddb
 import validate
 
-parameter = None
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
@@ -26,23 +25,13 @@ def lambda_handler(event, context):
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         }
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            logger.info("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            logger.info("tried ssm get parameter")
-        else:
-            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            device_relation_table = dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE"))
-            remote_controls_table = dynamodb.Table(parameter.get("REMOTE_CONTROL_TABLE"))
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,

@@ -18,7 +18,6 @@ import ddb
 logger = Logger()
 
 # 環境変数
-parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
@@ -41,24 +40,16 @@ aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            logger.info("parameter already exists. pass get_ssm_parameter")
-
+        ### 0. DynamoDBの操作オブジェクト生成
         try:
-            device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-            device_state_table = dynamodb.Table(parameter["STATE_TABLE"])
-            req_no_counter_table = dynamodb.Table(parameter["REQ_NO_COUNTER_TABLE"])
-            remote_controls_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
-            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
-            device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-            group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+            device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
+            req_no_counter_table = dynamodb.Table(ssm.table_names["REQ_NO_COUNTER_TABLE"])
+            remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
+            hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
-            parameter = None
             res_body = {"code": "9999", "message": e}
             respons["statusCode"] = 500
             return respons
@@ -137,7 +128,10 @@ def lambda_handler(event, context):
 
                 # 制御中判定
                 error_flg, result = __check_under_control(
-                    checked_di_state_info, icc_id, req_no_counter_table, remote_controls_table
+                    checked_di_state_info,
+                    icc_id,
+                    req_no_counter_table,
+                    remote_controls_table,
                 )
                 if not error_flg:
                     respons["statusCode"] = 500

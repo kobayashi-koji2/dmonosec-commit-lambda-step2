@@ -16,7 +16,6 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 INITIAL_LAMBDA_NAME = os.environ["INITIAL_LAMBDA_NAME"]
 
-parameter = None
 logger = Logger()
 
 
@@ -24,27 +23,21 @@ def lambda_handler(event, context):
     logger.debug(f"lambda_handler開始 event={event}")
 
     try:
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
         # DynamoDB操作オブジェクト生成
         try:
-            iccid_table = dynamodb.Table(parameter["ICCID_TABLE"])
-            device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-            hist_table = dynamodb.Table(parameter["CNT_HIST_TABLE"])
-            hist_list_table = dynamodb.Table(parameter["HIST_LIST_TABLE"])
-            state_table = dynamodb.Table(parameter["STATE_TABLE"])
-            group_table = dynamodb.Table(parameter["GROUP_TABLE"])
-            notification_hist_table = dynamodb.Table(parameter["NOTIFICATION_HIST_TABLE"])
-            device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            account_table = dynamodb.Table(parameter["ACCOUNT_TABLE"])
-            remote_control_table = dynamodb.Table(parameter["REMOTE_CONTROL_TABLE"])
+            iccid_table = dynamodb.Table(ssm.table_names["ICCID_TABLE"])
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+            hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
+            hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
+            state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
+            group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
+            notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             logger.error("KeyError")
-            parameter = None
             return bytes([3])
 
         # サーバー受信日時を取得

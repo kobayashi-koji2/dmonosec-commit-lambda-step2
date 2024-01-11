@@ -18,37 +18,29 @@ import convert
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 region_name = os.environ.get("AWS_REGION")
 
-parameter = None
 logger = Logger()
 
 
 def lambda_handler(event, context):
     logger.info(region_name)
     try:
-        res_headers = {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"}
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            logger.info("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            logger.info("tried ssm get parameter")
-        else:
-            logger.info("passed ssm get parameter")
+        res_headers = {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        }
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
-                "user_table": dynamodb.Table(parameter.get("USER_TABLE")),
-                "device_table": dynamodb.Table(parameter.get("DEVICE_TABLE")),
-                "group_table": dynamodb.Table(parameter.get("GROUP_TABLE")),
-                "device_state_table": dynamodb.Table(parameter.get("STATE_TABLE")),
-                "account_table": dynamodb.Table(parameter.get("ACCOUNT_TABLE")),
-                "contract_table": dynamodb.Table(parameter.get("CONTRACT_TABLE")),
-                "pre_register_table": dynamodb.Table(parameter.get("PRE_REGISTER_DEVICE_TABLE")),
-                "device_relation_table": dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE")),
+                "user_table": dynamodb.Table(ssm.table_names["USER_TABLE"]),
+                "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
+                "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
+                "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
+                "account_table": dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"]),
+                "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
+                "pre_register_table": dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"]),
+                "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,

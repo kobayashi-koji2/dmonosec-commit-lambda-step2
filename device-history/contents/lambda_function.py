@@ -8,7 +8,6 @@ import boto3
 from botocore.exceptions import ClientError
 from aws_lambda_powertools import Logger
 
-# layer
 import convert
 import ssm
 
@@ -19,7 +18,6 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-parameter = None
 logger = Logger()
 
 
@@ -166,24 +164,14 @@ def lambda_handler(event, context):
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         }
-        # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
-        global parameter
-        if not parameter:
-            logger.info("try ssm get parameter")
-            response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(response)
-            logger.info("tried ssm get parameter")
-        else:
-            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
-            user_table = dynamodb.Table(parameter["USER_TABLE"])
-            account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
-            contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            device_relation_table = dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE"))
-            hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
         except KeyError as e:
-            parameter = None
             body = {"code": "9999", "message": e}
             return {
                 "statusCode": 500,

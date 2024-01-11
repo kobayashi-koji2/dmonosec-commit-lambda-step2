@@ -14,7 +14,6 @@ import db
 logger = Logger()
 
 # 環境変数
-parameter = None
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 # 正常レスポンス内容
@@ -28,26 +27,21 @@ respons = {
 }
 # AWSリソース定義
 dynamodb = boto3.resource(
-    "dynamodb", region_name=AWS_DEFAULT_REGION, endpoint_url=os.environ.get("endpoint_url")
+    "dynamodb",
+    region_name=AWS_DEFAULT_REGION,
+    endpoint_url=os.environ.get("endpoint_url"),
 )
 
 
 def lambda_handler(event, context):
     try:
-        ### 0. 環境変数の取得・DynamoDBの操作オブジェクト生成
-        global parameter
-        if parameter is None:
-            ssm_params = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
-            parameter = json.loads(ssm_params)
-        else:
-            logger.info("parameter already exists. pass get_ssm_parameter")
-
-        account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
-        user_table = dynamodb.Table(parameter["USER_TABLE"])
-        device_relation_table = dynamodb.Table(parameter["DEVICE_RELATION_TABLE"])
-        contract_table = dynamodb.Table(parameter["CONTRACT_TABLE"])
-        device_table = dynamodb.Table(parameter["DEVICE_TABLE"])
-        device_state_table = dynamodb.Table(parameter["STATE_TABLE"])
+        ### 0. DynamoDBの操作オブジェクト生成
+        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+        device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+        contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+        device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+        device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
 
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
