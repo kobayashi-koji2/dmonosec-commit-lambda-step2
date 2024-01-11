@@ -90,51 +90,59 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
     ]:
         hist_list_data["hist_data"]["occurrence_flag"] = event_info["occurrence_flag"]
 
-	# 接点出力制御応答
-	elif event_info['event_type'] in ["manual_control", "on_timer_control", "off_timer_control"]:
-		if "link_di_no" in event_info:
-			hist_list_data['hist_data']['link_terminal_no'] = event_info['link_di_no']
-			for di_list in device_info['device_data']['config']['terminal_settings']['di_list']:
-				if int(di_list['di_no']) == int(event_info['link_di_no']):
-					di_terminal_name = di_list['di_name']
-					break;
-			hist_list_data['hist_data']['link_terminal_name'] = di_terminal_name
-			hist_list_data['hist_data']['control_trigger'] = event_info['control_trigger']
-			hist_list_data['hist_data']['terminal_no'] = int(event_info['do_no'])
-			for do_list in device_info['device_data']['config']['terminal_settings']['do_list']:
-				if int(do_list['do_no']) == int(event_info['do_no']):
-					do_terminal_name = do_list['do_name']
-					break;
-			hist_list_data['hist_data']['terminal_name'] = do_terminal_name
-			hist_list_data['hist_data']['control_exec_user_name'] = event_info['control_exec_user_name']
-			hist_list_data['hist_data']['control_exec_user_email_address'] = event_info['control_exec_user_email_address']
-			hist_list_data['hist_data']['control'] = event_info['control']
-			hist_list_data['hist_data']['control_result'] = event_info['control_result']
-			hist_list_data['hist_data']['device_req_no'] = event_info['device_req_no']
-			if event_info['event_type'] in ["on_timer_control", "off_timer_control"]:
-				hist_list_data['hist_data']['timer_time'] = event_info['timer_time']
-		else:
-			hist_list_data['hist_data']['control_trigger'] = event_info['control_trigger']
-			for do_list in device_info['device_data']['config']['terminal_settings']['do_list']:
-				if int(do_list['do_no']) == int(event_info['do_no']):
-					terminal_name = do_list['do_name']
-					break;
-			hist_list_data['hist_data']['terminal_no'] = int(event_info['do_no'])
-			hist_list_data['hist_data']['control_exec_user_name'] = event_info['control_exec_user_name']
-			hist_list_data['hist_data']['control_exec_user_email_address'] = event_info['control_exec_user_email_address']
-			hist_list_data['hist_data']['control'] = event_info['control']
-			hist_list_data['hist_data']['control_result'] = event_info['control_result']
-			hist_list_data['hist_data']['device_req_no'] = event_info['device_req_no']
-			if event_info['event_type'] in ["on_timer_control", "off_timer_control"]:
-				hist_list_data['hist_data']['timer_time'] = event_info['timer_time']
-	logger.debug(f'createHistListData終了 hist_list_data={hist_list_data}')
-	return hist_list_data
+    # 接点出力制御応答
+    elif event_info["event_type"] in ["manual_control", "on_timer_control", "off_timer_control"]:
+        if "link_di_no" in event_info:
+            hist_list_data["hist_data"]["link_terminal_no"] = event_info["link_di_no"]
+            for di_list in device_info["device_data"]["config"]["terminal_settings"]["di_list"]:
+                if int(di_list["di_no"]) == int(event_info["link_di_no"]):
+                    di_terminal_name = di_list["di_name"]
+                    break
+            hist_list_data["hist_data"]["link_terminal_name"] = di_terminal_name
+            hist_list_data["hist_data"]["control_trigger"] = event_info["control_trigger"]
+            hist_list_data["hist_data"]["terminal_no"] = int(event_info["do_no"])
+            for do_list in device_info["device_data"]["config"]["terminal_settings"]["do_list"]:
+                if int(do_list["do_no"]) == int(event_info["do_no"]):
+                    do_terminal_name = do_list["do_name"]
+                    break
+            hist_list_data["hist_data"]["terminal_name"] = do_terminal_name
+            hist_list_data["hist_data"]["control_exec_user_name"] = event_info[
+                "control_exec_user_name"
+            ]
+            hist_list_data["hist_data"]["control_exec_user_email_address"] = event_info[
+                "control_exec_user_email_address"
+            ]
+            hist_list_data["hist_data"]["control"] = event_info["control"]
+            hist_list_data["hist_data"]["control_result"] = event_info["control_result"]
+            hist_list_data["hist_data"]["device_req_no"] = event_info["device_req_no"]
+            if event_info["event_type"] in ["on_timer_control", "off_timer_control"]:
+                hist_list_data["hist_data"]["timer_time"] = event_info["timer_time"]
+        else:
+            hist_list_data["hist_data"]["control_trigger"] = event_info["control_trigger"]
+            for do_list in device_info["device_data"]["config"]["terminal_settings"]["do_list"]:
+                if int(do_list["do_no"]) == int(event_info["do_no"]):
+                    terminal_name = do_list["do_name"]
+                    break
+            hist_list_data["hist_data"]["terminal_no"] = int(event_info["do_no"])
+            hist_list_data["hist_data"]["control_exec_user_name"] = event_info[
+                "control_exec_user_name"
+            ]
+            hist_list_data["hist_data"]["control_exec_user_email_address"] = event_info[
+                "control_exec_user_email_address"
+            ]
+            hist_list_data["hist_data"]["control"] = event_info["control"]
+            hist_list_data["hist_data"]["control_result"] = event_info["control_result"]
+            hist_list_data["hist_data"]["device_req_no"] = event_info["device_req_no"]
+            if event_info["event_type"] in ["on_timer_control", "off_timer_control"]:
+                hist_list_data["hist_data"]["timer_time"] = event_info["timer_time"]
+    logger.debug(f"createHistListData終了 hist_list_data={hist_list_data}")
+    return hist_list_data
 
 
 def initCurrentStateInfo(recv_data, device_current_state, device_info, init_state_flg):
     logger.debug(
         f"initCurrentStateInfo開始 recv_data={recv_data}, device_current_state={device_current_state}, \
-	   device_info={device_info}, init_state_flg={init_state_flg}"
+       device_info={device_info}, init_state_flg={init_state_flg}"
     )
     if init_state_flg == 1:
         di_list = list(reversed(list(recv_data["di_state"])))
@@ -320,7 +328,7 @@ def eventJudge(
 ):
     logger.debug(
         f"eventJudge開始 recv_data={recv_data}, \
-	   device_current_state={device_current_state}, device_info={device_info}"
+       device_current_state={device_current_state}, device_info={device_info}"
     )
 
     # 履歴リスト作成
@@ -518,25 +526,29 @@ def eventJudge(
                 current_state_info, event_info, event_datetime
             )
 
-	# 遠隔制御（接点出力制御応答）
-	if recv_data['message_type'] in ["8002"]:
-		event_info = {}
-		remote_control_info = ddb.get_remote_control_info(recv_data['device_req_no'], remote_control_table)
-		if remote_control_info is None:
-			return hist_list, current_state_info
-		logger.debug(f'remote_control_info={remote_control_info}')
-		event_info['event_datetime'] = remote_control_info['req_datetime']
-		event_info['do_no'] = remote_control_info['do_no']
-		event_info['control'] = remote_control_info['control']
-		event_info['control_exec_user_name'] = remote_control_info['control_exec_user_name']
-		event_info['control_exec_user_email_address'] = remote_control_info['control_exec_user_email_address']
-		event_info['control_trigger'] = remote_control_info['control_trigger']
-		event_info['event_type'] = remote_control_info['control_trigger']
-		event_info['device_req_no'] = recv_data['device_req_no']
-		if recv_data['control_result'] == 0:
-			event_info['control_result'] = "success"
-		else:
-			event_info['control_result'] = "failure"
+    # 遠隔制御（接点出力制御応答）
+    if recv_data["message_type"] in ["8002"]:
+        event_info = {}
+        remote_control_info = ddb.get_remote_control_info(
+            recv_data["device_req_no"], remote_control_table
+        )
+        if remote_control_info is None:
+            return hist_list, current_state_info
+        logger.debug(f"remote_control_info={remote_control_info}")
+        event_info["event_datetime"] = remote_control_info["req_datetime"]
+        event_info["do_no"] = remote_control_info["do_no"]
+        event_info["control"] = remote_control_info["control"]
+        event_info["control_exec_user_name"] = remote_control_info["control_exec_user_name"]
+        event_info["control_exec_user_email_address"] = remote_control_info[
+            "control_exec_user_email_address"
+        ]
+        event_info["control_trigger"] = remote_control_info["control_trigger"]
+        event_info["event_type"] = remote_control_info["control_trigger"]
+        event_info["device_req_no"] = recv_data["device_req_no"]
+        if recv_data["control_result"] == 0:
+            event_info["control_result"] = "success"
+        else:
+            event_info["control_result"] = "failure"
 
         # 制御トリガー判定
         if remote_control_info["control_trigger"] in ["on_timer_control", "off_timer_control"]:
@@ -546,28 +558,34 @@ def eventJudge(
         )
         hist_list.append(hist_list_data)
 
-	# 遠隔制御（状態変化通知）
-	if recv_data['message_type'] in ["0001"]:
-		event_info = {}
-		remote_control_info = ddb.get_remote_control_info_by_device_id(device_info['device_id'], recv_data['recv_datetime'], remote_control_table)
-		logger.debug(f'remote_control_info={remote_control_info}')
-		if remote_control_info is not None and "link_di_no" in remote_control_info:
-			di_trigger = list(reversed(list(format(recv_data['di_trigger'], '08b'))))
-			list_di_no = int(remote_control_info['link_di_no']) - 1
-			if di_trigger[list_di_no] == "1":
-				event_info['event_datetime'] = remote_control_info['req_datetime']
-				event_info['do_no'] = remote_control_info['do_no']
-				event_info['control'] = remote_control_info['control']
-				event_info['control_exec_user_name'] = remote_control_info['control_exec_user_name']
-				event_info['control_exec_user_email_address'] = remote_control_info['control_exec_user_email_address']
-				event_info['link_di_no'] = remote_control_info['link_di_no']
-				event_info['device_req_no'] = remote_control_info['device_req_no']
-				event_info['control_trigger'] = remote_control_info['control_trigger']
-				event_info['event_type'] = remote_control_info['control_trigger']
-				if remote_control_info['control_result'] == 0:
-					event_info['control_result'] = "success"
-				else:
-					event_info['control_result'] = "failure"
+    # 遠隔制御（状態変化通知）
+    if recv_data["message_type"] in ["0001"]:
+        event_info = {}
+        remote_control_info = ddb.get_remote_control_info_by_device_id(
+            device_info["device_id"], recv_data["recv_datetime"], remote_control_table
+        )
+        logger.debug(f"remote_control_info={remote_control_info}")
+        if remote_control_info is not None and "link_di_no" in remote_control_info:
+            di_trigger = list(reversed(list(format(recv_data["di_trigger"], "08b"))))
+            list_di_no = int(remote_control_info["link_di_no"]) - 1
+            if di_trigger[list_di_no] == "1":
+                event_info["event_datetime"] = remote_control_info["req_datetime"]
+                event_info["do_no"] = remote_control_info["do_no"]
+                event_info["control"] = remote_control_info["control"]
+                event_info["control_exec_user_name"] = remote_control_info[
+                    "control_exec_user_name"
+                ]
+                event_info["control_exec_user_email_address"] = remote_control_info[
+                    "control_exec_user_email_address"
+                ]
+                event_info["link_di_no"] = remote_control_info["link_di_no"]
+                event_info["device_req_no"] = remote_control_info["device_req_no"]
+                event_info["control_trigger"] = remote_control_info["control_trigger"]
+                event_info["event_type"] = remote_control_info["control_trigger"]
+                if remote_control_info["control_result"] == 0:
+                    event_info["control_result"] = "success"
+                else:
+                    event_info["control_result"] = "failure"
 
                 # 制御トリガー判定
                 if remote_control_info["control_trigger"] in [

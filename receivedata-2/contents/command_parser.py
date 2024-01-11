@@ -161,21 +161,21 @@ def commandParser(
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         logger.debug(f"接点出力制御応答 cntrol_result={nControlResult}, nDOState={nDOState}")
 
-		recv_data = {
-			'device_req_no': szSimid + '-' + szReqNo,
-			'event_datetime': nEventTime,
-			'recv_datetime': szRecvDatetime,
-			'device_type': nDeviceType,
-			'fw_version': nVer,
-			'message_type': format(nMsgType, '04x'),
-			'power_voltage': nVolt,
-			'rssi': nRssi,
-			'sinr': nSinr,
-			'control_result': nControlResult,
-			'device_state': nState,
-			'do_state': format(nDOState, '08b'),
-			'iccid': szSimid,
-		}
+        recv_data = {
+            "device_req_no": szSimid + "-" + szReqNo,
+            "event_datetime": nEventTime,
+            "recv_datetime": szRecvDatetime,
+            "device_type": nDeviceType,
+            "fw_version": nVer,
+            "message_type": format(nMsgType, "04x"),
+            "power_voltage": nVolt,
+            "rssi": nRssi,
+            "sinr": nSinr,
+            "control_result": nControlResult,
+            "device_state": nState,
+            "do_state": format(nDOState, "08b"),
+            "iccid": szSimid,
+        }
 
     if not stray_flag:
         # 現状態取得
