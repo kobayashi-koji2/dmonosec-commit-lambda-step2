@@ -1,10 +1,10 @@
 import json
 import os
-import logging
 import traceback
 from decimal import Decimal
 import time
 
+from aws_lambda_powertools import Logger
 import boto3
 from botocore.exceptions import ClientError
 
@@ -14,7 +14,7 @@ import ddb
 import validate
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
@@ -29,22 +29,18 @@ def lambda_handler(event, context):
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print("try ssm get parameter")
+            logger.info("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print("tried ssm get parameter")
+            logger.info("tried ssm get parameter")
         else:
-            print("passed ssm get parameter")
+            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             user_table = dynamodb.Table(parameter["USER_TABLE"])
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            device_relation_table = dynamodb.Table(
-                parameter.get("DEVICE_RELATION_TABLE")
-            )
-            remote_controls_table = dynamodb.Table(
-                parameter.get("REMOTE_CONTROL_TABLE")
-            )
+            device_relation_table = dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE"))
+            remote_controls_table = dynamodb.Table(parameter.get("REMOTE_CONTROL_TABLE"))
             cnt_hist_table = dynamodb.Table(parameter.get("CNT_HIST_TABLE"))
             hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
             device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
@@ -109,9 +105,7 @@ def lambda_handler(event, context):
             remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
         )
         if not [
-            cnt_hist
-            for cnt_hist in cnt_hist_list
-            if cnt_hist.get("di_trigger") == link_di_no
+            cnt_hist for cnt_hist in cnt_hist_list if cnt_hist.get("di_trigger") == link_di_no
         ]:
             # TODO メール通知
 
@@ -127,7 +121,7 @@ def lambda_handler(event, context):
             )
 
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         raise Exception(json.dumps(res_body))

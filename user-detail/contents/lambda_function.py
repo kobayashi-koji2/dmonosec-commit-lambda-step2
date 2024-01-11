@@ -1,9 +1,9 @@
 import json
 import os
 import boto3
-import logging
 import traceback
 
+from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
 
 import ssm
@@ -17,7 +17,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -29,12 +29,12 @@ def lambda_handler(event, context):
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print("try ssm get parameter")
+            logger.info("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print("tried ssm get parameter")
+            logger.info("tried ssm get parameter")
         else:
-            print("passed ssm get parameter")
+            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             user_table = dynamodb.Table(parameter["USER_TABLE"])
@@ -42,9 +42,7 @@ def lambda_handler(event, context):
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
             group_table = dynamodb.Table(parameter.get("GROUP_TABLE"))
             device_table = dynamodb.Table(parameter.get("DEVICE_TABLE"))
-            device_relation_table = dynamodb.Table(
-                parameter.get("DEVICE_RELATION_TABLE")
-            )
+            device_relation_table = dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE"))
         except KeyError as e:
             parameter = None
             body = {"code": "9999", "message": e}
@@ -65,9 +63,7 @@ def lambda_handler(event, context):
         user = validate_result["user_info"]
 
         user_id = validate_result["request_params"]["user_id"]
-        account_info = db.get_account_info_by_account_id(
-            user.get("account_id"), account_table
-        )
+        account_info = db.get_account_info_by_account_id(user.get("account_id"), account_table)
         account = account_info["Item"]
         account_config = account.get("user_data", {}).get("config", {})
 
@@ -78,7 +74,7 @@ def lambda_handler(event, context):
         for group_relation in group_relation_list:
             group_id = group_relation["key2"][2:]
             group_info = db.get_group_info(group_id, group_table).get("Item")
-            print(group_info)
+            logger.info(group_info)
             group_list.append(
                 {
                     "group_id": group_id,
@@ -117,14 +113,12 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                res_body, ensure_ascii=False, default=convert.decimal_default_proc
-            )
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
             #'body':res_body
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,

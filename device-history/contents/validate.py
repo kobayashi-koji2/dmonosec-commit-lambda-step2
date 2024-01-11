@@ -1,18 +1,19 @@
 import json
-import logging
 import traceback
 from datetime import datetime
+
+from aws_lambda_powertools import Logger
 
 # layer
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 def get_user_device_list(user_id, device_relation_table):
     device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
-    print(device_relation_list)
+    logger.info(device_relation_list)
     user_device_list = []
     for relation in device_relation_list:
         relation_id = relation["key2"]
@@ -43,7 +44,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         logger.debug("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
-        print(traceback.format_exc())
+        logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
     user_res = db.get_user_info_by_user_id(user_id, user_table)
@@ -61,7 +62,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         "event_type_list": multi_query_params.get("event_type_list[]", []),
         "device_list": multi_query_params.get("device_list[]", []),
     }
-    print(params)
+    logger.info(params)
 
     if not params["history_start_datetime"] and not params["history_end_datetime"]:
         return {"code": "9999", "message": "パラメータが不正です"}
@@ -70,14 +71,14 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         try:
             datetime.fromtimestamp(int(params["history_start_datetime"]))
         except ValueError:
-            print(ValueError)
+            logger.info(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         try:
             datetime.fromtimestamp(int(params["history_end_datetime"]))
         except ValueError:
-            print(ValueError)
+            logger.info(ValueError)
             return {"code": "9999", "message": "パラメータが不正です"}
 
     if (

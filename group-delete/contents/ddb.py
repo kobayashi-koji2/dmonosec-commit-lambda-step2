@@ -1,5 +1,6 @@
 import time
 
+from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -8,6 +9,7 @@ import convert
 
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client("dynamodb", region_name="ap-northeast-1")
+logger = Logger()
 
 
 def delete_group_info(
@@ -59,7 +61,7 @@ def delete_group_info(
     device_relation_list = db.get_device_relation(
         "g-" + group_id, device_relation_table, sk_prefix="d-"
     )
-    print(device_relation_list)
+    logger.info(device_relation_list)
     for device_relation in device_relation_list:
         remove_relation = {
             "Delete": {
@@ -75,7 +77,7 @@ def delete_group_info(
     user_relation_list = db.get_device_relation(
         "g-" + group_id, device_relation_table, sk_prefix="u-", gsi_name="key2_index"
     )
-    print(user_relation_list)
+    logger.info(user_relation_list)
     for user_relation in user_relation_list:
         remove_relation = {
             "Delete": {

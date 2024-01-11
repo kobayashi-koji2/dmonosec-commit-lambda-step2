@@ -1,11 +1,14 @@
 import json
 import uuid
 
+from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
 
 import db
+
+logger = Logger()
 
 
 # 接点出力制御応答取得
@@ -69,9 +72,7 @@ def put_hist_list(
             group_list.append(
                 {
                     "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"][
-                        "group_name"
-                    ],
+                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
                 }
             )
 

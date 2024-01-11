@@ -1,4 +1,7 @@
+from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Attr, Key
+
+logger = Logger()
 
 
 def get_cnt_hist_list_by_sim_id(

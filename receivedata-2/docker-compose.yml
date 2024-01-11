@@ -46,7 +46,6 @@ services:
       - SIGNAL_LOW=2
       - NO_SIGNAL=3
     volumes:
-      - ../_local-dev-files/layer/common_functions_layer:/opt
       - ./contents:/var/task
     ports:
       - 9000:8080

@@ -1,14 +1,14 @@
 import re
 import json
-import logging
 import traceback
 
+from aws_lambda_powertools import Logger
 import boto3
 
 import db
 import convert
 
-logger = logging.getLogger()
+logger = Logger()
 
 
 def isValidEmail(str):
@@ -26,11 +26,11 @@ def validate(event, contract_table, user_table):
 
     try:
         decoded_idtoken = convert.decode_idtoken(event)
-        print("idtoken:", decoded_idtoken)
+        logger.info("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
         logger.error(e)
-        print(traceback.format_exc())
+        logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
     user_res = db.get_user_info_by_user_id(user_id, user_table)
@@ -64,9 +64,7 @@ def validate(event, contract_table, user_table):
     if http_method == "PUT":
         if "user_id" not in path_params:
             return {"code": "9999", "message": "パラメータが不正です"}
-        update_user_res = db.get_user_info_by_user_id(
-            path_params["user_id"], user_table
-        )
+        update_user_res = db.get_user_info_by_user_id(path_params["user_id"], user_table)
         if "Item" not in update_user_res:
             return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:

@@ -1,7 +1,6 @@
 import os
 import base64
 import boto3
-import logging
 import ddb
 import json
 import ssm
@@ -10,6 +9,7 @@ import traceback
 import validate
 from datetime import datetime
 from command_parser import commandParser
+from aws_lambda_powertools import Logger
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
@@ -17,12 +17,11 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 INITIAL_LAMBDA_NAME = os.environ["INITIAL_LAMBDA_NAME"]
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
-
-    logger.debug(f'lambda_handler開始 event={event}')
+    logger.debug(f"lambda_handler開始 event={event}")
 
     try:
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
@@ -53,9 +52,9 @@ def lambda_handler(event, context):
         szRecvDatetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
 
         # 受信データ取り出し
-        Payload = base64.standard_b64decode(event['payload'])
-        szSimid = context.client_context.custom['simId']
-        logger.info(f'Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}')
+        Payload = base64.standard_b64decode(event["payload"])
+        szSimid = context.client_context.custom["simId"]
+        logger.info(f"Payload={Payload.hex()}, szSimid={szSimid}, szRecvDatetime={szRecvDatetime}")
 
         # 入力データチェック
         vali_result = validate.validate(Payload, szSimid, szRecvDatetime, hist_table)
@@ -71,44 +70,53 @@ def lambda_handler(event, context):
         stray_flag = True
         iccid_info = ddb.get_iccid_info(szSimid, iccid_table)
         if iccid_info is None or len(iccid_info) == 0:
-            logger.debug(f'未登録デバイス szSimid={szSimid}')
+            logger.debug(f"未登録デバイス szSimid={szSimid}")
         else:
             stray_flag = False
-            logger.debug(f'iccid_info={iccid_info}')
-            device_id = iccid_info['device_id']
+            logger.debug(f"iccid_info={iccid_info}")
+            device_id = iccid_info["device_id"]
             device_info = ddb.get_device_info(device_id, device_table)
-            logger.debug(f'device_info={device_info}')
+            logger.debug(f"device_info={device_info}")
             if device_info is None or len(device_info) == 0:
                 return bytes([1])
 
         # データ解析・登録
         try:
-            res = commandParser(szSimid, szRecvDatetime, Payload, device_info, stray_flag, hist_table,
-                                hist_list_table, state_table, group_table, notification_hist_table,
-                                device_relation_table, user_table, account_table, remote_control_table)
+            res = commandParser(
+                szSimid,
+                szRecvDatetime,
+                Payload,
+                device_info,
+                stray_flag,
+                hist_table,
+                hist_list_table,
+                state_table,
+                group_table,
+                notification_hist_table,
+                device_relation_table,
+                user_table,
+                account_table,
+                remote_control_table,
+            )
         except Exception as e:
-            logger.debug(f'commandParserエラー e={e}')
+            logger.debug(f"commandParserエラー e={e}")
             return bytes([3])
 
         ##################
         # 初期受信処理
         ##################
-        if (not stray_flag) and (device_info['contract_state'] == 0):
+        if (not stray_flag) and (device_info["contract_state"] == 0):
             # パラメータ設定
-            input_event = {
-                "iccid": szSimid
-            }
+            input_event = {"iccid": szSimid}
             Payload = json.dumps(input_event)
 
             # 呼び出し
-            boto3.client('lambda').invoke(
-                FunctionName=INITIAL_LAMBDA_NAME,
-                InvocationType='Event',
-                Payload=Payload
+            boto3.client("lambda").invoke(
+                FunctionName=INITIAL_LAMBDA_NAME, InvocationType="Event", Payload=Payload
             )
-            logger.debug('initialreceive呼び出し')
+            logger.debug("initialreceive呼び出し")
 
-        logger.debug('lambda_handler正常終了')
+        logger.debug("lambda_handler正常終了")
         return res
 
     except Exception as e:

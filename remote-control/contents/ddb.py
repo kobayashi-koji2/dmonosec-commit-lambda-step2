@@ -1,14 +1,16 @@
 import decimal
 
+from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Key, Attr
 
 # layer
 import convert
 
+logger = Logger()
+
+
 def get_req_no_count_info(sim_id, table):
-    response = table.get_item(
-        Key={"simid": sim_id}
-    ).get("Item", {})
+    response = table.get_item(Key={"simid": sim_id}).get("Item", {})
     return response
 
 
@@ -16,8 +18,8 @@ def get_remote_control_latest(pk, filter, table):
     response = table.query(
         KeyConditionExpression=Key("device_req_no").eq(pk),
         FilterExpression=Attr("do_no").eq(filter),
-        ScanIndexForward = False, # 降順
-        Limit = 1
+        ScanIndexForward=False,  # 降順
+        Limit=1,
     ).get("Items", [])
     return response
 

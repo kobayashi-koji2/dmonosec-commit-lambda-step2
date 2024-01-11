@@ -1,9 +1,11 @@
 from decimal import Decimal
 
+from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 
+logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 
 

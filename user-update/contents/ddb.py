@@ -1,8 +1,12 @@
 import uuid
 
+from aws_lambda_powertools import Logger
+
 import db
 import convert
 import cognito
+
+logger = Logger()
 
 
 def generate_group_id():
@@ -193,12 +197,10 @@ def update_user_info(
     user = user_info["Item"]
     account_info = db.get_account_info_by_account_id(user["account_id"], account_table)
     account = account_info["Item"]
-    if request_params["user_name"] != account.get("user_data", {}).get(
-        "config", {}
-    ).get("user_name"):
-        account_update_expression = (
-            f"SET #map.#config_attr.#user_name_attr = :user_name"
-        )
+    if request_params["user_name"] != account.get("user_data", {}).get("config", {}).get(
+        "user_name"
+    ):
+        account_update_expression = f"SET #map.#config_attr.#user_name_attr = :user_name"
         account_expression_attribute_values = {
             ":user_name": request_params["user_name"],
         }
@@ -257,9 +259,7 @@ def update_user_info(
     group_list_old = [relation["key2"][2:] for relation in group_relation_list]
 
     # 削除されたグループ
-    removed_group_list = set(group_list_old) - set(
-        request_params["management_group_list"]
-    )
+    removed_group_list = set(group_list_old) - set(request_params["management_group_list"])
     for remove_group_id in removed_group_list:
         remove_group = {
             "Delete": {
@@ -272,9 +272,7 @@ def update_user_info(
         }
         transact_items.append(remove_group)
     # 追加されたグループ
-    added_group_list = set(request_params["management_group_list"]) - set(
-        group_list_old
-    )
+    added_group_list = set(request_params["management_group_list"]) - set(group_list_old)
     for add_group_id in added_group_list:
         group_relation_item = {
             "key1": "u-" + user_id,
@@ -298,9 +296,7 @@ def update_user_info(
     device_list_old = [relation["key2"][2:] for relation in device_relation_list]
 
     # 削除されたデバイス
-    removed_device_list = set(device_list_old) - set(
-        request_params["management_device_list"]
-    )
+    removed_device_list = set(device_list_old) - set(request_params["management_device_list"])
     for remove_device_id in removed_device_list:
         remove_device = {
             "Delete": {
@@ -313,9 +309,7 @@ def update_user_info(
         }
         transact_items.append(remove_device)
     # 追加されたデバイス
-    added_device_list = set(request_params["management_device_list"]) - set(
-        device_list_old
-    )
+    added_device_list = set(request_params["management_device_list"]) - set(device_list_old)
     for add_device_id in added_device_list:
         device_relation_item = {
             "key1": "u-" + user_id,
@@ -330,9 +324,9 @@ def update_user_info(
         }
         transact_items.append(add_device)
 
-    print("------------transact_items-----------")
-    print(transact_items)
-    print("-------------------------------------")
+    logger.info("------------transact_items-----------")
+    logger.info(transact_items)
+    logger.info("-------------------------------------")
 
     # 更新対象なし
     if not transact_items:

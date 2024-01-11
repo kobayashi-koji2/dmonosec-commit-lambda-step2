@@ -5,10 +5,10 @@ import generate_detail
 import ddb
 import os
 import re
-import logging
 from botocore.exceptions import ClientError
 from decimal import Decimal
 import traceback
+from aws_lambda_powertools import Logger
 
 # layer
 import db
@@ -20,7 +20,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 def lambda_handler(event, context):
@@ -29,12 +29,12 @@ def lambda_handler(event, context):
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print("try ssm get parameter")
+            logger.info("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print("tried ssm get parameter")
+            logger.info("tried ssm get parameter")
         else:
-            print("passed ssm get parameter")
+            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
@@ -66,7 +66,7 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
         device_id = validate_result["device_id"]
-        print(f"デバイスID:{device_id}")
+        logger.info(f"デバイスID:{device_id}")
 
         ##################
         # 4 デバイス情報取得
@@ -103,7 +103,7 @@ def lambda_handler(event, context):
                 sk_prefix="g-",
                 gsi_name="key2_index",
             )
-            print(device_group_relation)
+            logger.info(device_group_relation)
             for item1 in device_group_relation:
                 item1 = item1["key1"]
                 group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
@@ -114,22 +114,22 @@ def lambda_handler(event, context):
                 generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
             )
         except ClientError as e:
-            print(e)
+            logger.info(e)
             body = {"code": "9999", "message": "デバイス詳細の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
-        print(f"レスポンスボディ:{res_body}")
+        logger.info(f"レスポンスボディ:{res_body}")
         return {
             "statusCode": 200,
             "headers": res_headers,
             "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,

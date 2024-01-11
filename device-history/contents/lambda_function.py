@@ -2,11 +2,11 @@ import json
 import os
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-import logging
 import traceback
 
 import boto3
 from botocore.exceptions import ClientError
+from aws_lambda_powertools import Logger
 
 # layer
 import convert
@@ -20,7 +20,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 parameter = None
-logger = logging.getLogger()
+logger = Logger()
 
 
 CONTROL_NAME_DICT = {
@@ -37,15 +37,11 @@ def create_history_message(hist):
         link_terminal_name = hist.get(
             "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
         )
-        msg = (
-            f"【接点入力変化】\n{link_terminal_name}が{hist['link_terminal_state_name']}に変化しました。"
-        )
+        msg = f"【接点入力変化】\n{link_terminal_name}が{hist['link_terminal_state_name']}に変化しました。"
 
     # 接点出力変化
     elif hist["event_type"] == "do_change":
-        terminal_name = hist.get(
-            "terminal_name", "接点出力" + str(hist.get("terminal_no", ""))
-        )
+        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
         msg = f"【接点出力変化（{CONTROL_NAME_DICT.get(hist['control'])}）】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
 
     # アナログ入力変化（Ph2）
@@ -94,9 +90,7 @@ def create_history_message(hist):
 
     # 画面操作による制御
     elif hist["event_type"] == "manual_control" and not hist.get("link_terminal_no"):
-        terminal_name = hist.get(
-            "terminal_name", "接点出力" + str(hist.get("terminal_no", ""))
-        )
+        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
         control_exec_uer_name = (
             hist.get("control_exec_user_name")
             if hist.get("control_exec_user_name")
@@ -110,14 +104,9 @@ def create_history_message(hist):
             msg = f"【画面操作による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中だったため、制御を行いませんでした。\n ※ {control_exec_uer_name}が操作を行いました。"
 
     # タイマー設定による制御
-    elif (
-        hist["event_type"] == "on_timer_control"
-        or hist["event_type"] == "off_timer_control"
-    ):
+    elif hist["event_type"] == "on_timer_control" or hist["event_type"] == "off_timer_control":
         on_off = "ON" if hist["event_type"] == "on_timer_control" else "OFF"
-        terminal_name = hist.get(
-            "terminal_name", "接点出力" + str(hist.get("terminal_no", ""))
-        )
+        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
         link_terminal_name = hist.get(
             "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
         )
@@ -180,20 +169,18 @@ def lambda_handler(event, context):
         # コールドスタートの場合パラメータストアから値を取得してグローバル変数にキャッシュ
         global parameter
         if not parameter:
-            print("try ssm get parameter")
+            logger.info("try ssm get parameter")
             response = ssm.get_ssm_params(SSM_KEY_TABLE_NAME)
             parameter = json.loads(response)
-            print("tried ssm get parameter")
+            logger.info("tried ssm get parameter")
         else:
-            print("passed ssm get parameter")
+            logger.info("passed ssm get parameter")
         # DynamoDB操作オブジェクト生成
         try:
             user_table = dynamodb.Table(parameter["USER_TABLE"])
             account_table = dynamodb.Table(parameter.get("ACCOUNT_TABLE"))
             contract_table = dynamodb.Table(parameter.get("CONTRACT_TABLE"))
-            device_relation_table = dynamodb.Table(
-                parameter.get("DEVICE_RELATION_TABLE")
-            )
+            device_relation_table = dynamodb.Table(parameter.get("DEVICE_RELATION_TABLE"))
             hist_list_table = dynamodb.Table(parameter.get("HIST_LIST_TABLE"))
         except KeyError as e:
             parameter = None
@@ -211,7 +198,7 @@ def lambda_handler(event, context):
             contract_table,
             device_relation_table,
         )
-        print(validate_result)
+        logger.info(validate_result)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
@@ -221,13 +208,11 @@ def lambda_handler(event, context):
 
         try:
             # 履歴取得
-            hist_list = ddb.get_hist_list(
-                hist_list_table, validate_result["request_params"]
-            )
+            hist_list = ddb.get_hist_list(hist_list_table, validate_result["request_params"])
             response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:
-            print(e)
-            print(traceback.format_exc())
+            logger.info(e)
+            logger.info(traceback.format_exc())
             body = {"code": "9999", "message": "履歴一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
@@ -238,13 +223,11 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(
-                response, ensure_ascii=False, default=convert.decimal_default_proc
-            ),
+            "body": json.dumps(response, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.info(e)
+        logger.info(traceback.format_exc())
         body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
