@@ -12,6 +12,7 @@ services:
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
+      - POWERTOOLS_LOG_LEVEL=DEBUG
       - INITIAL_LAMBDA_NAME=lmonosc-lambda-initialreceive-2
       - RECV_FUTURE_TIME=86400000
       - RECV_PAST_TIME=31536000000

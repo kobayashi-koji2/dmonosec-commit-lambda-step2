@@ -12,6 +12,7 @@ services:
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
+      - POWERTOOLS_LOG_LEVEL=DEBUG
       - LAMBDA_TIMEOUT_CHECK=lmonosc-lambda-remote-control-timeout-check
     volumes:
       - ./contents:/var/task
