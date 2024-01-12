@@ -89,6 +89,14 @@ def get_account_info(pk, table):
     return response[0] if response else None
 
 
+def get_account_info_by_auth_id(auth_id, table):
+    account_list = table.query(
+        IndexName="auth_id_index",
+        KeyConditionExpression=Key("auth_id").eq(auth_id),
+    ).get("Items")
+    return account_list[0] if account_list[0] else None
+
+
 def get_account_info_by_email_address(email_address, table):
     response = table.query(
         IndexName="email_address_index",
