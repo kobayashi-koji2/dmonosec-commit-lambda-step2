@@ -14,10 +14,9 @@ logger = Logger()
 def lambda_handler(event, context):
     try:
         # アカウント情報取得
-        account_id = event["userName"]
+        auth_id = event["userName"]
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
-        account_info = db.get_account_info_by_account_id(account_id, account_table)
-        account = account_info["Item"]
+        account = db.get_account_info_by_auth_id(auth_id, account_table)
 
         # パスワード有効期限を計算
         password_update_datetime = account["user_data"]["config"]["password_update_datetime"]
