@@ -34,11 +34,11 @@ def validate(event, tables):
     # 1.3 ユーザー権限確認
     # モノセコムユーザ管理テーブル取得
     user_info = db.get_user_info_by_user_id(user_id, tables["user_table"])
-    if "Item" not in user_info:
+    if not user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    contract_id = user_info["Item"]["contract_id"]  # フェーズ2以降削除
+    contract_id = user_info["contract_id"]  # フェーズ2以降削除
     contract_info = db.get_contract_info(contract_id, tables["contract_table"])
-    if "Item" not in contract_info:
+    if not contract_info:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
 
     ##################
@@ -54,10 +54,10 @@ def validate(event, tables):
 
 # 操作権限チェック
 def operation_auth_check(user_info, contract_info, device_id, tables):
-    user_type, user_id = user_info["Item"]["user_type"], user_info["Item"]["user_id"]
+    user_type, user_id = user_info["user_type"], user_info["user_id"]
     contract_id_list = []
     # 2.1 デバイスID一覧取得
-    accunt_devices = contract_info["Item"]["contract_data"]["device_list"]
+    accunt_devices = contract_info["contract_data"]["device_list"]
     # 2.2 デバイス操作権限チェック
     if device_id not in accunt_devices:
         return False

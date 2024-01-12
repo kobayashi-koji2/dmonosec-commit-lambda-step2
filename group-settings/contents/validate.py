@@ -27,10 +27,9 @@ def validate(event, contract_table, user_table):
     # ユーザの存在チェック
     logger.info(user_id)
     logger.info(user_table)
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if not "Item" in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"code": "9999", "message": "グループの操作権限がありません。"}
@@ -40,10 +39,9 @@ def validate(event, contract_table, user_table):
     body_params = json.loads(event.get("body", "{}"))
     path_params = event.get("pathParameters") or {}
 
-    contract_res = db.get_contract_info(user["contract_id"], contract_table)
-    if "Item" not in contract_res:
+    contract = db.get_contract_info(user["contract_id"], contract_table)
+    if not contract:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    contract = contract_res["Item"]
 
     # グループIDの権限チェック（更新の場合）
     if http_method == "PUT":

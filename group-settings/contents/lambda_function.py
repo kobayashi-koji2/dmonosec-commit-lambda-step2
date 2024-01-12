@@ -81,7 +81,7 @@ def lambda_handler(event, context):
                 ),
             }
 
-        group_info = db.get_group_info(result[1], group_table).get("Item", {})
+        group_info = db.get_group_info(result[1], group_table)
         relation_list = db.get_device_relation(
             "g-" + result[1], device_relation_table, sk_prefix="d-"
         )

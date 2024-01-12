@@ -35,23 +35,23 @@ def get_device_relation(pk, table, **kwargs):
                 IndexName=kwargs["gsi_name"],
                 KeyConditionExpression=Key("key2").eq(pk)
                 & Key("key1").begins_with(kwargs["sk_prefix"]),
-            ).get("Items", {})
+            ).get("Items", [])
         # GSI PK検索
         else:
             response = table.query(
                 IndexName=kwargs["gsi_name"], KeyConditionExpression=Key("key2").eq(pk)
-            ).get("Items", {})
+            ).get("Items", [])
     else:
         # PK & SK(識別子の前方一致検索)
         if "sk_prefix" in kwargs:
             response = table.query(
                 KeyConditionExpression=Key("key1").eq(pk)
                 & Key("key2").begins_with(kwargs["sk_prefix"])
-            ).get("Items", {})
+            ).get("Items", [])
 
         # PK検索
         else:
-            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get("Items", {})
+            response = table.query(KeyConditionExpression=Key("key1").eq(pk)).get("Items", [])
 
     return response
 
@@ -72,37 +72,39 @@ def get_user_info(pk, sk, table):
     response = table.query(
         IndexName="account_id_index",
         KeyConditionExpression=Key("account_id").eq(pk) & Key("contract_id").eq(sk),
-    )
+    ).get("Items", [])
     return response
 
 
 def get_user_info_by_user_id(user_id, table):
-    response = table.get_item(Key={"user_id": user_id})
+    response = table.get_item(Key={"user_id": user_id}).get("Item", {})
     return response
 
 
 # アカウント情報取得
 def get_account_info(pk, table):
-    response = table.query(IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk))
-    return response
+    response = table.query(
+        IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk)
+    ).get("Items", [])
+    return response[0] if response else None
 
 
 def get_account_info_by_email_address(email_address, table):
     response = table.query(
         IndexName="email_address_index",
         KeyConditionExpression=Key("email_address").eq(email_address),
-    )
-    return response
+    ).get("Items", [])
+    return response[0] if response else None
 
 
 def get_account_info_by_account_id(account_id, table):
-    response = table.get_item(Key={"account_id": account_id})
+    response = table.get_item(Key={"account_id": account_id}).get("Item", {})
     return response
 
 
 # 契約情報取得
 def get_contract_info(contract_id, contract_table):
-    contract_info = contract_table.get_item(Key={"contract_id": contract_id})
+    contract_info = contract_table.get_item(Key={"contract_id": contract_id}).get("Item", {})
     return contract_info
 
 
@@ -111,13 +113,13 @@ def get_device_info(device_id, device_table):
     device_list = device_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").eq(1),
-    ).get("Items")
+    ).get("Items", [])
     return device_list[0] if device_list else None
 
 
 # 現状態取得
 def get_device_state(device_id, device_state_table):
-    device_state = device_state_table.get_item(Key={"device_id": device_id})
+    device_state = device_state_table.get_item(Key={"device_id": device_id}).get("Item", {})
     return device_state
 
 
@@ -143,7 +145,7 @@ def get_pre_reg_device_info(contract_id_list, pre_register_table):
 
 # グループ情報取得
 def get_group_info(group_id, group_table):
-    group_info = group_table.get_item(Key={"group_id": group_id})
+    group_info = group_table.get_item(Key={"group_id": group_id}).get("Item", {})
     return group_info
 
 
@@ -173,5 +175,5 @@ def get_remote_control(device_req_no, remote_control_table):
     remote_control_list = remote_control_table.query(
         KeyConditionExpression=Key("device_req_no").eq(device_req_no),
         ScanIndexForward=False,
-    ).get("Items")
+    ).get("Items", [])
     return remote_control_list[0] if remote_control_list else None

@@ -52,7 +52,7 @@ def lambda_handler(event, context):
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
         # トークンからユーザー情報取得
-        user_info = val_result["user_info"]["Item"]
+        user_info = val_result["user_info"]
         logger.info("user_info", end=": ")
         logger.info(user_info)
         # ユーザー権限確認
@@ -71,7 +71,7 @@ def lambda_handler(event, context):
         if user_info["user_type"] in ("admin", "sub_admin"):
             logger.info("In case of admin/sub_admin")
             cotract_id = user_info["contract_id"]
-            contract_info = db.get_contract_info(cotract_id, contract_table).get("Item")
+            contract_info = db.get_contract_info(cotract_id, contract_table)
             logger.info("contract_info", end=": ")
             logger.info(contract_info)
             device_id_list = contract_info["contract_data"]["device_list"]
@@ -89,7 +89,7 @@ def lambda_handler(event, context):
 
             if device_info is not None:
                 # 現状態情報取得
-                state_info = db.get_device_state(device_id, device_state_table).get("Item")
+                state_info = db.get_device_state(device_id, device_state_table)
                 logger.info("state_info", end=": ")
                 logger.info(state_info)
                 device_imei = device_info["imei"]

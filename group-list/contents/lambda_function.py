@@ -53,10 +53,8 @@ def lambda_handler(event, context):
         group_list = []
         try:
             contract_info = db.get_contract_info(user["contract_id"], contract_table)
-            for group_id in (
-                contract_info.get("Item", {}).get("contract_data", {}).get("group_list", {})
-            ):
-                group_info = db.get_group_info(group_id, group_table).get("Item", {})
+            for group_id in contract_info.get("contract_data", {}).get("group_list", {}):
+                group_info = db.get_group_info(group_id, group_table)
                 group_list.append(
                     {
                         "group_id": group_id,

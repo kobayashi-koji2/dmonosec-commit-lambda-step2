@@ -88,11 +88,11 @@ def lambda_handler(event, context):
             for item1 in device_group_relation:
                 item1 = item1["key1"]
                 group_info = db.get_group_info(re.sub("^g-", "", item1), tables["group_table"])
-                if "Item" in group_info:
+                if group_info:
                     group_list.append(
                         {
-                            "group_id": group_info["Item"]["group_id"],
-                            "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                            "group_id": group_info["group_id"],
+                            "group_name": group_info["group_data"]["config"]["group_name"],
                         }
                     )
 

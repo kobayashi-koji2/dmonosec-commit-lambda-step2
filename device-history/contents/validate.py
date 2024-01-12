@@ -47,10 +47,9 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if "Item" not in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
 
     # 入力値ェック
     query_params = event.get("queryStringParameters", {})
@@ -91,10 +90,9 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
     if len(params["device_list"]) == 0:
         return {"code": "9999", "message": "パラメータが不正です"}
 
-    contract_res = db.get_contract_info(user["contract_id"], contract_table)
-    if "Item" not in contract_res:
+    contract = db.get_contract_info(user["contract_id"], contract_table)
+    if not contract:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    contract = contract_res["Item"]
 
     # 権限チェック（共通）
     for device_id in params["device_list"]:

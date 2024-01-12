@@ -30,10 +30,8 @@ def create_user_info(
     # アカウント管理テーブル、Cognito UserPool
     #################################################
     # メールアドレスで検索して、なければ作成、あれば更新
-    account_info = db.get_account_info_by_email_address(
-        request_params["email_address"], account_table
-    )
-    if "Item" not in account_info:
+    account = db.get_account_info_by_email_address(request_params["email_address"], account_table)
+    if account is None:
         # なければCogitoユーザーを作成し、アカウント管理テーブルに登録
         auth_id = cognito.create_cognito_user(request_params["email_address"])
 
@@ -59,7 +57,6 @@ def create_user_info(
         transact_items.append(put_group)
     else:
         # すでにアカウントがあれば更新
-        account = account_info["Item"]
         account_id = account["account_id"]
         if request_params["user_name"] != account["user_name"]:
             account_update_expression = f"SET #email_address_attr = :email_address, #map.#config_attr.#user_name_attr = :user_name"
@@ -193,10 +190,8 @@ def update_user_info(
     #################################################
     # アカウント管理テーブル、Cognito UserPool
     #################################################
-    user_info = db.get_user_info_by_user_id(user_id, user_table)
-    user = user_info["Item"]
-    account_info = db.get_account_info_by_account_id(user["account_id"], account_table)
-    account = account_info["Item"]
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    account = db.get_account_info_by_account_id(user["account_id"], account_table)
     if request_params["user_name"] != account.get("user_data", {}).get("config", {}).get(
         "user_name"
     ):

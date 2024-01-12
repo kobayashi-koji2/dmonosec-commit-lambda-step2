@@ -23,10 +23,9 @@ def validate(event, user_table):
         logger.error("トークンの検証に失敗", exc_info=True)
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if "Item" not in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
 
     return {
         "code": "0000",

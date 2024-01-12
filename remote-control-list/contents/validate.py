@@ -21,7 +21,7 @@ def validate(event, user_table):
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     user_id = decoded_idtoken["cognito:username"]
     user_info = db.get_user_info_by_user_id(user_id, user_table)
-    if not "Item" in user_info:
+    if not user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
 
     return {

@@ -85,7 +85,7 @@ def lambda_handler(event, context):
         device_id = remote_control["device_id"]
 
         # デバイス操作権限チェック（共通）
-        contract = db.get_contract_info(user_info["contract_id"], contract_table)["Item"]
+        contract = db.get_contract_info(user_info["contract_id"], contract_table)
         logger.info(f"contract: {contract}")
         device_id_list_by_contract = contract["contract_data"]["device_list"]
 

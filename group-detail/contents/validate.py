@@ -27,10 +27,9 @@ def validate(event, contract_table, user_table):
         logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if "Item" not in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"code": "9999", "message": "グループの操作権限がありません。"}
@@ -39,10 +38,9 @@ def validate(event, contract_table, user_table):
     path_params = event.get("pathParameters", {})
     params = {"group_id": path_params.get("group_id")}
 
-    contract_res = db.get_contract_info(user["contract_id"], contract_table)
-    if "Item" not in contract_res:
+    contract = db.get_contract_info(user["contract_id"], contract_table)
+    if not contract:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    contract = contract_res["Item"]
 
     if not params["group_id"]:
         return {"code": "9999", "message": "パラメータが不正です"}

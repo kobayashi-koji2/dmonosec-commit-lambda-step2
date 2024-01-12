@@ -311,10 +311,9 @@ def __check_return_di_state(do_info, device_id, device_state_table):
 
     if ("do_di_return" in do_info) and do_info["do_di_return"]:
         device_state_info = db.get_device_state(device_id, device_state_table)
-        if not "Item" in device_state_info:
+        if not device_state_info:
             res_body = {"code": "9999", "message": "現状態情報が存在しません。"}
             return False, res_body
-        device_state_info = device_state_info["Item"]
         logger.info("device_state_info", end=": ")
         logger.info(device_state_info)
 
@@ -423,15 +422,15 @@ def __register_hist_info(
         ]
         for group_id in group_id_list:
             group_info = db.get_group_info(group_id, group_table)
-            if not "Item" in group_info:
+            if not group_info:
                 res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
                 return False, res_body
             logger.info("group_info", end=": ")
             logger.info(group_info)
             group_list.append(
                 {
-                    "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                    "group_id": group_info["group_id"],
+                    "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
     else:

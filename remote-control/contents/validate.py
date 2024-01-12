@@ -22,16 +22,14 @@ def validate(event, account_table, user_table):
     auth_id = decoded_idtoken["cognito:username"]
     # 1月まではいったん、IDトークンに含まれるusernameとモノセコムユーザーIDは同じ認識で直接ユーザー管理を参照するよう実装
     account_info = db.get_account_info(auth_id, account_table)
-    if not "Items" in account_info:
+    if account_info is None:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    account_info = account_info["Items"][0]
     logger.info("account_info", end=": ")
     logger.info(account_info)
 
     user_info = db.get_user_info_by_user_id(auth_id, user_table)
-    if not "Item" in user_info:
+    if not user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user_info = user_info["Item"]
     logger.info("user_info", end=": ")
     logger.info(user_info)
 

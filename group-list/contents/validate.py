@@ -27,10 +27,9 @@ def validate(event, user_table):
         logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if "Item" not in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"code": "9999", "message": "グループの操作権限がありません。"}

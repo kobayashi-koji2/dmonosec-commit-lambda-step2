@@ -16,7 +16,6 @@ def decode_idtoken(event):
 def dict_dynamo_format(dict):
     ret_dict = {}
     for k, v in dict.items():
-        print(k, v)
         ret_dict[k] = to_dynamo_format(v)
     return ret_dict
 
@@ -25,6 +24,8 @@ def to_dynamo_format(v):
     if type(v) is str:
         return {"S": v}
     if type(v) is int:
+        return {"N": str(v)}
+    if type(v) is Decimal:
         return {"N": str(v)}
     if type(v) is bool:
         return {"BOOL": v}

@@ -58,7 +58,7 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
 
-        user_info = validate_result["user_info"]["Item"]
+        user_info = validate_result['user_info']
         user_id = user_info["user_id"]
         user_type = user_info["user_type"]
         contract_id = user_info["contract_id"]
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         if user_type == "admin" or user_type == "sub_admin":
             # 3.1 デバイスID一覧取得
             contract_info = db.get_contract_info(contract_id, tables["contract_table"])
-            if "Item" not in contract_info:
+            if not contract_info:
                 res_body = {"code": "9999", "message": "契約情報が存在しません。"}
                 return {
                     "statusCode": 200,
@@ -81,7 +81,7 @@ def lambda_handler(event, context):
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             device_id_list = (
-                contract_info.get("Item", {}).get("contract_data", {}).get("device_list", [])
+                contract_info.get("contract_data", {}).get("device_list", [])
             )
 
         ##################
@@ -161,8 +161,8 @@ def lambda_handler(event, context):
         group_info_list = []
         for item in all_groups:
             group_info = db.get_group_info(item, tables["group_table"])
-            if "Item" in group_info:
-                group_info_list.append(group_info["Item"])
+            if group_info:
+                group_info_list.append(group_info)
             else:
                 logger.info(f"group information does not exist:{item}")
         logger.info(f"グループ情報:{group_info_list}")
@@ -207,8 +207,8 @@ def lambda_handler(event, context):
                 )
             logger.info(f"グループ名:{group_name_list}")
             # デバイス現状態取得
-            device_state = db.get_device_state(item1, tables["device_state_table"]).get("Item", {})
-            if "Item" not in device_state:
+            device_state = db.get_device_state(item1, tables["device_state_table"])
+            if not device_state:
                 logger.info(f"device current status information does not exist:{item1}")
 
             # デバイス一覧生成

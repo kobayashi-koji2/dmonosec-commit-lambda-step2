@@ -52,8 +52,7 @@ def lambda_handler(event, context):
         user = validate_result["user_info"]
 
         user_id = validate_result["request_params"]["user_id"]
-        account_info = db.get_account_info_by_account_id(user.get("account_id"), account_table)
-        account = account_info["Item"]
+        account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
         account_config = account.get("user_data", {}).get("config", {})
 
         group_relation_list = db.get_device_relation(
@@ -62,7 +61,7 @@ def lambda_handler(event, context):
         group_list = []
         for group_relation in group_relation_list:
             group_id = group_relation["key2"][2:]
-            group_info = db.get_group_info(group_id, group_table).get("Item")
+            group_info = db.get_group_info(group_id, group_table)
             logger.info(group_info)
             group_list.append(
                 {

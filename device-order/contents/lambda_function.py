@@ -47,7 +47,7 @@ def lambda_handler(event, context):
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
         # トークンからユーザー情報取得
-        user_info = val_result["user_info"]["Item"]
+        user_info = val_result["user_info"]
 
         ### 2. デバイス表示順序更新
         # ユーザー情報取得

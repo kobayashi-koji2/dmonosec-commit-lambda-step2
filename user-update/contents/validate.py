@@ -33,10 +33,9 @@ def validate(event, contract_table, user_table):
         logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
-    user_res = db.get_user_info_by_user_id(user_id, user_table)
-    if "Item" not in user_res:
+    user = db.get_user_info_by_user_id(user_id, user_table)
+    if not user:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    user = user_res["Item"]
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"code": "9999", "message": "ユーザの操作権限がありません。"}
@@ -46,10 +45,9 @@ def validate(event, contract_table, user_table):
     body_params = json.loads(event.get("body", "{}"))
     path_params = event.get("pathParameters", {})
 
-    contract_res = db.get_contract_info(user["contract_id"], contract_table)
-    if "Item" not in contract_res:
+    contract = db.get_contract_info(user["contract_id"], contract_table)
+    if not contract:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    contract = contract_res["Item"]
 
     if http_method == "POST":
         if "email_address" not in body_params:
@@ -65,7 +63,7 @@ def validate(event, contract_table, user_table):
         if "user_id" not in path_params:
             return {"code": "9999", "message": "パラメータが不正です"}
         update_user_res = db.get_user_info_by_user_id(path_params["user_id"], user_table)
-        if "Item" not in update_user_res:
+        if not update_user_res:
             return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:
             return {"code": "9999", "messege": "不正なユーザIDが指定されています。"}

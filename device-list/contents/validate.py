@@ -17,28 +17,26 @@ def validate(event, tables):
         decoded_idtoken = convert.decode_idtoken(event)
         # 1.2 トークンからユーザー情報取得
         user_id = decoded_idtoken["cognito:username"]
-        # contract_id = decode_idtoken['contract_id'] #フェーズ2
+        # contract_id = decode_idtoken["contract_id"] #フェーズ2
     except Exception as e:
         logger.error(e)
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # 1.3 ユーザー権限確認
     """
-    account_info = db.get_account_info(user_id,tables['account_table'])
+    account_info = db.get_account_info(user_id,tables["account_table"])
     logger.info(account_info)
-    if len(account_info['Items']) == 0:
+    if account_info is None:
         return {
-            'code':'9999',
-            'messege':'アカウント情報が存在しません。'
+            "code":"9999",
+            "messege":"アカウント情報が存在しません。"
         }
-    account_id = account_info['Items'][0]['account_id']
+    account_id = account_info["account_id"]
     """
     # モノセコムユーザ管理テーブル取得
     user_info = db.get_user_info_by_user_id(user_id, tables["user_table"])
-    if "Item" not in user_info:
+    if not user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    contract_info = db.get_contract_info(
-        user_info["Item"]["contract_id"], tables["contract_table"]
-    )
-    if "Item" not in contract_info:
+    contract_info = db.get_contract_info(user_info["contract_id"], tables["contract_table"])
+    if not contract_info:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
     return {"code": "0000", "user_info": user_info}

@@ -73,7 +73,7 @@ def lambda_handler(event, context):
         # デバイスID一覧取得
         contract_id = val_result["user_info"]["contract_id"]
         contract_info = db.get_contract_info(contract_id, contract_table)
-        if not "Item" in contract_info:
+        if not contract_info:
             res_body = {"code": "9999", "message": "契約情報が存在しません。"}
             respons["statusCode"] = 500
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
@@ -329,7 +329,7 @@ def __register_hist_info(
         ]
         for group_id in group_id_list:
             group_info = db.get_group_info(group_id, group_table)
-            if not "Item" in group_info:
+            if not group_info:
                 res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
                 respons["statusCode"] = 500
                 respons["body"] = json.dumps(result, ensure_ascii=False)
@@ -338,8 +338,8 @@ def __register_hist_info(
             logger.info(group_info)
             group_list.append(
                 {
-                    "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                    "group_id": group_info["group_id"],
+                    "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
     else:

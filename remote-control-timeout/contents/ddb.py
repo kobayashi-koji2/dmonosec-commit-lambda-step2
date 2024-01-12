@@ -68,11 +68,11 @@ def put_hist_list(
     group_list = []
     for device_relation in device_relation_list:
         group_info = db.get_group_info(device_relation["key2"][2:], group_table)
-        if "Item" in group_info:
+        if group_info:
             group_list.append(
                 {
-                    "group_id": group_info["Item"]["group_id"],
-                    "group_name": group_info["Item"]["group_data"]["config"]["group_name"],
+                    "group_id": group_info["group_id"],
+                    "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
 

@@ -55,7 +55,7 @@ def lambda_handler(event, context):
         try:
             contract = validate_result["contract_info"]
             group_id = validate_result["request_params"]["group_id"]
-            group_info = db.get_group_info(group_id, group_table).get("Item", {})
+            group_info = db.get_group_info(group_id, group_table)
             relation_list = db.get_device_relation(
                 "g-" + group_id, device_relation_table, sk_prefix="d-"
             )
