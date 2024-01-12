@@ -63,7 +63,7 @@ def lambda_handler(event, context):
         transact_items = [
             {
                 "Update": {
-                    "TableName": parameter["USER_TABLE"],
+                    "TableName": ssm.table_names["USER_TABLE"],
                     "Key": {"user_id": {"S": user_info["user_id"]}},
                     "UpdateExpression": "set #s = :s",
                     "ExpressionAttributeNames": {"#s": "user_data"},
