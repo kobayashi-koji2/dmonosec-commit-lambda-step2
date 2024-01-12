@@ -78,9 +78,7 @@ def lambda_handler(event, context):
             respons["statusCode"] = 500
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons
-        contract_info = contract_info["Item"]
-        logger.info("contract_info", end=": ")
-        logger.info(contract_info)
+        logger.info(f"contract_info: {contract_info}")
         device_list = contract_info["contract_data"]["device_list"]
 
         # デバイス操作権限チェック
@@ -97,8 +95,7 @@ def lambda_handler(event, context):
         if user_info["user_type"] == "worker":
             pk = "u-" + user_info["user_id"]
             relation_info = db.get_device_relation(pk, device_relation_table)
-            logger.info("device_relation", end=": ")
-            logger.info(relation_info)
+            logger.info(f"device_relation_info: {relation_info}")
             relation_d = [i["key2"] for i in relation_info if i["key2"].startswith("d-")]
             relation_g = [i["key2"] for i in relation_info if i["key2"].startswith("g-")]
 
@@ -106,12 +103,10 @@ def lambda_handler(event, context):
             if len(relation_g) != 0:
                 for pk in relation_g:
                     relation_info = db.get_device_relation(pk, device_relation_table)
-                    logger.info("device_relation[g-]", end=": ")
-                    logger.info(relation_info)
+                    logger.info(f"device_relation[g-]: {relation_info}")
                     relation_d += [i["key2"] for i in relation_info]
             device_id_list = [i.replace("d-", "", 1) for i in list(dict.fromkeys(relation_d))]
-            logger.info("device_id_list", end=": ")
-            logger.info(device_id_list)
+            logger.info(f"device_id_list: {device_id_list}")
 
             if device_id not in device_id_list:
                 res_body = {"code": "9999", "message": "デバイスの操作権限がありません。"}
@@ -129,8 +124,7 @@ def lambda_handler(event, context):
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons
         device_info = device_info[0]
-        logger.info("device_info", end=": ")
-        logger.info(device_info)
+        logger.info(f"device_info: {device_info}")
 
         ### 5. 制御中判定
         # 要求番号取得
@@ -138,8 +132,7 @@ def lambda_handler(event, context):
         do_no = int(val_result["path_params"]["do_no"])
         req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
         if req_no_count_info:
-            logger.info("req_no_count_info", end=": ")
-            logger.info(req_no_count_info)
+            logger.info(f"req_no_count_info: {req_no_count_info}")
 
             # 最新制御情報取得
             latest_req_num = convert.decimal_default_proc(req_no_count_info["num"])
@@ -154,8 +147,7 @@ def lambda_handler(event, context):
                 respons["body"] = json.dumps(res_body, ensure_ascii=False)
                 return respons
             remote_control_latest = remote_control_latest[0]
-            logger.info("remote_control_latest", end=": ")
-            logger.info(remote_control_latest)
+            logger.info(f"remote_control_latest: {remote_control_latest}")
 
             # 制御中判定
             if ("recv_datetime" not in remote_control_latest) or (
@@ -231,18 +223,15 @@ def lambda_handler(event, context):
             "DO_Control": do_control,
             "DO_ControlTime": do_control_time,
         }
-        logger.info("Iot Core Message", end=": ")
-        logger.info(payload)
+        logger.info(f"Iot Core Message: {payload}")
 
         pubhex = "".join(payload.values())
         # pubhex = "000C80020000000001100000"
-        logger.info("Iot Core Message(hexadecimal)", end=": ")
-        logger.info(pubhex)
+        logger.info(f"Iot Core Message(hexadecimal): {pubhex}")
 
         # AWS Iot Core へメッセージ送信
         iot_result = iot.publish(topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex))
-        logger.info("iot_result", end=": ")
-        logger.info(iot_result)
+        logger.info(f"iot_result: {iot_result}")
 
         # 要求データを接点出力制御応答TBLへ登録
         device_req_no = icc_id + "-" + req_no
@@ -284,8 +273,7 @@ def lambda_handler(event, context):
             InvocationType="Event",
             Payload=json.dumps(payload, ensure_ascii=False),
         )
-        logger.info("lambda_invoke_result", end=": ")
-        logger.info(lambda_invoke_result)
+        logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
         ### 9. メッセージ応答
         res_body = {"code": "0000", "message": "", "device_req_no": device_req_no}
@@ -334,8 +322,7 @@ def __register_hist_info(
                 respons["statusCode"] = 500
                 respons["body"] = json.dumps(result, ensure_ascii=False)
                 return respons
-            logger.info("group_info", end=": ")
-            logger.info(group_info)
+            logger.info(f"group_info: {group_info}")
             group_list.append(
                 {
                     "group_id": group_info["group_id"],
@@ -383,7 +370,6 @@ def __register_hist_info(
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
-    logger.info("put_items", end=": ")
-    logger.info(put_items)
+    logger.info(f"put_items: {put_items}")
 
     return True, result

@@ -60,8 +60,7 @@ def lambda_handler(event, context):
         # dt_now = datetime(2022, 12, 31, 1, 0, 30, 1000)
         if dt_now.tzname != "JST":
             dt_now = dt_now + timedelta(hours=+9)
-        logger.info("now_time", end=": ")
-        logger.info(dt_now.strftime("%H:%M"))
+        logger.info("now_time: {0}".format(dt_now.strftime("%H:%M")))
 
         # 実行対象のデバイス情報取得
         device_info_list = ddb.get_device_info_available(device_table)
@@ -74,8 +73,7 @@ def lambda_handler(event, context):
 
         ### 2. 接点出力制御要求
         for device_info in device_info_list:
-            logger.info("--- device_info", end=": ")
-            logger.info(device_info)
+            logger.info(f"--- device_info: {device_info}")
             device_id = device_info["device_id"]
             contract_id = device_info["device_data"]["param"]["contract_id"]
             icc_id = device_info["device_data"]["param"]["iccid"]
@@ -87,10 +85,8 @@ def lambda_handler(event, context):
                 checked_timer_do_info = __check_timer_settings(do_info, dt_now)
                 if not checked_timer_do_info:
                     logger.info(
-                        f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info",
-                        end=": ",
+                        f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info: {do_info}"
                     )
-                    logger.info(do_info)
                     continue
 
                 # 接点入力状態チェック
@@ -112,17 +108,13 @@ def lambda_handler(event, context):
                         hist_list_table,
                     )
                     logger.info(
-                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info",
-                        end=": ",
+                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
                     )
-                    logger.info(do_info)
                     continue
                 elif not result:
                     logger.info(
-                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info",
-                        end=": ",
+                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
                     )
-                    logger.info(do_info)
                     continue
                 checked_di_state_info = result
 
@@ -152,17 +144,13 @@ def lambda_handler(event, context):
                         respons["body"] = json.dumps(result, ensure_ascii=False)
                         return respons
                     logger.info(
-                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info",
-                        end=": ",
+                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
                     )
-                    logger.info(do_info)
                     continue
                 elif not result:
                     logger.info(
-                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info",
-                        end=": ",
+                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
                     )
-                    logger.info(do_info)
                     continue
                 checked_under_control_info = result
 
@@ -199,18 +187,15 @@ def lambda_handler(event, context):
                     "DO_Control": do_control,
                     "DO_ControlTime": do_control_time,
                 }
-                logger.info("Iot Core Message", end=": ")
-                logger.info(payload)
+                logger.info(f"Iot Core Message: {payload}")
                 pubhex = "".join(payload.values())
-                logger.info("Iot Core Message(hexadecimal)", end=": ")
-                logger.info(pubhex)
+                logger.info(f"Iot Core Message(hexadecimal): {pubhex}")
 
                 # AWS Iot Core へメッセージ送信
                 iot_result = iot.publish(
                     topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex)
                 )
-                logger.info("iot_result", end=": ")
-                logger.info(iot_result)
+                logger.info(f"iot_result: {iot_result}")
 
                 # 要求データを接点出力制御応答TBLへ登録
                 device_req_no = icc_id + "-" + req_no
@@ -250,8 +235,7 @@ def lambda_handler(event, context):
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(res_body, ensure_ascii=False)
                     return respons
-                logger.info("put_items", end=": ")
-                logger.info(put_items)
+                logger.info(f"put_items: {put_items}")
 
                 # タイムアウト判定Lambda呼び出し
                 payload = {"body": {"device_req_no": device_req_no}}
@@ -260,8 +244,7 @@ def lambda_handler(event, context):
                     InvocationType="Event",
                     Payload=json.dumps(payload, ensure_ascii=False),
                 )
-                logger.info("lambda_invoke_result", end=": ")
-                logger.info(lambda_invoke_result)
+                logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
         ### 3. メッセージ応答
         res_body = {"code": "0000", "message": ""}
@@ -314,8 +297,7 @@ def __check_return_di_state(do_info, device_id, device_state_table):
         if not device_state_info:
             res_body = {"code": "9999", "message": "現状態情報が存在しません。"}
             return False, res_body
-        logger.info("device_state_info", end=": ")
-        logger.info(device_state_info)
+        logger.info(f"device_state_info: {device_state_info}")
 
         # タイマーのON/OFF制御と接点入力状態の値が一致するなら処理対象外
         col_name = "di" + str(do_info["do_di_return"]) + "_state"
@@ -348,8 +330,7 @@ def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls
 
     req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
     if req_no_count_info:
-        logger.info("req_no_count_info", end=": ")
-        logger.info(req_no_count_info)
+        logger.info(f"req_no_count_info: {req_no_count_info}")
 
         # 最新制御情報取得
         latest_req_no = re.sub("^0x", "", format(int(req_no_count_info["num"]) % 65535, "#010x"))
@@ -361,8 +342,7 @@ def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls
             res_body = {"code": "9999", "message": "接点出力制御応答情報が存在しません。"}
             return False, res_body
         remote_control_latest = remote_control_latest[0]
-        logger.info("remote_control_latest", end=": ")
-        logger.info(remote_control_latest)
+        logger.info(f"remote_control_latest: {remote_control_latest}")
 
         # 制御中判定
         if ("recv_datetime" not in remote_control_latest) or (
@@ -425,8 +405,7 @@ def __register_hist_info(
             if not group_info:
                 res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
                 return False, res_body
-            logger.info("group_info", end=": ")
-            logger.info(group_info)
+            logger.info(f"group_info: {group_info}")
             group_list.append(
                 {
                     "group_id": group_info["group_id"],
@@ -491,7 +470,6 @@ def __register_hist_info(
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
-    logger.info("put_items", end=": ")
-    logger.info(put_items)
+    logger.info(f"put_items: {put_items}")
 
     return True, result

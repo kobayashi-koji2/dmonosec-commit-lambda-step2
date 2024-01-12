@@ -20,7 +20,7 @@ def validate(event, contract_table, user_table):
 
     try:
         decoded_idtoken = convert.decode_idtoken(event)
-        logger.info("idtoken:", decoded_idtoken)
+        logger.info(f"idtoken: {decoded_idtoken}")
         user_id = decoded_idtoken["cognito:username"]
     except Exception as e:
         logger.error(e)

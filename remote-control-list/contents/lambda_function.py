@@ -53,8 +53,7 @@ def lambda_handler(event, context):
             return respons
         # トークンからユーザー情報取得
         user_info = val_result["user_info"]
-        logger.info("user_info", end=": ")
-        logger.info(user_info)
+        logger.info(f"user_info: {user_info}")
         # ユーザー権限確認
         # 1月まではいったん、ログインするユーザーIDとモノセコムユーザーIDは同じ認識で直接ユーザー管理より参照する形で実装
         # バリデーションチェックの処理の中でモノセコムユーザー管理より参照しているのでその値を使用
@@ -72,26 +71,22 @@ def lambda_handler(event, context):
             logger.info("In case of admin/sub_admin")
             cotract_id = user_info["contract_id"]
             contract_info = db.get_contract_info(cotract_id, contract_table)
-            logger.info("contract_info", end=": ")
-            logger.info(contract_info)
+            logger.info(f"contract_info: {contract_info}")
             device_id_list = contract_info["contract_data"]["device_list"]
 
-        logger.info("device_id_list", end=": ")
-        logger.info(device_id_list)
+        logger.info(f"device_id_list: {device_id_list}")
 
         ### 4. 遠隔制御一覧生成
         results = list()
         # デバイス情報取得
         for device_id in device_id_list:
             device_info = db.get_device_info(device_id, device_table)
-            logger.info("device_info", end=": ")
-            logger.info(device_info)
+            logger.info(f"device_info: {device_info}")
 
             if device_info is not None:
                 # 現状態情報取得
                 state_info = db.get_device_state(device_id, device_state_table)
-                logger.info("state_info", end=": ")
-                logger.info(state_info)
+                logger.info(f"state_info: {state_info}")
                 device_imei = device_info["imei"]
                 device_name = device_info["device_data"]["config"]["device_name"]
                 # 接点出力一覧
@@ -108,8 +103,7 @@ def lambda_handler(event, context):
 
         ### 5. メッセージ応答
         results = __decimal_to_integer_or_float(results)
-        logger.info("results", end=": ")
-        logger.info(results)
+        logger.info(f"results: {results}")
         res_body = {"code": "0000", "message": "", "remote_control_list": results}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
@@ -128,26 +122,22 @@ def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_tabl
     quary_item = "u-" + user_info["user_id"]
     kwargs = {"sk_prefix": "g-"}
     device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
-    logger.info("device_relation[g-]", end=": ")
-    logger.info(device_relation_results)
+    logger.info(f"device_relation[g-]: {device_relation_results}")
     for group_id in device_relation_results:
         kwargs = {"sk_prefix": "d-"}
         device_relation_results = db.get_device_relation(
             group_id["key2"], device_relation_table, **kwargs
         )
         device_id_list += [item["key2"] for item in device_relation_results]
-        logger.info("device_relation[g-d-]", end=": ")
-        logger.info(device_relation_results)
+        logger.info(f"device_relation[g-d-]: {device_relation_results}")
 
     # ユーザーIDに紐づくデバイスIDを取得（デバイス関係TBL）
     kwargs = {"sk_prefix": "d-"}
     device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
-    logger.info("device_relation[d-]", end=": ")
-    logger.info(device_relation_results)
+    logger.info(f"device_relation[d-]: {device_relation_results}")
     device_id_list += [item["key2"] for item in device_relation_results]
     device_id_list = [i[2:] for i in list(dict.fromkeys(device_id_list))]
-    logger.info("device_id_list", end=": ")
-    logger.info(device_id_list)
+    logger.info(f"device_id_list: {device_id_list}")
 
     return device_id_list
 

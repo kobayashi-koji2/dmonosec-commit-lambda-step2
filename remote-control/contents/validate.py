@@ -24,14 +24,12 @@ def validate(event, account_table, user_table):
     account_info = db.get_account_info(auth_id, account_table)
     if account_info is None:
         return {"code": "9999", "messege": "アカウント情報が存在しません。"}
-    logger.info("account_info", end=": ")
-    logger.info(account_info)
+    logger.info(f"account_info: {account_info}")
 
     user_info = db.get_user_info_by_user_id(auth_id, user_table)
     if not user_info:
         return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
-    logger.info("user_info", end=": ")
-    logger.info(user_info)
+    logger.info(f"user_info: {user_info}")
 
     # 入力値チェック
     path_params = event.get("pathParameters", {})
