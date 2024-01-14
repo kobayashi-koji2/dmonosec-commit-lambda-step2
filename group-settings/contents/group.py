@@ -149,8 +149,7 @@ def update_group_info(
     # デバイス管理テーブル更新用オブジェクト作成
     #################################################
     # グループ更新前のデバイス一覧
-    relation_list = db.get_device_relation("g-" + group_id, device_relation_table, sk_prefix="d-")
-    device_list_old = [relation["key2"][2:] for relation in relation_list]
+    device_list_old = db.get_group_relation_device_id_list(group_id, device_relation_table)
 
     # グループから削除されたデバイス
     removed_devices = set(device_list_old) - set(device_list)

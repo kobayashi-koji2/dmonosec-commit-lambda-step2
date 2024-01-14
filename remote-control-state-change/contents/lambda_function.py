@@ -100,7 +100,9 @@ def lambda_handler(event, context):
 
         # デバイス操作権限チェック（管理者, 副管理者でない場合）
         if user_info["user_type"] not in ["admin", "sub_admin"]:
-            allowed_device_id_list = get_device_id_list_by_user_id(user_id, device_relation_table)
+            allowed_device_id_list = db.get_user_relation_device_id_list(
+                user_id, device_relation_table
+            )
             logger.info(f"allowed_device_id_list: {allowed_device_id_list}")
 
             if device_id not in allowed_device_id_list:
@@ -161,22 +163,3 @@ def lambda_handler(event, context):
                 {"code": "9999", "message": "予期しないエラーが発生しました。"}, ensure_ascii=False
             ),
         }
-
-
-def get_device_id_list_by_user_id(user_id, device_relation_table):
-    device_id_list = []
-    device_relation_list = db.get_device_relation(f"u-{user_id}", device_relation_table)
-
-    for device_relation in device_relation_list:
-        if device_relation["key2"].startswith("d-"):
-            device_id_list.append(device_relation["key2"][2:])
-
-        elif device_relation["key2"].startswith("g-"):
-            device_relation_list_by_group_id = db.get_device_relation(
-                device_relation["key2"], device_relation_table, sk_prefix="d-"
-            )
-            device_id_list += [
-                relation["key2"][2:] for relation in device_relation_list_by_group_id
-            ]
-
-    return device_id_list

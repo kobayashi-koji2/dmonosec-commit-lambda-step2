@@ -62,8 +62,8 @@ def lambda_handler(event, context):
         device_id_list = list()
         if user_info["user_type"] in ("worker", "referrer"):
             logger.info("In case of worker/referee")
-            device_id_list = __get_device_id_in_case_of_worker_or_referee(
-                user_info, device_relation_table
+            device_id_list = db.get_user_relation_device_id_list(
+                user_info["user_id"], device_relation_table
             )
 
         ### 3. デバイスID取得（管理者・副管理者の場合）
@@ -114,32 +114,6 @@ def lambda_handler(event, context):
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
-
-
-def __get_device_id_in_case_of_worker_or_referee(user_info, device_relation_table):
-    device_id_list = []
-    # ユーザーIDに紐づくグループIDからデバイスIDを取得（デバイス関係TBL）
-    quary_item = "u-" + user_info["user_id"]
-    kwargs = {"sk_prefix": "g-"}
-    device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
-    logger.info(f"device_relation[g-]: {device_relation_results}")
-    for group_id in device_relation_results:
-        kwargs = {"sk_prefix": "d-"}
-        device_relation_results = db.get_device_relation(
-            group_id["key2"], device_relation_table, **kwargs
-        )
-        device_id_list += [item["key2"] for item in device_relation_results]
-        logger.info(f"device_relation[g-d-]: {device_relation_results}")
-
-    # ユーザーIDに紐づくデバイスIDを取得（デバイス関係TBL）
-    kwargs = {"sk_prefix": "d-"}
-    device_relation_results = db.get_device_relation(quary_item, device_relation_table, **kwargs)
-    logger.info(f"device_relation[d-]: {device_relation_results}")
-    device_id_list += [item["key2"] for item in device_relation_results]
-    device_id_list = [i[2:] for i in list(dict.fromkeys(device_id_list))]
-    logger.info(f"device_id_list: {device_id_list}")
-
-    return device_id_list
 
 
 def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info):

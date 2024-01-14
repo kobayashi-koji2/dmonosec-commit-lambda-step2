@@ -391,30 +391,22 @@ def __register_hist_info(
     result = None
 
     # グループ情報取得
-    group_list = list()
-    pk = "d-" + device_info["device_id"]
-    group_device_list = db.get_device_relation(
-        pk, device_relation_table, sk_prefix="g-", gsi_name="key2_index"
+    group_id_list = db.get_device_relation_group_id_list(
+        device_info["device_id"], device_relation_table
     )
-    if len(group_device_list) != 0:
-        group_id_list = [
-            re.sub("^g-", "", group_device_info["key1"]) for group_device_info in group_device_list
-        ]
-        for group_id in group_id_list:
-            group_info = db.get_group_info(group_id, group_table)
-            if not group_info:
-                res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
-                return False, res_body
-            logger.info(f"group_info: {group_info}")
-            group_list.append(
-                {
-                    "group_id": group_info["group_id"],
-                    "group_name": group_info["group_data"]["config"]["group_name"],
-                }
-            )
-    else:
-        logger.info("The group containing the device did not exist.")
-        group_list.append({"group_id": "", "group_name": ""})
+    group_list = list()
+    for group_id in group_id_list:
+        group_info = db.get_group_info(group_id, group_table)
+        if not group_info:
+            res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
+            return False, res_body
+        logger.info(f"group_info: {group_info}")
+        group_list.append(
+            {
+                "group_id": group_info["group_id"],
+                "group_name": group_info["group_data"]["config"]["group_name"],
+            }
+        )
 
     # メール通知
     notification_hist_id = ""

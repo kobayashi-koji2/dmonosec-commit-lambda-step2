@@ -56,6 +56,57 @@ def get_device_relation(pk, table, **kwargs):
     return response
 
 
+# デバイスに紐づくグループID一覧を取得
+def get_device_relation_group_id_list(device_id, device_relation_table):
+    device_relation_group_list = get_device_relation(
+        f"d-{device_id}",
+        device_relation_table,
+        sk_prefix="g-",
+        gsi_name="key2_index",
+    )
+    group_id_list = [relation["key1"][2:] for relation in device_relation_group_list]
+    return group_id_list
+
+
+# グループに紐づくデバイスID一覧を取得
+def get_group_relation_device_id_list(group_id, device_relation_table):
+    group_relation_device_list = get_device_relation(
+        f"g-{group_id}", device_relation_table, sk_prefix="d-"
+    )
+    device_id_list = [relation["key2"][2:] for relation in group_relation_device_list]
+    return device_id_list
+
+
+# ユーザーに紐づくグループID一覧を取得
+def get_user_relation_group_id_list(user_id, device_relation_table):
+    user_relation_group_list = get_device_relation(
+        f"u-{user_id}", device_relation_table, sk_prefix="g-"
+    )
+    group_id_list = [relation["key2"][2:] for relation in user_relation_group_list]
+    return group_id_list
+
+
+# ユーザーに紐づくデバイスID一覧を取得
+def get_user_relation_device_id_list(user_id, device_relation_table, include_group_relation=True):
+    device_relation_list = get_device_relation(f"u-{user_id}", device_relation_table)
+    device_id_list = []
+    for relation in device_relation_list:
+        relation_id = relation["key2"]
+        if relation_id.startswith("d-"):
+            device_id_list.append(relation_id[2:])
+        elif relation_id.startswith("g-"):
+            if include_group_relation:
+                device_id_list.extend(
+                    [
+                        relation_device_id["key2"][2:]
+                        for relation_device_id in get_device_relation(
+                            relation_id, device_relation_table, sk_prefix="d-"
+                        )
+                    ]
+                )
+    return list(set(device_id_list))
+
+
 # トランザクション(書き込み)
 def execute_transact_write_item(transact_items):
     try:

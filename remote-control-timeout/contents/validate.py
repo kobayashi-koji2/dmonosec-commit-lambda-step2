@@ -9,27 +9,6 @@ import ddb
 logger = Logger()
 
 
-# TODO 履歴取得のvalidate.pyからコピー 要共通化
-def get_user_device_list(user_id, device_relation_table):
-    device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
-    logger.info(device_relation_list)
-    user_device_list = []
-    for relation in device_relation_list:
-        relation_id = relation["key2"]
-        if relation_id.startswith("d-"):
-            user_device_list.append(relation_id[2:])
-        elif relation_id.startswith("g-"):
-            user_device_list.extend(
-                [
-                    relation_device_id["key2"][2:]
-                    for relation_device_id in db.get_device_relation(
-                        relation_id, device_relation_table, sk_prefix="d-"
-                    )
-                ]
-            )
-    return user_device_list
-
-
 # パラメータチェック
 def validate(event, contract_table, user_table, device_relation_table, remote_controls_table):
     headers = event.get("headers", {})
@@ -74,7 +53,9 @@ def validate(event, contract_table, user_table, device_relation_table, remote_co
 
     # 権限チェック（作業者）
     if not operation_auth_check(user):
-        user_device_list = get_user_device_list(user["user_id"], device_relation_table)
+        user_device_list = db.get_user_relation_device_id_list(
+            user["user_id"], device_relation_table
+        )
         if remote_control.get("device_id") not in user_device_list:
             return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
 

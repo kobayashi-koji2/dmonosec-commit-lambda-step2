@@ -56,14 +56,11 @@ def lambda_handler(event, context):
             contract = validate_result["contract_info"]
             group_id = validate_result["request_params"]["group_id"]
             group_info = db.get_group_info(group_id, group_table)
-            relation_list = db.get_device_relation(
-                "g-" + group_id, device_relation_table, sk_prefix="d-"
-            )
-            for relation in relation_list:
-                device_id = relation["key2"][2:]
+            device_id_list = db.get_group_relation_device_id_list(group_id, device_relation_table)
+            for device_id in device_id_list:
                 logger.info(device_id)
-                logger.info(db.get_device_info(device_id, device_table))
                 device_info = db.get_device_info(device_id, device_table)
+                logger.info(device_info)
                 if not device_info:
                     continue
                 device_list.append(

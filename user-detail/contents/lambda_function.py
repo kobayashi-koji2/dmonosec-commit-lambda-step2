@@ -55,12 +55,9 @@ def lambda_handler(event, context):
         account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
         account_config = account.get("user_data", {}).get("config", {})
 
-        group_relation_list = db.get_device_relation(
-            "u-" + user_id, device_relation_table, sk_prefix="g-"
-        )
+        group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)
         group_list = []
-        for group_relation in group_relation_list:
-            group_id = group_relation["key2"][2:]
+        for group_id in group_id_list:
             group_info = db.get_group_info(group_id, group_table)
             logger.info(group_info)
             group_list.append(
@@ -72,12 +69,11 @@ def lambda_handler(event, context):
                 }
             )
 
-        device_relation_list = db.get_device_relation(
-            "u-" + user_id, device_relation_table, sk_prefix="d-"
+        device_id_list = db.get_user_relation_device_id_list(
+            user_id, device_relation_table, include_group_relation=False
         )
         device_list = []
-        for device_relation in device_relation_list:
-            device_id = device_relation["key2"][2:]
+        for device_id in device_id_list:
             device_info = db.get_device_info(device_id, device_table)
             device_list.append(
                 {

@@ -58,7 +58,7 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
 
-        user_info = validate_result['user_info']
+        user_info = validate_result["user_info"]
         user_id = user_info["user_id"]
         user_type = user_info["user_type"]
         contract_id = user_info["contract_id"]
@@ -80,33 +80,16 @@ def lambda_handler(event, context):
                     "headers": res_headers,
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
-            device_id_list = (
-                contract_info.get("contract_data", {}).get("device_list", [])
-            )
+            device_id_list = contract_info.get("contract_data", {}).get("device_list", [])
 
         ##################
         # 2 デバイスID一覧取得(権限が作業者・参照者の場合)
         ##################
         elif user_type == "worker" or user_type == "referrer":
             # 2.1 適用デバイスID、グループID一覧取得
-            device_relation = db.get_device_relation(
+            device_id_list = db.get_user_relation_device_id_list(
                 f"u-{user_id}", tables["device_relation_table"]
             )
-            logger.info(device_relation)
-            for item1 in device_relation:
-                item1 = item1["key2"]
-                # ユーザに紐づくデバイスIDを取得
-                if item1.startswith("d-"):
-                    device_id_list.append(re.sub("^d-", "", item1))
-                # グループIDをキーにデバイスIDを取得
-                elif item1.startswith("g-"):
-                    device_group_relation = db.get_device_relation(
-                        item1, tables["device_relation_table"], sk_prefix="d-"
-                    )
-                    for item2 in device_group_relation:
-                        device_id_list.append(re.sub("^d-", "", item2["key2"]))
-            # 2.2 デバイスID一覧生成
-            device_id_list = set(device_id_list)
         else:
             res_body = {"code": "9999", "messege": "不正なユーザです。"}
             return {
@@ -139,20 +122,12 @@ def lambda_handler(event, context):
         ##################
         # グループID取得
         device_group_relation, all_groups = [], []  # デバイスID毎のグループID一覧、重複のないグループID一覧
-        for item1 in device_id_list:
-            trimmed_prefix = []  # 識別子を削除したグループID
-            device_group_relation_res = db.get_device_relation(
-                f"d-{item1}",
-                tables["device_relation_table"],
-                sk_prefix="g-",
-                gsi_name="key2_index",
+        for device_id in device_id_list:
+            group_id_list = db.get_device_relation_group_id_list(
+                device_id, tables["device_relation_table"]
             )
-            # グループIDの抽出とprefixのトリミング
-            for item2 in device_group_relation_res:
-                trimmed_prefix.append(re.sub("^g-", "", item2["key1"]))
-            logger.info(f"グループ一覧:{trimmed_prefix}")
-            device_group_relation.append({"device_id": item1, "group_list": trimmed_prefix})
-            all_groups += trimmed_prefix
+            device_group_relation.append({"device_id": device_id, "group_list": group_id_list})
+            all_groups += group_id_list
         all_groups = set(all_groups)
         logger.info(f"デバイスグループ関連:{device_group_relation}")
         logger.info(f"重複のないグループID一覧:{all_groups}")

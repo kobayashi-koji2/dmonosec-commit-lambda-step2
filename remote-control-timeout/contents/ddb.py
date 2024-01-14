@@ -59,15 +59,12 @@ def put_hist_list(
             if di_list["di_no"] == remote_control.get("link_di_no"):
                 link_terminal_name = di_list["di_name"]
 
-    device_relation_list = db.get_device_relation(
-        "d-" + device["device_id"],
-        device_relation_table,
-        gsi_name="key2_index",
-        sk_prefix="g-",
+    group_id_list = db.get_device_relation_group_id_list(
+        device["device_id"], device_relation_table
     )
     group_list = []
-    for device_relation in device_relation_list:
-        group_info = db.get_group_info(device_relation["key2"][2:], group_table)
+    for group_id in group_id_list:
+        group_info = db.get_group_info(group_id, group_table)
         if group_info:
             group_list.append(
                 {

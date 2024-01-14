@@ -93,19 +93,9 @@ def lambda_handler(event, context):
         # デバイス操作権限チェック
         user_info = val_result["user_info"]
         if user_info["user_type"] == "worker":
-            pk = "u-" + user_info["user_id"]
-            relation_info = db.get_device_relation(pk, device_relation_table)
-            logger.info(f"device_relation_info: {relation_info}")
-            relation_d = [i["key2"] for i in relation_info if i["key2"].startswith("d-")]
-            relation_g = [i["key2"] for i in relation_info if i["key2"].startswith("g-")]
-
-            # グル―プにも紐づいている場合、そのグループに紐づくデバイスを取得
-            if len(relation_g) != 0:
-                for pk in relation_g:
-                    relation_info = db.get_device_relation(pk, device_relation_table)
-                    logger.info(f"device_relation[g-]: {relation_info}")
-                    relation_d += [i["key2"] for i in relation_info]
-            device_id_list = [i.replace("d-", "", 1) for i in list(dict.fromkeys(relation_d))]
+            device_id_list = db.get_user_relation_device_id_list(
+                user_info["user_id"], device_relation_table
+            )
             logger.info(f"device_id_list: {device_id_list}")
 
             if device_id not in device_id_list:
@@ -306,32 +296,24 @@ def __register_hist_info(
     do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
 
     # グループ情報取得
-    group_list = list()
-    pk = "d-" + device_info["device_id"]
-    group_device_list = db.get_device_relation(
-        pk, device_relation_table, sk_prefix="g-", gsi_name="key2_index"
+    group_id_list = db.get_device_relation_group_id_list(
+        device_info["device_id"], device_relation_table
     )
-    if len(group_device_list) != 0:
-        group_id_list = [
-            re.sub("^g-", "", group_device_info["key1"]) for group_device_info in group_device_list
-        ]
-        for group_id in group_id_list:
-            group_info = db.get_group_info(group_id, group_table)
-            if not group_info:
-                res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
-                respons["statusCode"] = 500
-                respons["body"] = json.dumps(result, ensure_ascii=False)
-                return respons
-            logger.info(f"group_info: {group_info}")
-            group_list.append(
-                {
-                    "group_id": group_info["group_id"],
-                    "group_name": group_info["group_data"]["config"]["group_name"],
-                }
-            )
-    else:
-        logger.info("The group containing the device did not exist.")
-        group_list.append({"group_id": "", "group_name": ""})
+    group_list = list()
+    for group_id in group_id_list:
+        group_info = db.get_group_info(group_id, group_table)
+        if not group_info:
+            res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
+            respons["statusCode"] = 500
+            respons["body"] = json.dumps(result, ensure_ascii=False)
+            return respons
+        logger.info(f"group_info: {group_info}")
+        group_list.append(
+            {
+                "group_id": group_info["group_id"],
+                "group_name": group_info["group_data"]["config"]["group_name"],
+            }
+        )
 
     # メール通知
     notification_hist_id = ""

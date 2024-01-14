@@ -11,26 +11,6 @@ import convert
 logger = Logger()
 
 
-def get_user_device_list(user_id, device_relation_table):
-    device_relation_list = db.get_device_relation("u-" + user_id, device_relation_table)
-    logger.info(device_relation_list)
-    user_device_list = []
-    for relation in device_relation_list:
-        relation_id = relation["key2"]
-        if relation_id.startswith("d-"):
-            user_device_list.append(relation_id[2:])
-        elif relation_id.startswith("g-"):
-            user_device_list.extend(
-                [
-                    relation_device_id["key2"][2:]
-                    for relation_device_id in db.get_device_relation(
-                        relation_id, device_relation_table, sk_prefix="d-"
-                    )
-                ]
-            )
-    return user_device_list
-
-
 # パラメータチェック
 def validate(event, account_table, user_table, contract_table, device_relation_table):
     headers = event.get("headers", {})
@@ -43,7 +23,7 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
         decoded_idtoken = convert.decode_idtoken(event)
         logger.debug("idtoken:", decoded_idtoken)
         user_id = decoded_idtoken["cognito:username"]
-    except Exception as e:
+    except Exception:
         logger.info(traceback.format_exc())
         return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
     # ユーザの存在チェック
@@ -101,7 +81,10 @@ def validate(event, account_table, user_table, contract_table, device_relation_t
 
     # 権限チェック（作業者）
     if user["user_type"] != "admin" and user["user_type"] != "sub_admin":
-        user_device_list = get_user_device_list(user["user_id"], device_relation_table)
+        user_device_list = db.get_user_relation_device_id_list(
+            user["user_id"], device_relation_table
+        )
+        logger.debug(user_device_list)
         for device_id in params["device_list"]:
             if device_id not in user_device_list:
                 return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
