@@ -94,7 +94,7 @@ def lambda_handler(event, context):
             )
             return
 
-        if link_di_no is not None:
+        if link_di_no > 0:
             # 接点入力紐づけ設定あり
             recv_datetime = remote_control["recv_datetime"]
             limit_datetime = recv_datetime + 20000  # 20秒
