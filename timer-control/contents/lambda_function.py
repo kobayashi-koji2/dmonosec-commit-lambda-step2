@@ -412,8 +412,6 @@ def __register_hist_info(
     notification_hist_id = ""
     # 12月の段階ではスキップ
 
-    do_di_return = do_info["do_di_return"]
-    link_terminal_name = [di["di_name"] for di in di_list if di["di_no"] == do_di_return][0]
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
         event_type = "off_timer_control"
@@ -426,6 +424,10 @@ def __register_hist_info(
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
+
+    do_di_return = do_info["do_di_return"]
+    link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
+    link_terminal_name = link_terminal["di_name"]
 
     hist_data = {
         "device_name": device_info["device_data"]["config"]["device_name"],
@@ -441,6 +443,13 @@ def __register_hist_info(
         "control_result": control_result,
         "timer_time": do_info["do_timer"]["do_time"],
     }
+
+    if flg == "__check_return_di_state":
+        if do_onoff_control == 0:
+            hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
+        elif do_onoff_control == 1:
+            hist_data["link_terminal_state_name"] = link_terminal["di_off_name"]
+
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
