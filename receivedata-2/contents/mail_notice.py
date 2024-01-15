@@ -76,7 +76,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
             mail_template = ""
             template_data = {
                 'event_datetime': hist_data['event_datetime'],
-                'recv_datetime'	: hist_data['recv_datetime'],
+                'recv_datetime': hist_data['recv_datetime'],
                 'group_name': hist_data['recv_datetime']['group_list'][0]['group_name'],
                 'device_name': hist_data['device_name']
             }

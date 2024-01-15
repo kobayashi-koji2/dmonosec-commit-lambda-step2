@@ -159,7 +159,7 @@ def commandParser(
     elif nMsgType == 0x8002:
         nControlResult = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
-        logger.debug(f"接点出力制御応答 cntrol_result={nControlResult}, nDOState={nDOState}")
+        logger.debug(f"接点出力制御応答 control_result={nControlResult}, nDOState={nDOState}")
 
         recv_data = {
             "device_req_no": szSimid + "-" + szReqNo,

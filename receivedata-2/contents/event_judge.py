@@ -80,6 +80,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
         hist_list_data["hist_data"]["terminal_no"] = terminal_no
         hist_list_data["hist_data"]["terminal_name"] = terminal_name
         hist_list_data["hist_data"]["terminal_state_name"] = terminal_state_name
+        hist_list_data["hist_data"]["control"] = event_info["control"]
 
     # デバイス状態
     elif event_info["event_type"] in [
@@ -370,22 +371,27 @@ def eventJudge(
                 )
 
     # 接点出力変化判定
-    if recv_data["message_type"] in ["0001", "0011", "0012"]:
+    if recv_data["message_type"] in ["0001"]:
         event_info = {}
         event_info["event_type"] = "do_change"
         event_info["event_datetime"] = recv_data["event_datetime"]
+        remote_control_info = ddb.get_remote_control_info_by_device_id(
+            device_info["device_id"], recv_data["recv_datetime"], remote_control_table
+        )
+        if remote_control_info is not None and "control" in remote_control_info:
+            event_info["control"] = remote_control_info["control"]
+        else:
+            event_info["control"] = "不明"
         do_list = list(reversed(list(recv_data["do_state"])))
-        if recv_data["message_type"] == "0001":
-            do_trigger = list(reversed(list(format(recv_data["do_trigger"], "08b"))))
+        do_trigger = list(reversed(list(format(recv_data["do_trigger"], "08b"))))
         for i in range(2):
             event_info["terminal_no"] = i + 1
             event_info["do_state"] = int(do_list[i])
-            if recv_data["message_type"] == "0001":
-                if do_trigger[i] == "1":
-                    hist_list_data = createHistListData(
-                        recv_data, device_info, event_info, device_relation_table, group_table
-                    )
-                    hist_list.append(hist_list_data)
+            if do_trigger[i] == "1":
+                hist_list_data = createHistListData(
+                    recv_data, device_info, event_info, device_relation_table, group_table
+                )
+                hist_list.append(hist_list_data)
             if not init_state_flg:
                 terminal_key = "do" + str(i + 1) + "_state"
                 current_do = device_current_state[terminal_key]

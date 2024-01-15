@@ -1,6 +1,7 @@
 import json
 import boto3
 import decimal
+import db
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 from aws_lambda_powertools import Logger
@@ -108,7 +109,7 @@ def update_control_res(db_item, remote_control_table):
         "UpdateExpression": "set #event_datetime = :event_datetime, \
                             #recv_datetime = :recv_datetime, #device_type = :device_type, \
                             #fw_version = :fw_version, #power_voltage = :power_voltage, \
-                            #rssi = :rssi, #sinr = :sinr, #cntrol_result = :cntrol_result, \
+                            #rssi = :rssi, #sinr = :sinr, #control_result = :control_result, \
                             #device_state = :device_state, #do_state = :do_state, #iccid = :iccid",
         "ExpressionAttributeNames": {
             "#event_datetime": "event_datetime",
@@ -118,7 +119,7 @@ def update_control_res(db_item, remote_control_table):
             "#power_voltage": "power_voltage",
             "#rssi": "rssi",
             "#sinr": "sinr",
-            "#cntrol_result": "cntrol_result",
+            "#control_result": "control_result",
             "#device_state": "device_state",
             "#do_state": "do_state",
             "#iccid": "iccid",
@@ -131,7 +132,7 @@ def update_control_res(db_item, remote_control_table):
             ":power_voltage": db_item["power_voltage"],
             ":rssi": db_item["rssi"],
             ":sinr": db_item["sinr"],
-            ":cntrol_result": db_item["cntrol_result"],
+            ":control_result": db_item["control_result"],
             ":device_state": db_item["device_state"],
             ":do_state": db_item["do_state"],
             ":iccid": db_item["iccid"],
@@ -167,18 +168,19 @@ def put_notice_hist(db_item, notification_hist_table):
 
 # グループ一覧取得
 def get_device_group_list(device_id, device_relation_table, group_table):
-    res = device_relation_table.query(
-        KeyConditionExpression=Key("key1").eq(device_id) & Key("key2").begins_with("g-"),
+    group_id_list = db.get_device_relation_group_id_list(
+        device_id, device_relation_table
     )
     group_list = []
-    for group_list in res["Items"]:
-        group_id = group_list["key2"]
-        group_info = group_table.get_item(Key={"group_id": group_id})
-        group_list_data = {
-            "group_id": group_id,
-            "group_name": group_info["group_data"]["config"]["group_name"],
-        }
-        group_list.append(group_list_data)
+    for group_id in group_id_list:
+        group_info = db.get_group_info(group_id, group_table)
+        if group_info:
+            group_list.append(
+                {
+                    "group_id": group_info["group_id"],
+                    "group_name": group_info["group_data"]["config"]["group_name"],
+                }
+            )
     return group_list
 
 
