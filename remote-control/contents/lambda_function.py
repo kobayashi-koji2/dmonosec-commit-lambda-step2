@@ -9,6 +9,7 @@ from aws_lambda_powertools import Logger
 import boto3
 
 # layer
+import auth
 import ssm
 import validate
 import db
@@ -58,9 +59,18 @@ def lambda_handler(event, context):
             respons["statusCode"] = 500
             return respons
 
+        try:
+            user_info = auth.verify_user(event, user_table)
+        except auth.AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return respons | {
+                "statusCode": e.code,
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
+
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
-        val_result = validate.validate(event, account_table, user_table)
+        val_result = validate.validate(event, user_info, account_table)
         if val_result["code"] != "0000":
             logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
@@ -71,7 +81,7 @@ def lambda_handler(event, context):
 
         ### 2. デバイス捜査権限チェック（共通）
         # デバイスID一覧取得
-        contract_id = val_result["user_info"]["contract_id"]
+        contract_id = user_info["contract_id"]
         contract_info = db.get_contract_info(contract_id, contract_table)
         if not contract_info:
             res_body = {"code": "9999", "message": "契約情報が存在しません。"}
@@ -91,7 +101,6 @@ def lambda_handler(event, context):
 
         ### 3. デバイス捜査権限チェック（作業者の場合）
         # デバイス操作権限チェック
-        user_info = val_result["user_info"]
         if user_info["user_type"] == "worker":
             device_id_list = db.get_user_relation_device_id_list(
                 user_info["user_id"], device_relation_table

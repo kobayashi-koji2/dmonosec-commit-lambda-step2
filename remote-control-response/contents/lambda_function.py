@@ -8,6 +8,7 @@ from aws_lambda_powertools import Logger
 import boto3
 from botocore.exceptions import ClientError
 
+import auth
 import ssm
 import convert
 import ddb
@@ -38,11 +39,21 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
+
+        try:
+            user_info = auth.verify_user(event, user_table)
+        except auth.AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return {
+                "statusCode": e.code,
+                "headers": res_headers,
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
         # パラメータチェック
         validate_result = validate.validate(
             event,
+            user_info,
             contract_table,
-            user_table,
             device_relation_table,
             remote_controls_table,
         )

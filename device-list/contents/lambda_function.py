@@ -11,6 +11,7 @@ dynamodb = boto3.resource("dynamodb")
 from boto3.dynamodb.conditions import Key
 
 # layer
+import auth
 import db
 import ssm
 import convert
@@ -47,10 +48,21 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
+
+        try:
+            user_info = auth.verify_user(event, tables["user_table"])
+        except auth.AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return {
+                "statusCode": e.code,
+                "headers": res_headers,
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
+
         ##################
         # 1 入力情報チェック
         ##################
-        validate_result = validate.validate(event, tables)
+        validate_result = validate.validate(event, user_info, tables)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
@@ -58,7 +70,6 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
 
-        user_info = validate_result["user_info"]
         user_id = user_info["user_id"]
         user_type = user_info["user_type"]
         contract_id = user_info["contract_id"]
@@ -91,7 +102,7 @@ def lambda_handler(event, context):
                 f"u-{user_id}", tables["device_relation_table"]
             )
         else:
-            res_body = {"code": "9999", "messege": "不正なユーザです。"}
+            res_body = {"code": "9999", "message": "不正なユーザです。"}
             return {
                 "statusCode": 200,
                 "headers": res_headers,

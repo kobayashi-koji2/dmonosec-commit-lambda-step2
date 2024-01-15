@@ -5,6 +5,7 @@ import boto3
 from aws_lambda_powertools import Logger
 
 # layer
+import auth
 import ssm
 import validate
 import db
@@ -38,16 +39,23 @@ def lambda_handler(event, context):
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
 
+        try:
+            user_info = auth.verify_user(event, user_table)
+        except auth.AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return respons | {
+                "statusCode": e.code,
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
+
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
-        val_result = validate.validate(event, user_table)
+        val_result = validate.validate(event)
         if val_result["code"] != "0000":
             logger.info("Error in validation check of input information.")
             respons["statusCode"] = 500
             respons["body"] = json.dumps(val_result, ensure_ascii=False)
             return respons
-        # トークンからユーザー情報取得
-        user_info = val_result["user_info"]
 
         ### 2. デバイス表示順序更新
         # ユーザー情報取得

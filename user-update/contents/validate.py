@@ -6,7 +6,6 @@ from aws_lambda_powertools import Logger
 import boto3
 
 import db
-import convert
 
 logger = Logger()
 
@@ -17,25 +16,7 @@ def isValidEmail(str):
 
 
 # パラメータチェック
-def validate(event, contract_table, user_table):
-    headers = event.get("headers", {})
-    if not headers:
-        return {"code": "9999", "messege": "リクエストパラメータが不正です。"}
-    if "Authorization" not in headers:
-        return {"code": "9999", "messege": "リクエストパラメータが不正です。"}
-
-    try:
-        decoded_idtoken = convert.decode_idtoken(event)
-        logger.info(f"idtoken: {decoded_idtoken}")
-        user_id = decoded_idtoken["cognito:username"]
-    except Exception as e:
-        logger.error(e)
-        logger.info(traceback.format_exc())
-        return {"code": "9999", "messege": "トークンの検証に失敗しました。"}
-    # ユーザの存在チェック
-    user = db.get_user_info_by_user_id(user_id, user_table)
-    if not user:
-        return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
+def validate(event, user, contract_table, user_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"code": "9999", "message": "ユーザの操作権限がありません。"}
@@ -47,7 +28,7 @@ def validate(event, contract_table, user_table):
 
     contract = db.get_contract_info(user["contract_id"], contract_table)
     if not contract:
-        return {"code": "9999", "messege": "アカウント情報が存在しません。"}
+        return {"code": "9999", "message": "アカウント情報が存在しません。"}
 
     if http_method == "POST":
         if "email_address" not in body_params:
@@ -64,21 +45,21 @@ def validate(event, contract_table, user_table):
             return {"code": "9999", "message": "パラメータが不正です"}
         update_user_res = db.get_user_info_by_user_id(path_params["user_id"], user_table)
         if not update_user_res:
-            return {"code": "9999", "messege": "ユーザ情報が存在しません。"}
+            return {"code": "9999", "message": "ユーザ情報が存在しません。"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:
-            return {"code": "9999", "messege": "不正なユーザIDが指定されています。"}
+            return {"code": "9999", "message": "不正なユーザIDが指定されています。"}
 
     # グループの権限チェック
     group_list = body_params.get("management_group_list", [])
     for group_id in group_list:
         if group_id not in contract["contract_data"]["group_list"]:
-            return {"code": "9999", "messege": "不正なグループIDが指定されています。"}
+            return {"code": "9999", "message": "不正なグループIDが指定されています。"}
 
     # デバイスの権限チェック
     device_list = body_params.get("management_device_list", [])
     for device_id in device_list:
         if device_id not in contract["contract_data"]["device_list"]:
-            return {"code": "9999", "messege": "不正なデバイスIDが指定されています。"}
+            return {"code": "9999", "message": "不正なデバイスIDが指定されています。"}
 
     params = {
         "update_user_id": path_params.get("user_id"),
@@ -92,9 +73,7 @@ def validate(event, contract_table, user_table):
 
     return {
         "code": "0000",
-        "user_info": user,
         "contract_info": contract,
-        "decoded_idtoken": decoded_idtoken,
         "request_params": params,
     }
 

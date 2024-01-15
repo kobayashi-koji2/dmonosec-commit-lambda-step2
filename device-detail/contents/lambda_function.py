@@ -14,6 +14,7 @@ from aws_lambda_powertools import Logger
 import db
 import ssm
 import convert
+import auth
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
@@ -47,10 +48,20 @@ def lambda_handler(event, context):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
+        try:
+            user_info = auth.verify_user(event, tables["user_table"])
+        except auth.AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return {
+                "statusCode": e.code,
+                "headers": res_headers,
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
+
         ##################
         # 1 入力情報チェック
         ##################
-        validate_result = validate.validate(event, tables)
+        validate_result = validate.validate(event, user_info, tables)
         if validate_result["code"] != "0000":
             return {
                 "statusCode": 200,
