@@ -127,7 +127,10 @@ def create_history_message(hist):
             msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※タイマー設定「{on_off}制御　{hist.get('timer_time')}」により制御信号を送信しました。"
         elif hist["control_result"] == "not_excuted_done":
             msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}制御　{hist.get('timer_time')}」による制御信号を送信しませんでした。"
-        elif hist["control_result"] == "not_excuted_on":
+        elif (
+            hist["control_result"] == "not_excuted_on"
+            or hist["control_result"] == "not_excuted_off"
+        ):
             msg = f"【タイマー設定による制御（不実施）】\n{link_terminal_name}が既に{hist.get('link_terminal_state_name')}のため、{terminal_name}の制御を行いませんでした。\n※タイマー設定「{on_off}制御　{hist.get('timer_time')}」による制御信号を送信しませんでした。"
 
     # 連動設定による制御（Ph2）
