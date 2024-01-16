@@ -41,7 +41,7 @@ def lambda_handler(event, context):
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -62,9 +62,9 @@ def lambda_handler(event, context):
         # 1 入力情報チェック
         ##################
         validate_result = validate.validate(event, user_info, tables)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -78,15 +78,14 @@ def lambda_handler(event, context):
             # 4.1 デバイス設定取得
             device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
             if len(device_info) == 0:
-                res_body = {"code": "9999", "message": "デバイス情報が存在しません。"}
+                res_body = {"message": "デバイス情報が存在しません。"}
                 return {
-                    "statusCode": 500,
+                    "statusCode": 404,
                     "headers": res_headers,
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             elif len(device_info) >= 2:
                 res_body = {
-                    "code": "9999",
                     "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています",
                 }
                 return {
@@ -111,7 +110,7 @@ def lambda_handler(event, context):
             )
         except ClientError as e:
             logger.info(e)
-            body = {"code": "9999", "message": "デバイス詳細の取得に失敗しました。"}
+            body = {"message": "デバイス詳細の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -126,7 +125,7 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

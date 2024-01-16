@@ -25,40 +25,40 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
     logger.info(params)
 
     if not params["history_start_datetime"] and not params["history_end_datetime"]:
-        return {"code": "9999", "message": "パラメータが不正です"}
+        return {"message": "パラメータが不正です"}
 
     if params["history_start_datetime"]:
         try:
             datetime.fromtimestamp(int(params["history_start_datetime"]))
         except ValueError:
             logger.info(ValueError)
-            return {"code": "9999", "message": "パラメータが不正です"}
+            return {"message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         try:
             datetime.fromtimestamp(int(params["history_end_datetime"]))
         except ValueError:
             logger.info(ValueError)
-            return {"code": "9999", "message": "パラメータが不正です"}
+            return {"message": "パラメータが不正です"}
 
     if (
         params["history_start_datetime"]
         and params["history_end_datetime"]
         and int(params["history_start_datetime"]) > int(params["history_end_datetime"])
     ):
-        return {"code": "9999", "message": "パラメータが不正です"}
+        return {"message": "パラメータが不正です"}
 
     if len(params["device_list"]) == 0:
-        return {"code": "9999", "message": "パラメータが不正です"}
+        return {"message": "パラメータが不正です"}
 
     contract = db.get_contract_info(user["contract_id"], contract_table)
     if not contract:
-        return {"code": "9999", "message": "アカウント情報が存在しません。"}
+        return {"message": "アカウント情報が存在しません。"}
 
     # 権限チェック（共通）
     for device_id in params["device_list"]:
         if device_id not in contract["contract_data"]["device_list"]:
-            return {"code": "9999", "message": "不正なデバイスIDが指定されています。"}
+            return {"message": "不正なデバイスIDが指定されています。"}
 
     # 権限チェック（作業者）
     if user["user_type"] != "admin" and user["user_type"] != "sub_admin":
@@ -68,10 +68,9 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         logger.debug(user_device_list)
         for device_id in params["device_list"]:
             if device_id not in user_device_list:
-                return {"code": "9999", "message": "不正なデバイスIDが指定されています。"}
+                return {"message": "不正なデバイスIDが指定されています。"}
 
     return {
-        "code": "0000",
         "user_info": user,
         "request_params": params,
     }

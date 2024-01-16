@@ -17,14 +17,14 @@ def validate(event, user_info, tables):
     headers = event.get("headers", {})
     pathParam = event.get("pathParameters", {})
     if not headers or not pathParam:
-        return {"code": "9999", "message": "パラメータが不正です。"}
+        return {"message": "パラメータが不正です。"}
     if "Authorization" not in headers or "device_id" not in pathParam:
-        return {"code": "9999", "message": "パラメータが不正です。"}
+        return {"message": "パラメータが不正です。"}
     device_id = pathParam["device_id"]
     contract_id = user_info["contract_id"]  # フェーズ2以降削除
     contract_info = db.get_contract_info(contract_id, tables["contract_table"])
     if not contract_info:
-        return {"code": "9999", "message": "アカウント情報が存在しません。"}
+        return {"message": "アカウント情報が存在しません。"}
 
     ##################
     # 2 デバイス操作権限チェック(共通)
@@ -32,9 +32,9 @@ def validate(event, user_info, tables):
     ##################
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
-        return {"code": "9999", "message": "不正なデバイスIDが指定されています"}
+        return {"message": "不正なデバイスIDが指定されています"}
 
-    return {"code": "0000", "user_info": user_info, "device_id": device_id}
+    return {"user_info": user_info, "device_id": device_id}
 
 
 # 操作権限チェック

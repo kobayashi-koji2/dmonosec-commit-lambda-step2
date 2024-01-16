@@ -23,7 +23,7 @@ def lambda_handler(event, context):
         user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
     except KeyError as e:
-        body = {"code": "9999", "message": e}
+        body = {"message": e}
         return {
             "statusCode": 500,
             "headers": res_headers,

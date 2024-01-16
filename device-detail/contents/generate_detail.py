@@ -27,7 +27,6 @@ def get_device_detail(device_info, device_state, group_info_list):
 
     # レスポンス生成
     device_detail = {
-        "code": "0000",
         "message": "",
         "device_id": device_info["device_id"],
         "device_name": device_info["device_data"]["config"]["device_name"],

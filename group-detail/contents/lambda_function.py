@@ -35,7 +35,7 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -54,7 +54,7 @@ def lambda_handler(event, context):
 
         # パラメータチェック
         validate_result = validate.validate(event, user_info, contract_table)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
                 "statusCode": 200,
                 "headers": res_headers,
@@ -84,14 +84,13 @@ def lambda_handler(event, context):
         except ClientError as e:
             logger.info(e)
             logger.info(traceback.format_exc())
-            body = {"code": "9999", "message": "グループ一覧の取得に失敗しました。"}
+            body = {"message": "グループ一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
         res_body = {
-            "code": "0000",
             "message": "",
             "group_id": group_info.get("group_id", {}),
             "group_name": group_info.get("group_data", {}).get("config", {}).get("group_name", {}),
@@ -100,13 +99,12 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
-            #'body':res_body
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

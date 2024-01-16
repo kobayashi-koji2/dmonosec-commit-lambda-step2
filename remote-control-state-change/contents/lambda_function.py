@@ -15,8 +15,6 @@ import ssm
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
-SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-
 # レスポンスヘッダー
 response_headers = {
     "Content-Type": "application/json",
@@ -34,7 +32,7 @@ def lambda_handler(event, context):
             remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
             cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": response_headers,
@@ -55,9 +53,9 @@ def lambda_handler(event, context):
         # 権限が参照者の場合はエラー
         if user_info["user_type"] == "referrer":
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": response_headers,
-                "body": json.dumps({"code": "9999", "message": "権限がありません。"}, ensure_ascii=False),
+                "body": json.dumps({"message": "権限がありません。"}, ensure_ascii=False),
             }
 
         # 通信制御情報取得
@@ -70,11 +68,9 @@ def lambda_handler(event, context):
 
         if remote_control is None:
             return {
-                "statusCode": 200,
+                "statusCode": 404,
                 "headers": response_headers,
-                "body": json.dumps(
-                    {"code": "9999", "message": "端末要求が存在しません。"}, ensure_ascii=False
-                ),
+                "body": json.dumps({"message": "端末要求が存在しません。"}, ensure_ascii=False),
             }
 
         device_id = remote_control["device_id"]
@@ -86,11 +82,9 @@ def lambda_handler(event, context):
 
         if device_id not in device_id_list_by_contract:
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": response_headers,
-                "body": json.dumps(
-                    {"code": "9999", "message": "端末の操作権限がありません。"}, ensure_ascii=False
-                ),
+                "body": json.dumps({"message": "端末の操作権限がありません。"}, ensure_ascii=False),
             }
 
         # デバイス操作権限チェック（管理者, 副管理者でない場合）
@@ -102,10 +96,10 @@ def lambda_handler(event, context):
 
             if device_id not in allowed_device_id_list:
                 return {
-                    "statusCode": 200,
+                    "statusCode": 400,
                     "headers": response_headers,
                     "body": json.dumps(
-                        {"code": "9999", "message": "端末の操作権限がありません。"},
+                        {"message": "端末の操作権限がありません。"},
                         ensure_ascii=False,
                     ),
                 }
@@ -139,7 +133,6 @@ def lambda_handler(event, context):
             "headers": response_headers,
             "body": json.dumps(
                 {
-                    "code": "0000",
                     "message": "",
                     "device_req_no": device_req_no,
                     "control_result": control_result,
@@ -150,11 +143,8 @@ def lambda_handler(event, context):
 
     except Exception as e:
         logger.info(e)
-        logger.info(traceback.format_exc())
         return {
             "statusCode": 500,
             "headers": response_headers,
-            "body": json.dumps(
-                {"code": "9999", "message": "予期しないエラーが発生しました。"}, ensure_ascii=False
-            ),
+            "body": json.dumps({"message": "予期しないエラーが発生しました。"}, ensure_ascii=False),
         }

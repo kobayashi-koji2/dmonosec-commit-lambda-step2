@@ -2,7 +2,6 @@ import json
 import os
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-import traceback
 
 import boto3
 from botocore.exceptions import ClientError
@@ -162,7 +161,6 @@ def create_response(request_params, hist_list):
         )
 
     return {
-        "code": "0000",
         "history": {
             "history_start_datetime": int(request_params["history_start_datetime"]),
             "history_end_datetime": int(request_params["history_end_datetime"]),
@@ -186,7 +184,7 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -212,9 +210,9 @@ def lambda_handler(event, context):
             device_relation_table,
         )
         logger.info(validate_result)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -225,8 +223,7 @@ def lambda_handler(event, context):
             response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:
             logger.info(e)
-            logger.info(traceback.format_exc())
-            body = {"code": "9999", "message": "履歴一覧の取得に失敗しました。"}
+            body = {"message": "履歴一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -240,8 +237,7 @@ def lambda_handler(event, context):
         }
     except Exception as e:
         logger.info(e)
-        logger.info(traceback.format_exc())
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

@@ -14,17 +14,14 @@ import db
 logger = Logger()
 
 # 環境変数
-SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
-# 正常レスポンス内容
-respons = {
-    "statusCode": 200,
-    "headers": {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-    },
-    "body": "",
+
+# レスポンスヘッダー
+res_headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
 }
+
 # AWSリソース定義
 dynamodb = boto3.resource(
     "dynamodb",
@@ -47,8 +44,9 @@ def lambda_handler(event, context):
             user_info = auth.verify_user(event, user_table)
         except auth.AuthError as e:
             logger.info("ユーザー検証失敗", exc_info=True)
-            return respons | {
+            return {
                 "statusCode": e.code,
+                "headers": res_headers,
                 "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
@@ -106,16 +104,20 @@ def lambda_handler(event, context):
         ### 5. メッセージ応答
         results = __decimal_to_integer_or_float(results)
         logger.info(f"results: {results}")
-        res_body = {"code": "0000", "message": "", "remote_control_list": results}
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        return respons
+        res_body = {"message": "", "remote_control_list": results}
+        return {
+            "statusCode": 200,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False),
+        }
     except Exception as e:
         logger.info(e)
-        logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
-        respons["statusCode"] = 500
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        return respons
+        res_body = {"message": "予期しないエラーが発生しました。"}
+        return {
+            "statusCode": 500,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False),
+        }
 
 
 def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info):

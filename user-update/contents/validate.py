@@ -19,7 +19,7 @@ def isValidEmail(str):
 def validate(event, user, contract_table, user_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
-        return {"code": "9999", "message": "ユーザの操作権限がありません。"}
+        return {"message": "ユーザの操作権限がありません。"}
 
     # 入力値ェック
     http_method = event.get("httpMethod")
@@ -28,38 +28,38 @@ def validate(event, user, contract_table, user_table):
 
     contract = db.get_contract_info(user["contract_id"], contract_table)
     if not contract:
-        return {"code": "9999", "message": "アカウント情報が存在しません。"}
+        return {"message": "アカウント情報が存在しません。"}
 
     if http_method == "POST":
         if "email_address" not in body_params:
-            return {"code": "9999", "message": "パラメータが不正です"}
+            return {"message": "パラメータが不正です"}
         elif not isValidEmail(body_params["email_address"]):
-            return {"code": "9999", "message": "パラメータが不正です"}
+            return {"message": "パラメータが不正です"}
 
     if "user_type" not in body_params:
-        return {"code": "9999", "message": "パラメータが不正です"}
+        return {"message": "パラメータが不正です"}
 
     # 更新対象ユーザのチェック
     if http_method == "PUT":
         if "user_id" not in path_params:
-            return {"code": "9999", "message": "パラメータが不正です"}
+            return {"message": "パラメータが不正です"}
         update_user_res = db.get_user_info_by_user_id(path_params["user_id"], user_table)
         if not update_user_res:
-            return {"code": "9999", "message": "ユーザ情報が存在しません。"}
+            return {"message": "ユーザ情報が存在しません。"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:
-            return {"code": "9999", "message": "不正なユーザIDが指定されています。"}
+            return {"message": "不正なユーザIDが指定されています。"}
 
     # グループの権限チェック
     group_list = body_params.get("management_group_list", [])
     for group_id in group_list:
         if group_id not in contract["contract_data"]["group_list"]:
-            return {"code": "9999", "message": "不正なグループIDが指定されています。"}
+            return {"message": "不正なグループIDが指定されています。"}
 
     # デバイスの権限チェック
     device_list = body_params.get("management_device_list", [])
     for device_id in device_list:
         if device_id not in contract["contract_data"]["device_list"]:
-            return {"code": "9999", "message": "不正なデバイスIDが指定されています。"}
+            return {"message": "不正なデバイスIDが指定されています。"}
 
     params = {
         "update_user_id": path_params.get("user_id"),
@@ -72,7 +72,6 @@ def validate(event, user, contract_table, user_table):
         params["email_address"] = body_params.get("email_address").lower()
 
     return {
-        "code": "0000",
         "contract_info": contract,
         "request_params": params,
     }

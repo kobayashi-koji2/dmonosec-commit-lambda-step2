@@ -19,18 +19,15 @@ import ddb
 logger = Logger()
 
 # 環境変数
-SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
-# 正常レスポンス内容
-respons = {
-    "statusCode": 200,
-    "headers": {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-    },
-    "body": "",
+
+# レスポンスヘッダー
+res_headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
 }
+
 # AWSリソース定義
 dynamodb = boto3.resource(
     "dynamodb",
@@ -55,27 +52,33 @@ def lambda_handler(event, context):
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
-            res_body = {"code": "9999", "message": e}
-            respons["statusCode"] = 500
-            return respons
+            body = {"message": e}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(body, ensure_ascii=False),
+            }
 
         try:
             user_info = auth.verify_user(event, user_table)
         except auth.AuthError as e:
             logger.info("ユーザー検証失敗", exc_info=True)
-            return respons | {
+            return {
                 "statusCode": e.code,
+                "headers": res_headers,
                 "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
         ### 1. 入力情報チェック
         # 入力情報のバリデーションチェック
         val_result = validate.validate(event, user_info, account_table)
-        if val_result["code"] != "0000":
+        if val_result.get("message"):
             logger.info("Error in validation check of input information.")
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(val_result, ensure_ascii=False)
-            return respons
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(val_result, ensure_ascii=False),
+            }
         user_name = val_result["account_info"]["user_data"]["config"]["user_name"]
         email_address = val_result["account_info"]["email_address"]
 
@@ -84,20 +87,24 @@ def lambda_handler(event, context):
         contract_id = user_info["contract_id"]
         contract_info = db.get_contract_info(contract_id, contract_table)
         if not contract_info:
-            res_body = {"code": "9999", "message": "契約情報が存在しません。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            return respons
+            res_body = {"message": "契約情報が存在しません。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         logger.info(f"contract_info: {contract_info}")
         device_list = contract_info["contract_data"]["device_list"]
 
         # デバイス操作権限チェック
         device_id = val_result["path_params"]["device_id"]
         if device_id not in device_list:
-            res_body = {"code": "9999", "message": "デバイスの操作権限がありません。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            return respons
+            res_body = {"message": "デバイスの操作権限がありません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         ### 3. デバイス捜査権限チェック（作業者の場合）
         # デバイス操作権限チェック
@@ -108,20 +115,24 @@ def lambda_handler(event, context):
             logger.info(f"device_id_list: {device_id_list}")
 
             if device_id not in device_id_list:
-                res_body = {"code": "9999", "message": "デバイスの操作権限がありません。"}
-                respons["statusCode"] = 500
-                respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                return respons
+                res_body = {"message": "デバイスの操作権限がありません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         else:
             pass
 
         ### 4. 制御情報取得
         device_info = ddb.get_device_info_other_than_unavailable(device_id, device_table)
         if len(device_info) == 0:
-            res_body = {"code": "9999", "message": "デバイス情報が存在しません。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            return respons
+            res_body = {"message": "デバイス情報が存在しません。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         device_info = device_info[0]
         logger.info(f"device_info: {device_info}")
 
@@ -141,10 +152,12 @@ def lambda_handler(event, context):
                 device_req_no, do_no, remote_controls_table
             )
             if len(remote_control_latest) == 0:
-                res_body = {"code": "9999", "message": "接点出力制御応答情報が存在しません。"}
-                respons["statusCode"] = 500
-                respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                return respons
+                res_body = {"message": "接点出力制御応答情報が存在しません。"}
+                return {
+                    "statusCode": 500,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
             remote_control_latest = remote_control_latest[0]
             logger.info(f"remote_control_latest: {remote_control_latest}")
 
@@ -155,7 +168,7 @@ def lambda_handler(event, context):
                 logger.info(
                     "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
                 )
-                __register_hist_info(
+                regist_result = __register_hist_info(
                     device_info,
                     do_no,
                     user_name,
@@ -164,9 +177,18 @@ def lambda_handler(event, context):
                     device_relation_table,
                     hist_list_table,
                 )
-                res_body = {"code": "9999", "message": "他のユーザー操作、タイマーまたは連動により制御中"}
-                respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                return respons
+                if not regist_result[0]:
+                    return {
+                        "statusCode": 500,
+                        "headers": res_headers,
+                        "body": json.dumps(regist_result[1], ensure_ascii=False),
+                    }
+                res_body = {"message": "他のユーザー操作、タイマーまたは連動により制御中です。"}
+                return {
+                    "statusCode": 200,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
 
             ### 6. 要求番号生成（アトミックカウンタをインクリメントし、端末要求番号を生成）
             req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
@@ -185,10 +207,12 @@ def lambda_handler(event, context):
             ]
             result = db.execute_transact_write_item(write_items)
             if not result:
-                res_body = {"code": "9999", "message": "要求番号カウンタ情報への書き込みに失敗しました。"}
-                respons["statusCode"] = 500
-                respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                return respons
+                res_body = {"message": "要求番号カウンタ情報への書き込みに失敗しました。"}
+                return {
+                    "statusCode": 500,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
         req_no = re.sub("^0x", "", format(req_num % 65535, "#010x"))
 
         ### 7. 接点出力制御要求
@@ -209,10 +233,12 @@ def lambda_handler(event, context):
             do_control = "10"
             do_control_time = "0000"
         else:
-            res_body = {"code": "9999", "message": "接点出力_制御方法の値が不正です。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            return respons
+            res_body = {"message": "接点出力_制御方法の値が不正です。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         payload = {
             "Message_Length": "000C",
@@ -257,10 +283,12 @@ def lambda_handler(event, context):
         ]
         result = db.execute_transact_write_item(put_items)
         if not result:
-            res_body = {"code": "9999", "message": "接点出力制御応答情報への書き込みに失敗しました。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            return respons
+            res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         ### 8. タイムアウト判定Lambda呼び出し
         payload = {
@@ -275,16 +303,21 @@ def lambda_handler(event, context):
         logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
         ### 9. メッセージ応答
-        res_body = {"code": "0000", "message": "", "device_req_no": device_req_no}
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        return respons
+        res_body = {"message": "", "device_req_no": device_req_no}
+        return {
+            "statusCode": 200,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False),
+        }
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
-        respons["statusCode"] = 500
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        return respons
+        res_body = {"message": "予期しないエラーが発生しました。"}
+        return {
+            "statusCode": 500,
+            "headers": res_headers,
+            "body": json.dumps(res_body, ensure_ascii=False),
+        }
 
 
 def __register_hist_info(
@@ -312,10 +345,7 @@ def __register_hist_info(
     for group_id in group_id_list:
         group_info = db.get_group_info(group_id, group_table)
         if not group_info:
-            res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(result, ensure_ascii=False)
-            return respons
+            return False, {"message": "グループ情報が存在しません。"}
         logger.info(f"group_info: {group_info}")
         group_list.append(
             {
@@ -357,10 +387,7 @@ def __register_hist_info(
     ]
     result = db.execute_transact_write_item(put_items)
     if not result:
-        res_body = {"code": "9999", "message": "履歴一覧情報への書き込みに失敗しました。"}
-        respons["statusCode"] = 500
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        return respons
+        return False, {"message": "履歴一覧情報への書き込みに失敗しました。"}
     logger.info(f"put_items: {put_items}")
 
     return True, result

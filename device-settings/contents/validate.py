@@ -17,9 +17,9 @@ def validate(event, user_info, tables):
     pathParam = event.get("pathParameters", {})
     body = event.get("body", {})
     if not headers or not pathParam or not body:
-        return {"code": "9999", "message": "リクエストパラメータが不正です。"}
+        return {"message": "リクエストパラメータが不正です。"}
     if "Authorization" not in headers or "device_id" not in pathParam or "device_imei" not in body:
-        return {"code": "9999", "message": "リクエストパラメータが不正です。"}
+        return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
     body = json.loads(body)
@@ -29,7 +29,7 @@ def validate(event, user_info, tables):
     # 1.3 ユーザー権限確認
     contract_info = db.get_contract_info(user_info["contract_id"], tables["contract_table"])
     if not contract_info:
-        return {"code": "9999", "message": "アカウント情報が存在しません。"}
+        return {"message": "アカウント情報が存在しません。"}
 
     ##################
     # 2 デバイス操作権限チェック
@@ -41,20 +41,20 @@ def validate(event, user_info, tables):
     logger.info(f"device_imei: {body['device_imei']}")
     logger.info(f"device_info: {device_info}")
     if "Item" not in device_info:
-        return {"code": "9999", "message": "デバイス情報が存在しません。"}
+        return {"message": "デバイス情報が存在しません。"}
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
-        return {"code": "9999", "message": "不正なデバイスIDが指定されています。"}
+        return {"message": "不正なデバイスIDが指定されています。"}
     # 端子設定チェック
     terminal = terminal_check(body, device_id, device_info["Item"]["device_type"], tables)
     if not terminal:
-        return {"code": "9999", "message": "デバイス種別と端子設定が一致しません。"}
+        return {"message": "デバイス種別と端子設定が一致しません。"}
 
     input = input_check(body)
     if not input:
-        return {"code": "9999", "message": "入力パラメータが不正です。"}
-    return {"code": "0000", "message": "", "device_id": device_id, "body": body}
+        return {"message": "入力パラメータが不正です。"}
+    return {"device_id": device_id, "body": body}
 
 
 # 操作権限チェック

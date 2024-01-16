@@ -33,7 +33,7 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -57,9 +57,9 @@ def lambda_handler(event, context):
             device_relation_table,
             remote_controls_table,
         )
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -78,7 +78,6 @@ def lambda_handler(event, context):
         logger.info(f"result:{control_result}")
 
         res_body = {
-            "code": "0000",
             "message": "",
             "device_req_no": validate_result["request_params"]["device_req_no"],
             "control_result": control_result,
@@ -91,8 +90,7 @@ def lambda_handler(event, context):
         }
     except Exception as e:
         logger.info(e)
-        logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        res_body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

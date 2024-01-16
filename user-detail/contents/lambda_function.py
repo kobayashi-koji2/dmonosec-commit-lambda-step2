@@ -1,7 +1,6 @@
 import json
 import os
 import boto3
-import traceback
 
 from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
@@ -35,7 +34,7 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -54,9 +53,9 @@ def lambda_handler(event, context):
 
         # パラメータチェック
         validate_result = validate.validate(event, user, contract_table)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -95,7 +94,6 @@ def lambda_handler(event, context):
             )
 
         res_body = {
-            "code": "0000",
             "message": "",
             "user_id": user_id,
             "email_address": account.get("email_address"),
@@ -107,13 +105,11 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
-            #'body':res_body
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
         logger.info(e)
-        logger.info(traceback.format_exc())
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

@@ -11,9 +11,9 @@ logger = Logger()
 def validate(event, user):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
-        return {"code": "9999", "message": "グループの操作権限がありません。"}
+        return {"message": "グループの操作権限がありません。"}
 
-    return {"code": "0000"}
+    return {}
 
 
 # 操作権限チェック

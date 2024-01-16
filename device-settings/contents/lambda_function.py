@@ -37,7 +37,7 @@ def lambda_handler(event, context):
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -56,9 +56,9 @@ def lambda_handler(event, context):
 
         # パラメータチェック
         validate_result = validate.validate(event, user_info, tables)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
             ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
         except ClientError as e:
             logger.info(f"デバイス設定更新エラー e={e}")
-            res_body = {"code": "9999", "message": "デバイス設定の更新に失敗しました。"}
+            res_body = {"message": "デバイス設定の更新に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -106,7 +106,6 @@ def lambda_handler(event, context):
 
         res_body = num_to_str(
             {
-                "code": "0000",
                 "message": "",
                 "device_id": device_info["device_id"],
                 "device_name": device_info_config.get("device_name", ""),
@@ -132,7 +131,7 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        res_body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

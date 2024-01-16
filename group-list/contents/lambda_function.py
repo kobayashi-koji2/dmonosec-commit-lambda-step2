@@ -29,12 +29,10 @@ def lambda_handler(event, context):
         # DynamoDB操作オブジェクト生成
         try:
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
-            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
-            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -53,9 +51,9 @@ def lambda_handler(event, context):
 
         # パラメータチェック
         validate_result = validate.validate(event, user)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -77,23 +75,22 @@ def lambda_handler(event, context):
         except ClientError as e:
             logger.info(e)
             logger.info(traceback.format_exc())
-            body = {"code": "9999", "message": "グループ一覧の取得に失敗しました。"}
+            body = {"message": "グループ一覧の取得に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
-        res_body = {"code": "0000", "message": "", "group_list": group_list}
+        res_body = {"message": "", "group_list": group_list}
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc)
-            #'body':res_body
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

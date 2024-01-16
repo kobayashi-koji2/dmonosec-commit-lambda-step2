@@ -29,7 +29,7 @@ def lambda_handler(event, context):
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -48,7 +48,7 @@ def lambda_handler(event, context):
         # パラメータチェック
         validate_result = validate.validate(event, user_info, contract_table)
         logger.info(validate_result)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
                 "statusCode": 200,
                 "headers": res_headers,
@@ -65,21 +65,25 @@ def lambda_handler(event, context):
             ssm.table_names["DEVICE_RELATION_TABLE"],
         )
 
-        if transact_result:
-            res_body = {"code": "0000", "message": "グループの削除が完了しました。"}
-        else:
-            res_body = {"code": "9999", "message": "グループの削除に失敗しました。"}
+        if not transact_result:
+            res_body = {"message": "グループの削除に失敗しました。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(
+                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                ),
+            }
 
         return {
-            "statusCode": 200,
+            "statusCode": 204,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
 
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        res_body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,

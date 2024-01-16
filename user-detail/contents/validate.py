@@ -12,7 +12,7 @@ logger = Logger()
 def validate(event, user, contract_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
-        return {"code": "9999", "message": "ユーザの操作権限がありません。"}
+        return {"message": "ユーザの操作権限がありません。"}
 
     # 入力値ェック
     path_params = event.get("pathParameters", {})
@@ -20,15 +20,14 @@ def validate(event, user, contract_table):
 
     contract = db.get_contract_info(user["contract_id"], contract_table)
     if not contract:
-        return {"code": "9999", "message": "アカウント情報が存在しません。"}
+        return {"message": "アカウント情報が存在しません。"}
 
     if not params["user_id"]:
-        return {"code": "9999", "message": "パラメータが不正です"}
+        return {"message": "パラメータが不正です"}
     if params["user_id"] not in contract["contract_data"]["user_list"]:
-        return {"code": "9999", "message": "不正なユーザIDが指定されています。"}
+        return {"message": "不正なユーザIDが指定されています。"}
 
     return {
-        "code": "0000",
         "contract_info": contract,
         "request_params": params,
     }

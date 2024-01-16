@@ -42,7 +42,7 @@ def lambda_handler(event, context):
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
         except KeyError as e:
-            body = {"code": "9999", "message": e}
+            body = {"message": e}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -63,9 +63,9 @@ def lambda_handler(event, context):
         # 1 入力情報チェック
         ##################
         validate_result = validate.validate(event, user_info, tables)
-        if validate_result["code"] != "0000":
+        if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
@@ -85,9 +85,9 @@ def lambda_handler(event, context):
             # 3.1 デバイスID一覧取得
             contract_info = db.get_contract_info(contract_id, tables["contract_table"])
             if not contract_info:
-                res_body = {"code": "9999", "message": "契約情報が存在しません。"}
+                res_body = {"message": "契約情報が存在しません。"}
                 return {
-                    "statusCode": 200,
+                    "statusCode": 500,
                     "headers": res_headers,
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
@@ -99,12 +99,12 @@ def lambda_handler(event, context):
         elif user_type == "worker" or user_type == "referrer":
             # 2.1 適用デバイスID、グループID一覧取得
             device_id_list = db.get_user_relation_device_id_list(
-                f"u-{user_id}", tables["device_relation_table"]
+                user_id, tables["device_relation_table"]
             )
         else:
-            res_body = {"code": "9999", "message": "不正なユーザです。"}
+            res_body = {"message": "不正なユーザです。"}
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
@@ -169,7 +169,6 @@ def lambda_handler(event, context):
                 continue
             else:
                 res_body = {
-                    "code": "9999",
                     "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています",
                 }
                 return {
@@ -227,13 +226,12 @@ def lambda_handler(event, context):
             # 8 応答メッセージ生成
             ##################
             res_body = {
-                "code": "0000",
                 "message": "",
                 "device_list": device_list,
                 "unregistered_device_list": pre_reg_device_info,
             }
         elif user_type == "worker" or user_type == "referrer":
-            res_body = {"code": "0000", "message": "", "device_list": device_list}
+            res_body = {"message": "", "device_list": device_list}
 
         logger.info(f"レスポンス:{res_body}")
         return {
@@ -243,7 +241,7 @@ def lambda_handler(event, context):
         }
     except Exception as e:
         logger.info(e)
-        body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
             "headers": res_headers,
