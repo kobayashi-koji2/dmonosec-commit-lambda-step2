@@ -352,16 +352,15 @@ def eventJudge(
         event_info["event_datetime"] = recv_data["event_datetime"]
         di_list = list(reversed(list(recv_data["di_state"])))
         if recv_data["message_type"] == "0001":
-            di_trigger = list(reversed(list(format(recv_data["di_trigger"], "08b"))))
+            di_trigger = recv_data["di_trigger"]
         for i in range(8):
             event_info["terminal_no"] = i + 1
             event_info["di_state"] = int(di_list[i])
-            if recv_data["message_type"] == "0001":
-                if di_trigger[i] == "1":
-                    hist_list_data = createHistListData(
-                        recv_data, device_info, event_info, device_relation_table, group_table
-                    )
-                    hist_list.append(hist_list_data)
+            if recv_data["message_type"] == "0001" and event_info["terminal_no"] == di_trigger:
+                hist_list_data = createHistListData(
+                    recv_data, device_info, event_info, device_relation_table, group_table
+                )
+                hist_list.append(hist_list_data)
             if not init_state_flg:
                 terminal_key = "di" + str(i + 1) + "_state"
                 current_di = device_current_state[terminal_key]
@@ -383,11 +382,11 @@ def eventJudge(
         else:
             event_info["control"] = "不明"
         do_list = list(reversed(list(recv_data["do_state"])))
-        do_trigger = list(reversed(list(format(recv_data["do_trigger"], "08b"))))
+        do_trigger = recv_data["do_trigger"]
         for i in range(2):
             event_info["terminal_no"] = i + 1
             event_info["do_state"] = int(do_list[i])
-            if do_trigger[i] == "1":
+            if event_info["terminal_no"] == do_trigger:
                 hist_list_data = createHistListData(
                     recv_data, device_info, event_info, device_relation_table, group_table
                 )
@@ -572,9 +571,9 @@ def eventJudge(
         )
         logger.debug(f"remote_control_info={remote_control_info}")
         if remote_control_info is not None and "link_di_no" in remote_control_info:
-            di_trigger = list(reversed(list(format(recv_data["di_trigger"], "08b"))))
-            list_di_no = int(remote_control_info["link_di_no"]) - 1
-            if di_trigger[list_di_no] == "1":
+            di_trigger = recv_data["di_trigger"]
+            list_di_no = int(remote_control_info["link_di_no"])
+            if di_trigger != 0 and di_trigger == list_di_no:
                 event_info["event_datetime"] = remote_control_info["req_datetime"]
                 event_info["do_no"] = remote_control_info["do_no"]
                 event_info["control"] = remote_control_info["control"]
