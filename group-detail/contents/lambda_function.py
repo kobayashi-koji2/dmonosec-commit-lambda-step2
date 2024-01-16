@@ -56,7 +56,7 @@ def lambda_handler(event, context):
         validate_result = validate.validate(event, user_info, contract_table)
         if validate_result.get("message"):
             return {
-                "statusCode": 200,
+                "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
