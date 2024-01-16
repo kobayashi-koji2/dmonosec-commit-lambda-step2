@@ -102,24 +102,24 @@ def lambda_handler(event, context):
                 # タイムアウト時間まで待機
                 time.sleep(float(limit_datetime) / 1000 - time.time())
 
-        cnt_hist_list = ddb.get_cnt_hist(
-            remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
-        )
-        if not [
-            cnt_hist for cnt_hist in cnt_hist_list if cnt_hist.get("di_trigger") == link_di_no
-        ]:
-            # TODO メール通知
-
-            # 履歴レコード作成
-            ddb.put_hist_list(
-                remote_control,
-                None,
-                "timeout_status",
-                hist_list_table,
-                device_table,
-                group_table,
-                device_relation_table,
+            cnt_hist_list = ddb.get_cnt_hist(
+                remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
             )
+            if not [
+                cnt_hist for cnt_hist in cnt_hist_list if cnt_hist.get("di_trigger") == link_di_no
+            ]:
+                # TODO メール通知
+
+                # 履歴レコード作成
+                ddb.put_hist_list(
+                    remote_control,
+                    None,
+                    "timeout_status",
+                    hist_list_table,
+                    device_table,
+                    group_table,
+                    device_relation_table,
+                )
 
     except Exception as e:
         logger.info(e)
