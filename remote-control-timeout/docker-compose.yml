@@ -12,6 +12,7 @@ services:
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
+      - MAIL_FROM_ADDRESS=mun-yamashita@secom.co.jp
       - POWERTOOLS_LOG_LEVEL=DEBUG
     volumes:
       - ./contents:/var/task

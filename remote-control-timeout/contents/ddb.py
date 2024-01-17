@@ -1,5 +1,7 @@
 import json
 import uuid
+import decimal
+import time
 
 from aws_lambda_powertools import Logger
 import boto3
@@ -18,9 +20,26 @@ def get_remote_control_info(device_req_no, remote_controls_table):
         ScanIndexForward=False,
         Limit=1,
     )
-    if not "Items" in remote_control_res:
+    if "Items" not in remote_control_res:
         return None
     return remote_control_res["Items"][0]
+
+
+# 通知履歴テーブル作成
+def put_notification_hist(
+    contract_id, notification_user_list, notification_datetime, notification_hist_table
+):
+    notification_hist_id = str(uuid.uuid4())
+    notice_hist_item = {
+        "notification_hist_id": notification_hist_id,
+        "contract_id": contract_id,
+        "notification_datetime": int(time.mktime(notification_datetime.timetuple()) * 1000)
+        + int(notification_datetime.microsecond / 1000),
+        "notification_user_list": notification_user_list,
+    }
+    item = json.loads(json.dumps(notice_hist_item), parse_float=decimal.Decimal)
+    notification_hist_table.put_item(Item=item)
+    return notification_hist_id
 
 
 # 履歴情報テーブル取得
@@ -97,3 +116,14 @@ def put_hist_list(
         },
     }
     hist_list_table.put_item(Item=hist_list_item)
+
+
+# 接点出力制御結果更新
+def update_remote_control_result(
+    device_req_no, req_datetime, control_result, remote_controls_table
+):
+    remote_controls_table.update_item(
+        Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
+        UpdateExpression="SET control_result = :new_value",
+        ExpressionAttributeValues={":new_value": control_result},
+    )
