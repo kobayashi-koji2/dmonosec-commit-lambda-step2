@@ -210,6 +210,7 @@ def lambda_handler(event, context, user_info):
                 .get("config", {})
                 .get("notification_settings", [])
                 if setting.get("event_trigger") == "do_change"
+                and setting.get("terminal_no") == remote_control["do_no"]
             ]
 
             notification_hist_id = None
@@ -268,6 +269,7 @@ def lambda_handler(event, context, user_info):
                     .get("config", {})
                     .get("notification_settings", [])
                     if setting.get("event_trigger") == "do_change"
+                    and setting.get("terminal_no") == remote_control["do_no"]
                 ]
 
                 notification_hist_id = None
