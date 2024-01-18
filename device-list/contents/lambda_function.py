@@ -186,6 +186,11 @@ def lambda_handler(event, context, user_info):
             device_state = db.get_device_state(item1, tables["device_state_table"])
             if not device_state:
                 logger.info(f"device current status information does not exist:{item1}")
+                
+            # 機器異常状態判定
+            device_abnormality = 0
+            if device_state.get("device_abnormality") or device_state.get("parameter_abnormality") or device_state.get("fw_update_abnormality"):
+                device_abnormality = 1
 
             # デバイス一覧生成
             device_list.append(
@@ -195,13 +200,9 @@ def lambda_handler(event, context, user_info):
                     "device_imei": device_info["Items"][0]["imei"],
                     "group_name_list": group_name_list,
                     "device_order": order,
-                    "signal_status": device_state.get("signal_status", ""),
-                    "battery_near_status": device_state.get("battery_near_status", ""),
-                    "device_abnormality": device_state.get("device_abnormality", ""),
-                    "parameter_abnormality": device_state.get("parameter_abnormality", ""),
-                    "fw_update_abnormality": device_state.get("fw_abnormality", ""),
-                    "device_unhealthy": "",  # フェーズ2
-                    "di_unhealthy": "",  # フェーズ2
+                    "battery_near_status": device_state.get("battery_near_status", 0),
+                    "device_abnormality": device_abnormality,
+                    "di_unhealthy": 0,  # フェーズ2
                 }
             )
             order += 1
