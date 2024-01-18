@@ -21,10 +21,11 @@ def get_req_no_count_info(sim_id, table):
     return response
 
 
-def get_remote_control_latest(pk, filter, table):
+def get_remote_control_latest(device_id, do_no, table):
     response = table.query(
-        KeyConditionExpression=Key("device_req_no").eq(pk),
-        FilterExpression=Attr("do_no").eq(filter),
+        IndexName="device_id_req_datetime_index",
+        KeyConditionExpression=Key("device_id").eq(device_id),
+        FilterExpression=Attr("do_no").eq(do_no),
         ScanIndexForward=False,  # 降順
         Limit=1,
     ).get("Items", [])

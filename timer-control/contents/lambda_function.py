@@ -125,6 +125,7 @@ def lambda_handler(event, context):
                 error_flg, result = __check_under_control(
                     checked_di_state_info,
                     icc_id,
+                    device_id,
                     req_no_counter_table,
                     remote_controls_table,
                 )
@@ -325,7 +326,7 @@ def __check_return_di_state(do_info, device_id, device_state_table):
     return True, result
 
 
-def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls_table):
+def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remote_controls_table):
     """
     1. 要求番号が設定されている場合
         最新の制御情報を確認し、接点出力端子が制御中なのかどうか判定する。
@@ -338,31 +339,23 @@ def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls
     """
     result = None
 
-    req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
-    if req_no_count_info:
-        logger.info(f"req_no_count_info: {req_no_count_info}")
-
-        # 最新制御情報取得
-        latest_req_no = re.sub("^0x", "", format(int(req_no_count_info["num"]) % 65535, "#010x"))
-        device_req_no = icc_id + "-" + latest_req_no
-        remote_control_latest = ddb.get_remote_control_latest(
-            device_req_no, do_info["do_no"], remote_controls_table
-        )
-        if len(remote_control_latest) == 0:
-            res_body = {"message": "接点出力制御応答情報が存在しません。"}
-            return False, res_body
+    # 最新制御情報取得
+    remote_control_latest = ddb.get_remote_control_latest(
+        device_id, do_info["do_no"], remote_controls_table
+    )
+    if len(remote_control_latest) > 0:
         remote_control_latest = remote_control_latest[0]
         logger.info(f"remote_control_latest: {remote_control_latest}")
 
         # 制御中判定
-        if ("recv_datetime" not in remote_control_latest) or (
-            remote_control_latest["recv_datetime"] == 0
-        ):
+        if "control_result" not in remote_control_latest:
             logger.info(
                 "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
             )
             return True, 1
 
+    req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
+    if req_no_count_info:
         # 要求番号生成（アトミックカウンタをインクリメントし、要求番号を取得）
         req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
         result = do_info
