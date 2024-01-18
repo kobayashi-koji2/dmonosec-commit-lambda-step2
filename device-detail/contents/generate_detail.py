@@ -36,8 +36,8 @@ def get_device_detail(device_info, device_state, group_info_list):
         "device_type": device_info["device_type"],
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,
-        "battery_near_status": device_state.get("battery_near_status", ""),
-        "signal_status": device_state.get("signal_status", ""),
+        "battery_near_status": device_state.get("battery_near_state", 0),
+        "signal_status": device_state.get("signal_state", 0),
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", "")
         #'ai_list':terminal_info.get('ai_list','') #フェーズ2
