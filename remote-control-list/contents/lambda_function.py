@@ -119,9 +119,9 @@ def __generate_response_items(device_id, device_name, device_imei, do_info, di_l
     results_item["do_name"] = do_info["do_name"]
     if do_info["do_control"] == "toggle":
         results_item["do_control"] = 0
-    elif do_info["do_control"] == "close":
-        results_item["do_control"] = 1
     elif do_info["do_control"] == "open":
+        results_item["do_control"] = 1
+    elif do_info["do_control"] == "close":
         results_item["do_control"] = 2
 
     # 接点出力情報をもとに接点入力情報を設定

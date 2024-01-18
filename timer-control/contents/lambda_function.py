@@ -50,8 +50,9 @@ def lambda_handler(event, context):
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         except KeyError as e:
-            res_body = {"code": "9999", "message": e}
+            res_body = {"message": e}
             respons["statusCode"] = 500
+            logger.info(respons)
             return respons
 
         ### 1. スケジュール設定チェック
@@ -67,8 +68,9 @@ def lambda_handler(event, context):
         # 有効デバイス有無チェック
         if len(device_info_list) == 0:
             # 正常終了
-            res_body = {"code": "0000", "message": ""}
+            res_body = {"message": ""}
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
+            logger.info(respons)
             return respons
 
         ### 2. 接点出力制御要求
@@ -96,6 +98,7 @@ def lambda_handler(event, context):
                 if not error_flg:
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(result, ensure_ascii=False)
+                    logger.info(respons)
                     return respons
                 if result == 1:
                     error_flg, result = __register_hist_info(
@@ -128,6 +131,7 @@ def lambda_handler(event, context):
                 if not error_flg:
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(result, ensure_ascii=False)
+                    logger.info(respons)
                     return respons
                 if result == 1:
                     error_flg, result = __register_hist_info(
@@ -142,6 +146,7 @@ def lambda_handler(event, context):
                     if not error_flg:
                         respons["statusCode"] = 500
                         respons["body"] = json.dumps(result, ensure_ascii=False)
+                        logger.info(respons)
                         return respons
                     logger.info(
                         f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
@@ -174,9 +179,10 @@ def lambda_handler(event, context):
                     do_control = "10"
                     do_control_time = "0000"
                 else:
-                    res_body = {"code": "9999", "message": "接点出力_制御方法の値が不正です。"}
+                    res_body = {"message": "接点出力_制御方法の値が不正です。"}
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                    logger.info(respons)
                     return respons
 
                 payload = {
@@ -206,9 +212,10 @@ def lambda_handler(event, context):
                 elif do_onoff_control == 1:
                     control_trigger = "on_timer_control"
                 else:
-                    res_body = {"code": "9999", "message": "接点出力_ON/OFF制御の値が不正です。"}
+                    res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                    logger.info(respons)
                     return respons
 
                 put_items = [
@@ -231,9 +238,10 @@ def lambda_handler(event, context):
                 ]
                 result = db.execute_transact_write_item(put_items)
                 if not result:
-                    res_body = {"code": "9999", "message": "接点出力制御応答情報への書き込みに失敗しました。"}
+                    res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
                     respons["statusCode"] = 500
                     respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                    logger.info(respons)
                     return respons
                 logger.info(f"put_items: {put_items}")
 
@@ -247,15 +255,17 @@ def lambda_handler(event, context):
                 logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
         ### 3. メッセージ応答
-        res_body = {"code": "0000", "message": ""}
+        res_body = {"message": ""}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
+        logger.info(respons)
         return respons
     except Exception as e:
         logger.info(e)
         logger.info(traceback.format_exc())
-        res_body = {"code": "9999", "message": "予期しないエラーが発生しました。"}
+        res_body = {"message": "予期しないエラーが発生しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
+        logger.info(respons)
         return respons
 
 
@@ -295,11 +305,11 @@ def __check_return_di_state(do_info, device_id, device_state_table):
     if ("do_di_return" in do_info) and do_info["do_di_return"]:
         device_state_info = db.get_device_state(device_id, device_state_table)
         if not device_state_info:
-            res_body = {"code": "9999", "message": "現状態情報が存在しません。"}
+            res_body = {"message": "現状態情報が存在しません。"}
             return False, res_body
         logger.info(f"device_state_info: {device_state_info}")
 
-        # タイマーのON/OFF制御と接点入力状態の値が一致するなら処理対象外
+        # タイマーのON/OFF制御と接点入力状態の値が一致しないなら処理続行
         col_name = "di" + str(do_info["do_di_return"]) + "_state"
         if do_info["do_timer"]["do_onoff_control"] != device_state_info[col_name]:
             result = do_info
@@ -339,7 +349,7 @@ def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls
             device_req_no, do_info["do_no"], remote_controls_table
         )
         if len(remote_control_latest) == 0:
-            res_body = {"code": "9999", "message": "接点出力制御応答情報が存在しません。"}
+            res_body = {"message": "接点出力制御応答情報が存在しません。"}
             return False, res_body
         remote_control_latest = remote_control_latest[0]
         logger.info(f"remote_control_latest: {remote_control_latest}")
@@ -371,7 +381,7 @@ def __check_under_control(do_info, icc_id, req_no_counter_table, remote_controls
         ]
         result = db.execute_transact_write_item(write_items)
         if not result:
-            res_body = {"code": "9999", "message": "要求番号カウンタ情報への書き込みに失敗しました。"}
+            res_body = {"message": "要求番号カウンタ情報への書き込みに失敗しました。"}
             return False, res_body
         result = do_info
         result["req_num"] = req_num
@@ -398,7 +408,7 @@ def __register_hist_info(
     for group_id in group_id_list:
         group_info = db.get_group_info(group_id, group_table)
         if not group_info:
-            res_body = {"code": "9999", "message": "グループ情報が存在しません。"}
+            res_body = {"message": "グループ情報が存在しません。"}
             return False, res_body
         logger.info(f"group_info: {group_info}")
         group_list.append(
@@ -420,7 +430,7 @@ def __register_hist_info(
         event_type = "on_timer_control"
         control_result = "not_excuted_off"
     else:
-        res_body = {"code": "9999", "message": "接点出力_ON/OFF制御の値が不正です。"}
+        res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         return respons
@@ -446,9 +456,9 @@ def __register_hist_info(
 
     if flg == "__check_return_di_state":
         if do_onoff_control == 0:
-            hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
-        elif do_onoff_control == 1:
             hist_data["link_terminal_state_name"] = link_terminal["di_off_name"]
+        elif do_onoff_control == 1:
+            hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
 
     item = {
         "device_id": device_info["device_id"],
@@ -467,9 +477,10 @@ def __register_hist_info(
     ]
     result = db.execute_transact_write_item(put_items)
     if not result:
-        res_body = {"code": "9999", "message": "履歴一覧情報への書き込みに失敗しました。"}
+        res_body = {"message": "履歴一覧情報への書き込みに失敗しました。"}
         respons["statusCode"] = 500
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
+        logger.info(respons)
         return respons
     logger.info(f"put_items: {put_items}")
 
