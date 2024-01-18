@@ -13,14 +13,14 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
-def lambda_handler(event, context):
+@auth.verify_login_user
+def lambda_handler(event, context, user):
     res_headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
     }
     # DynamoDB操作オブジェクト生成
     try:
-        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
     except KeyError as e:
         body = {"message": e}
@@ -31,16 +31,6 @@ def lambda_handler(event, context):
         }
 
     try:
-        try:
-            user = auth.verify_user(event, user_table)
-        except auth.AuthError as e:
-            logger.info("ユーザー検証失敗", exc_info=True)
-            return {
-                "statusCode": e.code,
-                "headers": res_headers,
-                "body": json.dumps({"message": e.message}, ensure_ascii=False),
-            }
-
         account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
 
         res_body = {

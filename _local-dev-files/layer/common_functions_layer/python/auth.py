@@ -1,10 +1,15 @@
-import logging
+import json
+import os
 
-from jose import jwt, JWTError
+import boto3
+from aws_lambda_powertools import Logger
+from jose import JWTError, jwt
 
 import db
+import ssm
 
-logger = logging.getLogger()
+logger = Logger()
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
 class AuthError(Exception):
@@ -14,7 +19,27 @@ class AuthError(Exception):
         self.message = message
 
 
-def verify_user(event, user_table):
+def verify_login_user(func):
+    def wrapper(event, *args, **kwargs):
+        try:
+            login_user = _get_login_user(event)
+        except AuthError as e:
+            logger.info("ユーザー検証失敗", exc_info=True)
+            return {
+                "statusCode": e.code,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*",
+                },
+                "body": json.dumps({"message": e.message}, ensure_ascii=False),
+            }
+        result = func(event, *args, login_user, **kwargs)
+        return result
+
+    return wrapper
+
+
+def _get_login_user(event):
     try:
         id_token = event["headers"]["Authorization"]
         claims = jwt.get_unverified_claims(id_token)
@@ -32,11 +57,12 @@ def verify_user(event, user_table):
         logger.info("トークンが不正", exc_info=True)
         raise AuthError(401, "認証情報が不正です。")
 
-    user_info = db.get_user_info_by_user_id(user_id, user_table)
+    user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+    login_user = db.get_user_info_by_user_id(user_id, user_table)
 
-    if not user_info:
+    if not login_user:
         raise AuthError(401, "認証情報が不正です。")
     if auth_time > password_exp:
         raise AuthError(401, "パスワードの有効期限が切れています。")
 
-    return user_info
+    return login_user

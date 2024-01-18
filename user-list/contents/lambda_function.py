@@ -19,7 +19,8 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 logger = Logger()
 
 
-def lambda_handler(event, context):
+@auth.verify_login_user
+def lambda_handler(event, context, login_user):
     try:
         res_headers = {
             "Content-Type": "application/json",
@@ -38,15 +39,6 @@ def lambda_handler(event, context):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        try:
-            login_user = auth.verify_user(event, user_table)
-        except auth.AuthError as e:
-            logger.info("ユーザー検証失敗", exc_info=True)
-            return {
-                "statusCode": e.code,
-                "headers": res_headers,
-                "body": json.dumps({"message": e.message}, ensure_ascii=False),
-            }
         # パラメータチェック
         validate_result = validate.validate(event, login_user)
         if validate_result.get("message"):

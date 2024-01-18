@@ -22,7 +22,8 @@ region_name = os.environ.get("AWS_REGION")
 logger = Logger()
 
 
-def lambda_handler(event, context):
+@auth.verify_login_user
+def lambda_handler(event, context, user_info):
     logger.info(region_name)
     try:
         res_headers = {
@@ -47,16 +48,6 @@ def lambda_handler(event, context):
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
-            }
-
-        try:
-            user_info = auth.verify_user(event, tables["user_table"])
-        except auth.AuthError as e:
-            logger.info("ユーザー検証失敗", exc_info=True)
-            return {
-                "statusCode": e.code,
-                "headers": res_headers,
-                "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
         ##################

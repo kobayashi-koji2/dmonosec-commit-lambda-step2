@@ -23,7 +23,8 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 logger = Logger()
 
 
-def lambda_handler(event, context):
+@auth.verify_login_user
+def lambda_handler(event, context, user_info):
     try:
         res_headers = {
             "Content-Type": "application/json",
@@ -46,16 +47,6 @@ def lambda_handler(event, context):
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
-            }
-
-        try:
-            user_info = auth.verify_user(event, tables["user_table"])
-        except auth.AuthError as e:
-            logger.info("ユーザー検証失敗", exc_info=True)
-            return {
-                "statusCode": e.code,
-                "headers": res_headers,
-                "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
         ##################
