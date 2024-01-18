@@ -149,7 +149,7 @@ def lambda_handler(event, context):
             latest_req_no = re.sub("^0x", "", format(latest_req_num % 65535, "#010x"))
             device_req_no = icc_id + "-" + latest_req_no
             remote_control_latest = ddb.get_remote_control_latest(
-                device_req_no, do_no, remote_controls_table
+                device_info["device_id"], do_no, remote_controls_table
             )
             if len(remote_control_latest) == 0:
                 res_body = {"message": "接点出力制御応答情報が存在しません。"}
