@@ -97,7 +97,10 @@ def send_mail(
         di_no = remote_control.get("link_di_no")
         di = [
             di
-            for di in device.get("config", {}).get("terminal_settings", {}).get("di_list", [])
+            for di in device.get("device_data", {})
+            .get("config", {})
+            .get("terminal_settings", {})
+            .get("di_list", [])
             if di.get("di_no") == di_no
         ]
         di_name = di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
@@ -270,7 +273,9 @@ def lambda_handler(event, context):
             ]:
                 notification_setting = [
                     setting
-                    for setting in device.get("config", {}).get("notification_settings", [])
+                    for setting in device.get("device_data", {})
+                    .get("config", {})
+                    .get("notification_settings", [])
                     if setting.get("event_trigger") == "do_change"
                 ]
 
@@ -298,14 +303,6 @@ def lambda_handler(event, context):
                     device_table,
                     group_table,
                     device_relation_table,
-                )
-
-                # 接点衆力制御応答テーブルに制御結果（タイムアウト）を登録
-                ddb.update_remote_control_result(
-                    remote_control.get("device_req_no"),
-                    remote_control.get("req_datetime"),
-                    "9999",
-                    remote_controls_table,
                 )
 
     except Exception as e:
