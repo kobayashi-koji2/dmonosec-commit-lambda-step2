@@ -137,27 +137,12 @@ def lambda_handler(event, context):
         logger.info(f"device_info: {device_info}")
 
         ### 5. 制御中判定
-        # 要求番号取得
-        icc_id = device_info["device_data"]["param"]["iccid"]
+        # 最新制御情報取得
         do_no = int(val_result["path_params"]["do_no"])
-        req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
-        if req_no_count_info:
-            logger.info(f"req_no_count_info: {req_no_count_info}")
-
-            # 最新制御情報取得
-            latest_req_num = convert.decimal_default_proc(req_no_count_info["num"])
-            latest_req_no = re.sub("^0x", "", format(latest_req_num % 65535, "#010x"))
-            device_req_no = icc_id + "-" + latest_req_no
-            remote_control_latest = ddb.get_remote_control_latest(
-                device_info["device_id"], do_no, remote_controls_table
-            )
-            if len(remote_control_latest) == 0:
-                res_body = {"message": "接点出力制御応答情報が存在しません。"}
-                return {
-                    "statusCode": 500,
-                    "headers": res_headers,
-                    "body": json.dumps(res_body, ensure_ascii=False),
-                }
+        remote_control_latest = ddb.get_remote_control_latest(
+            device_info["device_id"], do_no, remote_controls_table
+        )
+        if len(remote_control_latest) > 0:
             remote_control_latest = remote_control_latest[0]
             logger.info(f"remote_control_latest: {remote_control_latest}")
 
@@ -189,6 +174,12 @@ def lambda_handler(event, context):
                     "headers": res_headers,
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
+
+        # 要求番号取得
+        icc_id = device_info["device_data"]["param"]["iccid"]
+        req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
+        if req_no_count_info:
+            logger.info(f"req_no_count_info: {req_no_count_info}")
 
             ### 6. 要求番号生成（アトミックカウンタをインクリメントし、端末要求番号を生成）
             req_num = ddb.increment_req_no_count_num(icc_id, req_no_counter_table)
