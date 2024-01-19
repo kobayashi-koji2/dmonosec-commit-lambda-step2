@@ -25,7 +25,6 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 
 def send_mail(
-    user_info,
     notification_setting,
     device,
     remote_control,
@@ -137,7 +136,7 @@ def send_mail(
 
     # 通知履歴登録
     notification_hist_id = ddb.put_notification_hist(
-        user_info.get("contract_id"),
+        remote_control.get("contract_id"),
         notification_setting.get("notification_target_list", []),
         send_datetime,
         notification_hist_table,
@@ -146,8 +145,7 @@ def send_mail(
     return notification_hist_id
 
 
-@auth.verify_login_user
-def lambda_handler(event, context, user_info):
+def lambda_handler(event, context):
     try:
         res_headers = {
             "Content-Type": "application/json",
@@ -173,12 +171,9 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        logger.info(user_info)
-
         # パラメータチェック
         validate_result = validate.validate(
             event,
-            user_info,
             contract_table,
             device_relation_table,
             remote_controls_table,
@@ -216,7 +211,6 @@ def lambda_handler(event, context, user_info):
             notification_hist_id = None
             if notification_setting:
                 notification_hist_id = send_mail(
-                    user_info,
                     notification_setting[0],
                     device,
                     remote_control,
@@ -275,7 +269,6 @@ def lambda_handler(event, context, user_info):
                 notification_hist_id = None
                 if notification_setting:
                     notification_hist_id = send_mail(
-                        user_info,
                         notification_setting[0],
                         device,
                         remote_control,
