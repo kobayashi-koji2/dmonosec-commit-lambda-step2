@@ -21,8 +21,7 @@ logger = Logger()
 
 
 CONTROL_NAME_DICT = {
-    "open": "開制御",
-    "close": "閉制御",
+    "close": "パルス",
     "toggle": "トグル",
 }
 
