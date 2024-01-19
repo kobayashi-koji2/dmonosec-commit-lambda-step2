@@ -247,7 +247,7 @@ def lambda_handler(event, context):
                 logger.info(f"put_items: {put_items}")
 
                 # タイムアウト判定Lambda呼び出し
-                payload = {"body": {"device_req_no": device_req_no}}
+                payload = {"body": json.dumps({"device_req_no": device_req_no})}
                 lambda_invoke_result = aws_lambda.invoke(
                     FunctionName=LAMBDA_TIMEOUT_CHECK,
                     InvocationType="Event",
