@@ -577,6 +577,13 @@ resource "aws_dynamodb_table" "remote_controls" {
     projection_type = "ALL"
   }
 
+  global_secondary_index {
+    hash_key        = "device_id"
+    range_key       = "req_datetime" 
+    name            = "device_id_req_datetime_index"
+    projection_type = "ALL"
+  }
+
   point_in_time_recovery {
     enabled = "true"
   }
