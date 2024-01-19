@@ -244,6 +244,7 @@ def lambda_handler(event, context):
                                 "do_no": {"N": str(do_no)},
                                 "link_di_no": {"N": str(do_di_return)},
                                 "iccid": {"S": icc_id},
+                                "timer_time": {"S": do_info["do_timer"]["do_time"]},
                             },
                         }
                     }
@@ -403,7 +404,7 @@ def __register_hist_info(
     user_table,
     account_table,
     notification_hist_table,
-    hist_list_table
+    hist_list_table,
 ):
     """
     1. 紐づく接点入力端子番号の指定があり、その出力端子の現状態ステータスがタイマーのON_OFF制御の値と一致する場合
@@ -436,7 +437,8 @@ def __register_hist_info(
         device_info.get("device_data", {}).get("config", {}).get("notification_settings", [])
     )
     notification_setting = [
-        setting for setting in notification_settings_list
+        setting
+        for setting in notification_settings_list
         if setting.get("event_trigger") == "do_change"
     ]
 
@@ -452,7 +454,7 @@ def __register_hist_info(
             di_list,
             user_table,
             account_table,
-            notification_hist_table
+            notification_hist_table,
         )
 
     # 履歴情報登録
@@ -530,7 +532,7 @@ def __send_mail(
     di_list,
     user_table,
     account_table,
-    notification_hist_table
+    notification_hist_table,
 ):
     # メール送信内容の設定
     send_datetime = datetime.now()
