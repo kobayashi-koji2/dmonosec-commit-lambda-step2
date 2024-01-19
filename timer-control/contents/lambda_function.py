@@ -5,6 +5,7 @@ import time
 import traceback
 import uuid
 import re
+import textwrap
 
 from aws_lambda_powertools import Logger
 import boto3
@@ -14,6 +15,7 @@ import ssm
 import db
 import convert
 import ddb
+import mail
 
 logger = Logger()
 
@@ -42,6 +44,8 @@ def lambda_handler(event, context):
     try:
         ### 0. DynamoDBの操作オブジェクト生成
         try:
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
             req_no_counter_table = dynamodb.Table(ssm.table_names["REQ_NO_COUNTER_TABLE"])
@@ -49,6 +53,7 @@ def lambda_handler(event, context):
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
+            notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
         except KeyError as e:
             res_body = {"message": e}
             respons["statusCode"] = 500
@@ -108,6 +113,9 @@ def lambda_handler(event, context):
                         di_list,
                         group_table,
                         device_relation_table,
+                        user_table,
+                        account_table,
+                        notification_hist_table,
                         hist_list_table,
                     )
                     logger.info(
@@ -142,6 +150,9 @@ def lambda_handler(event, context):
                         di_list,
                         group_table,
                         device_relation_table,
+                        user_table,
+                        account_table,
+                        notification_hist_table,
                         hist_list_table,
                     )
                     if not error_flg:
@@ -383,7 +394,16 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
 
 
 def __register_hist_info(
-    flg, device_info, do_info, di_list, group_table, device_relation_table, hist_list_table
+    flg,
+    device_info,
+    do_info,
+    di_list,
+    group_table,
+    device_relation_table,
+    user_table,
+    account_table,
+    notification_hist_table,
+    hist_list_table
 ):
     """
     1. 紐づく接点入力端子番号の指定があり、その出力端子の現状態ステータスがタイマーのON_OFF制御の値と一致する場合
@@ -411,10 +431,31 @@ def __register_hist_info(
             }
         )
 
+    # メール通知設定を取得
+    notification_settings_list = (
+        device_info.get("device_data", {}).get("config", {}).get("notification_settings", [])
+    )
+    notification_setting = [
+        setting for setting in notification_settings_list
+        if setting.get("event_trigger") == "do_change"
+    ]
+
     # メール通知
     notification_hist_id = ""
-    # 12月の段階ではスキップ
+    if notification_setting:
+        notification_hist_id = __send_mail(
+            flg,
+            notification_setting[0],
+            device_info,
+            group_list,
+            do_info,
+            di_list,
+            user_table,
+            account_table,
+            notification_hist_table
+        )
 
+    # 履歴情報登録
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
         event_type = "off_timer_control"
@@ -478,3 +519,93 @@ def __register_hist_info(
     logger.info(f"put_items: {put_items}")
 
     return True, result
+
+
+def __send_mail(
+    flg,
+    notification_setting,
+    device_info,
+    group_list,
+    do_info,
+    di_list,
+    user_table,
+    account_table,
+    notification_hist_table
+):
+    # メール送信内容の設定
+    send_datetime = datetime.now()
+    device_config = device_info.get("device_data", {}).get("config", {})
+    device_name = device_config.get("device_name", device_info.get("imei"))
+    group_name_list = [g["group_name"] for g in group_list]
+    group_name = "、".join(group_name_list)
+    do_timer = do_info["do_timer"]["do_time"]
+
+    # 接点出力名の設定
+    do_name = do_info["do_name"]
+    if not do_name:
+        do_name = "接点出力" + str(do_info["do_no"])
+
+    # 紐づく接点入力名・接点入力状態の設定
+    do_di_return = do_info["do_di_return"]
+    link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
+    di_name = link_terminal["di_name"]
+    if not di_name:
+        di_name = "接点入力" + str(link_terminal["di_no"])
+
+    do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
+    if do_onoff_control == 0:
+        control_name = "OFF制御"
+        di_state = link_terminal["di_off_name"]
+        if not di_state:
+            di_state = "クローズ"
+    elif do_onoff_control == 1:
+        control_name = "ON制御"
+        di_state = link_terminal["di_on_name"]
+        if not di_state:
+            di_state = "オープン"
+
+    mail_to_list = []
+    for user_id in notification_setting.get("notification_target_list", []):
+        mail_user = db.get_user_info_by_user_id(user_id, user_table)
+        mail_account = db.get_account_info_by_account_id(mail_user["account_id"], account_table)
+        mail_to_list.append(mail_account.get("email_address"))
+    logger.debug(f"mail_to_list: {mail_to_list}")
+
+    event_detail = ""
+    if flg == "__check_return_di_state":
+        event_detail = f"""\
+            【タイマー設定による制御（不実施）】
+            {di_name}がすでに{di_state}のため、{do_name}の制御を行いませんでした。
+            ※タイマー設定「{control_name} {do_timer}」による制御信号を送信しませんでした。
+        """
+    elif flg == "__check_under_control":
+        event_detail = f"""\
+            【タイマーによる制御（不実施）】
+            他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
+            そのため、制御を行いませんでした。
+            ※タイマー設定「{control_name} {do_timer}」による制御信号を送信しませんでした。
+        """
+    logger.debug(f"event_detail: {event_detail}")
+
+    # メール送信
+    mail_subject = "イベントが発生しました"
+    mail_body = f"""\
+        ■発生日時：{send_datetime.strftime('%y/%m/%d %H:%M:%S')}
+
+        ■グループ：{group_name}
+        　デバイス：{device_name}
+
+        ■イベント内容
+        {event_detail}
+    """
+    mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
+
+    # 通知履歴登録
+    notification_hist_id = ddb.put_notification_hist(
+        device_info["device_data"]["param"]["contract_id"],
+        notification_setting.get("notification_target_list", []),
+        send_datetime,
+        notification_hist_table,
+    )
+
+    return notification_hist_id
