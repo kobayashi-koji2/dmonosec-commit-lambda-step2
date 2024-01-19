@@ -1,20 +1,23 @@
-import os
 import json
+import os
 import re
+import textwrap
 import time
 import traceback
 import uuid
+from datetime import datetime
 
-from aws_lambda_powertools import Logger
 import boto3
+from aws_lambda_powertools import Logger
 
 # layer
 import auth
+import convert
+import db
+import ddb
+import mail
 import ssm
 import validate
-import db
-import convert
-import ddb
 
 logger = Logger()
 
@@ -44,6 +47,7 @@ def lambda_handler(event, context, user_info):
         ### 0. DynamoDBの操作オブジェクト生成
         try:
             account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
@@ -51,6 +55,7 @@ def lambda_handler(event, context, user_info):
             remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
+            notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -106,11 +111,11 @@ def lambda_handler(event, context, user_info):
 
             if device_id not in device_id_list:
                 res_body = {"message": "デバイスの操作権限がありません。"}
-            return {
-                "statusCode": 400,
-                "headers": res_headers,
-                "body": json.dumps(res_body, ensure_ascii=False),
-            }
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
         else:
             pass
 
@@ -148,8 +153,11 @@ def lambda_handler(event, context, user_info):
                     do_no,
                     user_name,
                     email_address,
+                    user_table,
+                    account_table,
                     group_table,
                     device_relation_table,
+                    notification_hist_table,
                     hist_list_table,
                 )
                 if not regist_result[0]:
@@ -306,8 +314,11 @@ def __register_hist_info(
     do_no,
     user_name,
     email_address,
+    user_table,
+    account_table,
     group_table,
     device_relation_table,
+    notification_hist_table,
     hist_list_table,
 ):
     """
@@ -336,8 +347,26 @@ def __register_hist_info(
         )
 
     # メール通知
+    notification_setting = [
+        setting
+        for setting in device_info.get("device_data", {})
+        .get("config", {})
+        .get("notification_settings", [])
+        if setting.get("event_trigger") == "do_change"
+    ]
     notification_hist_id = ""
-    # 12月の段階ではスキップ
+    if notification_setting:
+        notification_hist_id = __send_mail(
+            notification_setting[0],
+            device_info,
+            group_list,
+            do_info,
+            user_name,
+            email_address,
+            user_table,
+            account_table,
+            notification_hist_table
+        )
 
     # 履歴情報登録
     item = {
@@ -372,3 +401,70 @@ def __register_hist_info(
     logger.info(f"put_items: {put_items}")
 
     return True, result
+
+
+def __send_mail(
+    notification_setting,
+    device_info,
+    group_list,
+    do_info,
+    user_name,
+    email_address,
+    user_table,
+    account_table,
+    notification_hist_table
+):
+    # メール送信内容の設定
+    send_datetime = datetime.now()
+    device_config = device_info.get("device_data", {}).get("config", {})
+    device_name = device_config.get("device_name", device_info.get("imei"))
+    group_name_list = [g["group_name"] for g in group_list]
+    group_name = "、".join(group_name_list)
+
+    # 接点出力名の設定
+    do_name = do_info["do_name"]
+    if not do_name:
+        do_name = "接点出力" + str(do_info["do_no"])
+
+    # ユーザー名の設定
+    if not user_name:
+        user_name = email_address
+
+    # メール送信先の設定
+    mail_to_list = []
+    for user_id in notification_setting.get("notification_target_list", []):
+        mail_user = db.get_user_info_by_user_id(user_id, user_table)
+        mail_account = db.get_account_info_by_account_id(mail_user["account_id"], account_table)
+        mail_to_list.append(mail_account.get("email_address"))
+    logger.debug(f"mail_to_list: {mail_to_list}")
+
+    event_detail = f"""\
+        【画面制御による制御（不実施）】
+        他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
+        そのため、制御を行いませんでした。
+        ※{user_name}が操作を行いました。
+    """
+
+    # メール送信
+    mail_subject = "イベントが発生しました"
+    mail_body = f"""\
+        ■発生日時：{send_datetime.strftime('%y/%m/%d %H:%M:%S')}
+
+        ■グループ：{group_name}
+        　デバイス：{device_name}
+
+        ■イベント内容
+        {event_detail}
+    """
+    logger.debug(f"mail_body: {mail_body}")
+    mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
+
+    # 通知履歴登録
+    notification_hist_id = ddb.put_notification_hist(
+        device_info["device_data"]["param"]["contract_id"],
+        notification_setting.get("notification_target_list", []),
+        send_datetime,
+        notification_hist_table,
+    )
+
+    return notification_hist_id

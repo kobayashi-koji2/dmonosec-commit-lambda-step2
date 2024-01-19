@@ -14,6 +14,7 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - LAMBDA_TIMEOUT_CHECK=lmonosc-lambda-remote-control-timeout-check
+      - MAIL_FROM_ADDRESS=mun-yamashita@secom.co.jp
     volumes:
       - ./contents:/var/task
     ports:
