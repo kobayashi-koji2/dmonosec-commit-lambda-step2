@@ -142,9 +142,7 @@ def lambda_handler(event, context, user_info):
             logger.info(f"remote_control_latest: {remote_control_latest}")
 
             # 制御中判定
-            if ("recv_datetime" not in remote_control_latest) or (
-                remote_control_latest["recv_datetime"] == 0
-            ):
+            if not remote_control_latest.get("control_result"):
                 logger.info(
                     "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
                 )
