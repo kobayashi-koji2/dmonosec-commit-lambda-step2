@@ -23,6 +23,7 @@ def lambda_handler(event, context, user, body):
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
     }
+    logger.info({"user": user})
 
     # DynamoDB操作オブジェクト生成
     try:
