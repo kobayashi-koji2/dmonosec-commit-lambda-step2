@@ -20,12 +20,6 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 logger = Logger()
 
 
-CONTROL_NAME_DICT = {
-    "close": "パルス",
-    "toggle": "トグル",
-}
-
-
 def create_history_message(hist):
     msg = ""
     # 接点入力変化
@@ -36,7 +30,7 @@ def create_history_message(hist):
     # 接点出力変化
     elif hist["event_type"] == "do_change":
         terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
-        msg = f"【接点出力変化（{CONTROL_NAME_DICT.get(hist['control'])}）】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
+        msg = f"【接点出力変化】\n{terminal_name}が{hist['terminal_state_name']}に変化しました。"
 
     # アナログ入力変化（Ph2）
     elif hist["event_type"] == "ai_change":
