@@ -14,22 +14,9 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - INITIAL_LAMBDA_NAME=lmonosc-lambda-initialreceive-2
+      - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
       - RECV_FUTURE_TIME=86400000
       - RECV_PAST_TIME=31536000000
-      - MONOSC_MAIL_FROM=yuma-tsurumi@design.secom.co.jp
-      - OCCURRENCE_FLAG_ON=1
-      - DI_MAIL_TEMPLATE=lmonosc-sest-di
-      - DO_MAIL_TEMPLATE=lmonosc-sest-do
-      - DEVICE_ABNORMALITY_OCCURRENCE_MAIL_TEMPLATE=lmonosc-sest-device-abnormality-occurrence
-      - DEVICE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE=lmonosc-sest-device-abnormality-recovery
-      - BATTERY_NEAR_OCCURRENCE_MAIL_TEMPLATE=lmonosc-sest-battery-near-occurrence
-      - BATTERY_NEAR_RECOVERY_MAIL_TEMPLATE=lmonosc-sest-battery-near-recovery
-      - PARAMETER_ABNORMALITY_OCCURRENCE_MAIL_TEMPLATE=lmonosc-sest-parameter-abnormality-occurrence
-      - PARAMETER_ABNORMALITY_RECOVERY_MAIL_TEMPLATE=lmonosc-sest-parameter-abnormality-recovery
-      - FW_UPDATE_ABNORMALITY_OCCURRENCE_MAIL_TEMPLATE=lmonosc-sest-fw-update-abnormality-occurrence
-      - FW_UPDATE_ABNORMALITY_RECOVERY_MAIL_TEMPLATE=lmonosc-sest-fw-update-abnormality-recovery
-      - TURN_ON_MAIL_TEMPLATE=lmonosc-sest-turn-on
-      - REMOTE_CONTROL_MAIL_TEMPLATE=lmonosc-sest-remote-control
       - RSSI_HIGH_MIN=-72
       - RSSI_HIGH_MAX=-51
       - RSSI_MID_MIN=-84
@@ -55,7 +42,6 @@ services:
     ports:
       - 4510-4559:4510-4559
       - 4566:4566
-      - 4579:4579
     environment:
       - DEBUG=1
       - DOCKER_HOST=unix:///var/run/docker.sock

@@ -559,7 +559,7 @@ resource "aws_dynamodb_table" "remote_controls" {
   }
 
   attribute {
-    name = "event_datetime"
+    name = "recv_datetime"
     type = "N"
   }
 
@@ -572,7 +572,7 @@ resource "aws_dynamodb_table" "remote_controls" {
 
   global_secondary_index {
     hash_key        = "device_id"
-    range_key       = "event_datetime" 
+    range_key       = "recv_datetime" 
     name            = "device_id_index"
     projection_type = "ALL"
   }

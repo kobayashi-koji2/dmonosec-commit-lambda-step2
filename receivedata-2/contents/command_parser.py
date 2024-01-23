@@ -171,7 +171,7 @@ def commandParser(
             "power_voltage": nVolt,
             "rssi": nRssi,
             "sinr": nSinr,
-            "control_result": nControlResult,
+            "control_result": str(nControlResult),
             "device_state": nState,
             "do_state": format(nDOState, "08b"),
             "iccid": szSimid,
@@ -195,11 +195,11 @@ def commandParser(
         logger.debug(f"hist_list={hist_list}, current_state_info={current_state_info}")
 
         # メール通知
-        # hist_list = mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table)
+        hist_list = mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table)
         logger.debug(f"hist_list2={hist_list}")
 
-        # DB登録データ編集
-        # 履歴情報テーブル
+    # DB登録データ編集
+    # 履歴情報テーブル
     if hist_flg:
         logger.debug(f"履歴情報テーブル dbItem={recv_data}")
         ddb.put_cnt_hist(recv_data, hist_table)

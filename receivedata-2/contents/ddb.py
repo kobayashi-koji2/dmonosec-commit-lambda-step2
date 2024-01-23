@@ -46,12 +46,12 @@ def get_remote_control_info(device_req_no, remote_control_table):
 
 
 # 接点出力制御応答デバイスIDキー取得
-def get_remote_control_info_by_device_id(device_id, req_datetime, remote_control_table):
-    start_req_datetime = req_datetime - 30000
+def get_remote_control_info_by_device_id(device_id, recv_datetime, remote_control_table):
+    start_recv_datetime = recv_datetime - 20000
     remote_control_info = remote_control_table.query(
         IndexName="device_id_index",
         KeyConditionExpression=Key("device_id").eq(device_id)
-        & Key("event_datetime").between(start_req_datetime, req_datetime),
+        & Key("recv_datetime").between(start_recv_datetime, recv_datetime),
     ).get("Items")
     return remote_control_info[0] if remote_control_info else None
 
@@ -147,6 +147,30 @@ def update_control_res(db_item, remote_control_table):
         logger.debug(f"update_itemエラー e={e}")
 
 
+# 接点出力制御応答データ更新
+def update_control_res_link_di_result(device_req_no, req_datetime, remote_control_table):
+    option = {
+        "Key": {
+            "device_req_no": device_req_no,
+            "req_datetime": req_datetime,
+        },
+        "UpdateExpression": "set #link_di_result = :link_di_result",
+        "ExpressionAttributeNames": {
+            "#link_di_result": "link_di_result",
+        },
+        "ExpressionAttributeValues": {
+            ":link_di_result": "0"
+        },
+    }
+    logger.debug(f"option={option}")
+
+    try:
+        remote_control_table.update_item(**option)
+        logger.debug("update_control_res_link_di_result正常終了")
+    except ClientError as e:
+        logger.debug(f"update_itemエラー e={e}")
+
+
 # 履歴情報取得
 def get_history_count(simid, eventtime, hist_table):
     res = hist_table.query(
@@ -190,10 +214,13 @@ def get_notice_mailaddress(user_id_list, user_table, account_table):
         users_table_res = user_table.query(
             KeyConditionExpression=Key("user_id").eq(item),
         ).get("Items", [])
+        logger.debug(f"users_table_res ={users_table_res}")
         for items in users_table_res:
             account_id = items["account_id"]
             account_info = account_table.query(
                 KeyConditionExpression=Key("account_id").eq(account_id)
-            )
-            mailaddress_list.append(account_info["email_address"])
+            ).get("Items", [])
+            logger.debug(f"account_info ={account_info}")
+            mailaddress_list.append(account_info[0]["email_address"])
+    logger.debug(f"mailaddress_list ={mailaddress_list}")
     return mailaddress_list

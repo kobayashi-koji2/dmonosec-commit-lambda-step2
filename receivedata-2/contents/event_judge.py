@@ -80,7 +80,6 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
         hist_list_data["hist_data"]["terminal_no"] = terminal_no
         hist_list_data["hist_data"]["terminal_name"] = terminal_name
         hist_list_data["hist_data"]["terminal_state_name"] = terminal_state_name
-        hist_list_data["hist_data"]["control"] = event_info["control"]
 
     # デバイス状態
     elif event_info["event_type"] in [
@@ -119,7 +118,6 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 hist_list_data["hist_data"]["control_exec_user_email_address"] = event_info[
                     "control_exec_user_email_address"
                 ]
-            hist_list_data["hist_data"]["control"] = event_info["control"]
             hist_list_data["hist_data"]["control_result"] = event_info["control_result"]
             hist_list_data["hist_data"]["device_req_no"] = event_info["device_req_no"]
             if event_info["event_type"] in ["on_timer_control", "off_timer_control"]:
@@ -130,6 +128,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 if int(do_list["do_no"]) == int(event_info["do_no"]):
                     terminal_name = do_list["do_name"]
                     break
+            hist_list_data["hist_data"]["terminal_name"] = terminal_name
             hist_list_data["hist_data"]["terminal_no"] = int(event_info["do_no"])
             if event_info["event_type"] == "manual_control":
                 hist_list_data["hist_data"]["control_exec_user_name"] = event_info[
@@ -138,7 +137,6 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 hist_list_data["hist_data"]["control_exec_user_email_address"] = event_info[
                     "control_exec_user_email_address"
                 ]
-            hist_list_data["hist_data"]["control"] = event_info["control"]
             hist_list_data["hist_data"]["control_result"] = event_info["control_result"]
             hist_list_data["hist_data"]["device_req_no"] = event_info["device_req_no"]
             if event_info["event_type"] in ["on_timer_control", "off_timer_control"]:
@@ -384,10 +382,6 @@ def eventJudge(
         remote_control_info = ddb.get_remote_control_info_by_device_id(
             device_info["device_id"], recv_data["recv_datetime"], remote_control_table
         )
-        if remote_control_info is not None and "control" in remote_control_info:
-            event_info["control"] = remote_control_info["control"]
-        else:
-            event_info["control"] = "不明"
         do_list = list(reversed(list(recv_data["do_state"])))
         do_trigger = recv_data["do_trigger"]
         for i in range(2):
@@ -544,13 +538,12 @@ def eventJudge(
         remote_control_info = ddb.get_remote_control_info(
             recv_data["device_req_no"], remote_control_table
         )
-        if remote_control_info is None or remote_control_info["link_di_no"] != 0:
+        if remote_control_info is None or "link_di_no" in remote_control_info and remote_control_info["link_di_no"] != 0:
             logger.debug("紐づけ接点有の為、履歴一覧未記録")
             return hist_list, current_state_info
         logger.debug(f"remote_control_info={remote_control_info}")
         event_info["event_datetime"] = remote_control_info["req_datetime"]
         event_info["do_no"] = remote_control_info["do_no"]
-        event_info["control"] = remote_control_info["control"]
         event_info["control_trigger"] = remote_control_info["control_trigger"]
         if event_info["control_trigger"] == "manual_control":
             event_info["control_exec_user_name"] = remote_control_info["control_exec_user_name"]
@@ -585,7 +578,6 @@ def eventJudge(
             if di_trigger != 0 and di_trigger == list_di_no:
                 event_info["event_datetime"] = remote_control_info["req_datetime"]
                 event_info["do_no"] = remote_control_info["do_no"]
-                event_info["control"] = remote_control_info["control"]
                 if remote_control_info["control_trigger"] == "manual_control":
                     event_info["control_exec_user_name"] = remote_control_info[
                         "control_exec_user_name"
@@ -594,6 +586,8 @@ def eventJudge(
                         "control_exec_user_email_address"
                     ]
                 event_info["link_di_no"] = remote_control_info["link_di_no"]
+                di_list = list(reversed(list(recv_data["di_state"])))
+                event_info["di_state"] = int(di_list[di_trigger-1])
                 event_info["device_req_no"] = remote_control_info["device_req_no"]
                 event_info["control_trigger"] = remote_control_info["control_trigger"]
                 event_info["event_type"] = remote_control_info["control_trigger"]
@@ -612,6 +606,9 @@ def eventJudge(
                     recv_data, device_info, event_info, device_relation_table, group_table
                 )
                 hist_list.append(hist_list_data)
+
+                # 接点入力状態変化通知結果更新
+                ddb.update_control_res_link_di_result(remote_control_info['device_req_no'], remote_control_info['req_datetime'], remote_control_table)
 
     logger.debug(f"eventJudge終了 hist_list={hist_list}, current_state_info={current_state_info}")
     return hist_list, current_state_info
