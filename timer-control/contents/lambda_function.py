@@ -357,10 +357,15 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
     )
     if len(remote_control_latest) > 0:
         remote_control_latest = remote_control_latest[0]
+        link_di_no = remote_control_latest.get("link_di_no")
         logger.info(f"remote_control_latest: {remote_control_latest}")
 
         # 制御中判定
-        if "control_result" not in remote_control_latest:
+        if not remote_control_latest.get("control_result") or (
+            link_di_no
+            and remote_control_latest.get("control_result") != "9999"
+            and not remote_control_latest.get("link_di_result")
+        ):
             logger.info(
                 "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
             )
