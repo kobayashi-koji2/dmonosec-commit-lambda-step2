@@ -64,9 +64,9 @@ def lambda_handler(event, context, login_user, user_id):
         user = db.get_user_info_by_user_id(user_id, user_table)
         logger.info({"user": user})
 
-        if user is None:
+        if not user:
             return {
-                "statusCode": 400,
+                "statusCode": 404,
                 "headers": res_headers,
                 "body": json.dumps({"message": "ユーザーが存在しません。"}, ensure_ascii=False),
             }
