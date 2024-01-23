@@ -552,7 +552,7 @@ def eventJudge(
             ]
         event_info["event_type"] = remote_control_info["control_trigger"]
         event_info["device_req_no"] = recv_data["device_req_no"]
-        if recv_data["control_result"] == 0:
+        if recv_data["control_result"] == "0":
             event_info["control_result"] = "success"
         else:
             event_info["control_result"] = "failure"
@@ -591,7 +591,7 @@ def eventJudge(
                 event_info["device_req_no"] = remote_control_info["device_req_no"]
                 event_info["control_trigger"] = remote_control_info["control_trigger"]
                 event_info["event_type"] = remote_control_info["control_trigger"]
-                if remote_control_info["control_result"] == 0:
+                if remote_control_info["control_result"] == "0":
                     event_info["control_result"] = "success"
                 else:
                     event_info["control_result"] = "failure"
