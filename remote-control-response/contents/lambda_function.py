@@ -65,7 +65,7 @@ def lambda_handler(event, context, user_info):
                 remote_control["device_req_no"], remote_controls_table
             )
 
-        control_result = "0" if remote_control.get("control_result") == 0 else "1"
+        control_result = "0" if remote_control.get("control_result") == "0" else "1"
         logger.info(f"result:{control_result}")
 
         res_body = {
