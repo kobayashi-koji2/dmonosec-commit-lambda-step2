@@ -251,12 +251,10 @@ def lambda_handler(event, context):
                 # タイムアウト時間まで待機
                 time.sleep(float(limit_datetime) / 1000 - time.time())
 
-            cnt_hist_list = ddb.get_cnt_hist(
-                remote_control["iccid"], recv_datetime, limit_datetime, cnt_hist_table
+            remote_control = ddb.get_remote_control_info(
+                remote_control["device_req_no"], remote_controls_table
             )
-            if not [
-                cnt_hist for cnt_hist in cnt_hist_list if cnt_hist.get("di_trigger") == link_di_no
-            ]:
+            if remote_control.get("link_di_result") != "0":
                 notification_setting = [
                     setting
                     for setting in device.get("device_data", {})
@@ -289,6 +287,14 @@ def lambda_handler(event, context):
                     device_table,
                     group_table,
                     device_relation_table,
+                )
+
+                # 接点衆力制御応答テーブルに接点入力状態変化の結果（タイムアウト）を登録
+                ddb.update_link_di_result(
+                    remote_control.get("device_req_no"),
+                    remote_control.get("req_datetime"),
+                    "9999",
+                    remote_controls_table,
                 )
 
     except Exception as e:

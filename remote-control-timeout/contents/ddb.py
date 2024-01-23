@@ -128,3 +128,12 @@ def update_remote_control_result(
         UpdateExpression="SET control_result = :new_value",
         ExpressionAttributeValues={":new_value": control_result},
     )
+
+
+# 接点入力状態変化通知結果更新
+def update_link_di_result(device_req_no, req_datetime, link_di_result, remote_controls_table):
+    remote_controls_table.update_item(
+        Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
+        UpdateExpression="SET link_di_result = :new_value",
+        ExpressionAttributeValues={":new_value": link_di_result},
+    )
