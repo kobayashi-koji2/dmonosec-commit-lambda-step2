@@ -1,7 +1,8 @@
 import json
 import os
-import boto3
+import textwrap
 
+import boto3
 from aws_lambda_powertools import Logger
 from botocore.exceptions import ClientError
 
@@ -9,6 +10,7 @@ import auth
 import ssm
 import convert
 import db
+import mail
 import ddb
 import validate
 
@@ -17,6 +19,18 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 logger = Logger()
+
+web_domain = os.environ.get("WEB_DOMAIN")
+
+
+def send_invite_email(email_address):
+    mail_subject = "【モノセコム】初回ログイン通知"
+    mail_body = f"""\
+        以下URLへアクセスし、ログイン情報を入力し、パスワードを設定してください。
+        ログイン情報は別途メールにて通知いたします。
+        https://{web_domain}/
+    """
+    mail.send_email([email_address], mail_subject, textwrap.dedent(mail_body))
 
 
 @auth.verify_login_user
@@ -63,7 +77,8 @@ def lambda_handler(event, context, user):
                 ssm.table_names["CONTRACT_TABLE"],
                 ssm.table_names["DEVICE_RELATION_TABLE"],
             )
-            # TODO 招待メール送信？
+            # 招待メール送信
+            send_invite_email(validate_result["request_params"]["email_address"])
 
         # ユーザ更新
         elif event["httpMethod"] == "PUT":
