@@ -101,7 +101,7 @@ def lambda_handler(event, context, user_info, request_body):
         put_item = {
             "device_id": device_id,
             "imei": device_imei,
-            "contract_state": pre_device_info["contract_state"],
+            "contract_state": 0,
             "device_data": device_data,
             "device_type": device_type,
         }
