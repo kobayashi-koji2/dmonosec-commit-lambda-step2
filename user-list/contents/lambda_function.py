@@ -53,6 +53,9 @@ def lambda_handler(event, context, login_user):
             contract_info = db.get_contract_info(login_user["contract_id"], contract_table)
             for user_id in contract_info.get("contract_data", {}).get("user_list", {}):
                 user = db.get_user_info_by_user_id(user_id, user_table)
+                if user.get("user_type") == "admin":
+                    continue
+
                 account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
                 account_config = account.get("user_data", {}).get("config", {})
                 user_list.append(
