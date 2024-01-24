@@ -26,6 +26,9 @@ BODY_SCHEMA = {
                     "terminal_no": {
                         "type": "string",
                     },
+                    "event_type": {
+                        "type": "string",
+                    },
                     "change_detail": {
                         "type": "string",
                     },
