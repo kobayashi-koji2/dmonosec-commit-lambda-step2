@@ -7,13 +7,16 @@ from aws_lambda_powertools import Logger
 import auth
 import db
 import ssm
+import validate
+import ddb
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
 @auth.verify_login_user
-def lambda_handler(event, context, user):
+@validate.validate_parameter
+def lambda_handler(event, context, user, body):
     res_headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
@@ -40,10 +43,38 @@ def lambda_handler(event, context, user):
                 "body": json.dumps({"message": "権限がありません。"}, ensure_ascii=False),
             }
 
-        contract = db.get_contract_info(user.get("contract_id"), contract_table)
-        logger.debug(contract)
+        contract = db.get_contract_info(user["contract_id"], contract_table)
+        notification_list = body["notification_list"]
+
+        # 権限チェック
+        for notification in notification_list:
+            if notification["device_id"] not in contract["contract_data"]["device_list"]:
+                return {"message": "不正なデバイスIDが指定されています。"}
+            for user_id in notification["notification_target_list"]:
+                if user_id not in contract["contract_data"]["user_list"]:
+                    return {"message": "不正なユーザーIDが指定されています。"}
+
+        # リクエストの通知設定をデバイスIDごとにまとめる
+        notificaton_settings_list = {}
+        for notification in notification_list:
+            device_id = notification["device_id"]
+            notificaton_settings = notificaton_settings_list.get(device_id, [])
+            notificaton_settings.append(
+                {
+                    "event_trigger": notification["event_trigger"],
+                    "terminal_no": notification["terminal_no"],
+                    "event_type": notification["event_type"],
+                    "change_detail": notification["change_detail"],
+                    "notification_target_list": notification["notification_target_list"],
+                }
+            )
+            notificaton_settings_list[device_id] = notificaton_settings
+
+        # デバイス管理テーブルの通知設定更新
+        ddb.update_device_notification_settings(notificaton_settings_list, device_table)
+
+        # 通知設定を取得しなおして返却
         device_list = contract.get("contract_data", {}).get("device_list", {})
-        logger.debug(device_list)
         notification_list = []
         for device_id in device_list:
             device = db.get_device_info(device_id, device_table)
@@ -61,7 +92,6 @@ def lambda_handler(event, context, user):
                         "device_imei": device.get("imei", ""),
                         "event_trigger": notification_setting.get("device_state", ""),
                         "terminal_no": notification_setting.get("terminal_no", ""),
-                        "event_type": notification_setting.get("event_type", ""),
                         "change_detail": notification_setting.get("change_detail", ""),
                         "notification_target_list": notification_setting.get(
                             "notification_target_list", []
