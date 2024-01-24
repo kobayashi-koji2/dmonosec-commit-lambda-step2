@@ -53,27 +53,29 @@ def lambda_handler(event, context, user_info, request_body):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
+        device_imei = request_body["device_imei"]
 
         ### 2. デバイス情報登録
         transact_items = list()
-        device_info = ddb.get_pre_reg_device_info_by_imei(
-            request_body["device_imei"], pre_register_table
-        )
-        if not device_info:
+        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, pre_register_table)
+        if not pre_device_info:
             res_body = {"message": "登録前デバイス情報が存在しません。"}
             return {
                 "statusCode": 404,
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
+        logger.debug(f"pre_device_info: {pre_device_info}")
+
         device_id = str(uuid.uuid4())
-        contract_id = device_info["contract_id"]
+        contract_id = pre_device_info["contract_id"]
+
         # デバイス種別の判定
-        if device_info["device_code"] == "MS-C0100":
+        if pre_device_info["device_code"] == "MS-C0100":
             device_type = 1
-        elif device_info["device_code"] == "MS-C0110":
+        elif pre_device_info["device_code"] == "MS-C0110":
             device_type = 2
-        elif device_info["device_code"] == "MS-C0120":
+        elif pre_device_info["device_code"] == "MS-C0120":
             device_type = 3
         else:
             res_body = {"message": "機器コードの値が不正です。"}
@@ -85,31 +87,21 @@ def lambda_handler(event, context, user_info, request_body):
 
         device_data = {
             "param": {
-                "iccid": device_info["iccid"],
-                "device_code": device_info["device_code"],
+                "iccid": pre_device_info["iccid"],
+                "device_code": pre_device_info["device_code"],
                 "contract_id": contract_id,
-                "dev_reg_datetime": int(device_info["dev_reg_datetime"]),
-                "coverage_url": device_info["coverage_url"],
+                "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
+                "coverage_url": pre_device_info["coverage_url"],
                 "use_type": 0,
                 "dev_user_reg_datetime": int(time.time() * 1000),
                 "service": "monosc",
-                # "init_datetime": 0,
-                # "del_datetime": 0,
             },
-            "config": {
-                "device_name": "",
-                "terminal_settings": {
-                    "do_list": [],
-                    "di_list": [],
-                    "ai_list": [],
-                },
-                "notification_settings": [],
-            },
+            "config": __generate_device_data_config(device_type),
         }
         put_item = {
             "device_id": device_id,
-            "imei": device_info["imei"],
-            "contract_state": device_info["contract_state"],
+            "imei": device_imei,
+            "contract_state": pre_device_info["contract_state"],
             "device_data": device_data,
             "device_type": device_type,
         }
@@ -143,7 +135,7 @@ def lambda_handler(event, context, user_info, request_body):
 
         ### 4. デバイス関連情報追加
         put_item = {
-            "imei": device_info["imei"],
+            "imei": device_imei,
             "contract_id": contract_id,
             "device_id": device_id,
         }
@@ -158,7 +150,7 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"put_imei: {put_imei}")
 
         put_item = {
-            "iccid": device_info["iccid"],
+            "iccid": pre_device_info["iccid"],
             "contract_id": contract_id,
             "device_id": device_id,
         }
@@ -176,7 +168,7 @@ def lambda_handler(event, context, user_info, request_body):
         delete_pre_register = {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"imei": {"S": request_body["device_imei"]}},
+                "Key": {"imei": {"S": device_imei}},
             }
         }
         transact_items.append(delete_pre_register)
@@ -216,3 +208,41 @@ def __operation_auth_check(user_info):
     if user_type == "admin" or user_type == "sub_admin":
         return True
     return False
+
+
+def __generate_device_data_config(device_type):
+    di_list, do_list = list(), list()
+    # 現状はdevice_typeは 2 のみ来る想定
+    di_count, do_count = 8, 2
+    # if device_type == 1:
+    #     di_count, do_count = 1, 0
+    # elif device_type == 2:
+    #     di_count, do_count = 8, 2
+    # elif device_type == 3:
+    #     di_count, do_count = 8, 2
+
+    for di_no in range(1, di_count + 1):
+        di_item = {
+            "di_no": di_no,
+            "di_name": "接点入力" + str(di_no),
+            "di_on_name": "Open",
+            "di_on_icon": "state_icon_1",
+            "di_off_name": "Close",
+            "di_off_icon": "state_icon_2",
+        }
+        di_list.append(di_item)
+
+    for do_no in range(1, do_count + 1):
+        do_item = {
+            "do_no": do_no,
+            "do_name": "接点出力" + str(do_no),
+            "do_on_name": "Open",
+            "do_on_icon": "state_icon_1",
+            "do_off_name": "Close",
+            "do_off_icon": "state_icon_2",
+        }
+        do_list.append(do_item)
+
+    result = {"terminal_settings": {"do_list": do_list, "di_list": di_list}}
+
+    return result
