@@ -23,6 +23,8 @@ def lambda_handler(event, context, user):
     # DynamoDB操作オブジェクト生成
     try:
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
+        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
     except KeyError as e:
@@ -47,6 +49,23 @@ def lambda_handler(event, context, user):
         for device_id in contract_device_list:
             device = db.get_device_info(device_id, device_table)
             user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
+            user_list = []
+            for user_id in user_id_list:
+                logger.debug(user_id)
+                notification_user = db.get_user_info_by_user_id(user_id, user_table)
+                notification_account = db.get_account_info_by_account_id(
+                    notification_user.get("account_id"), account_table
+                )
+                user_list.append(
+                    {
+                        "user_id": user_id,
+                        "user_name": notification_account.get("user_data", {})
+                        .get("config", {})
+                        .get("user_name", ""),
+                        "email_address": notification_account.get("email_address", ""),
+                    }
+                )
+
             device_list.append(
                 {
                     "device_id": device_id,
@@ -54,7 +73,7 @@ def lambda_handler(event, context, user):
                     .get("config", {})
                     .get("device_name", ""),
                     "device_imei": device.get("imei", ""),
-                    "user_list": user_id_list,
+                    "user_list": user_list,
                 }
             )
 
