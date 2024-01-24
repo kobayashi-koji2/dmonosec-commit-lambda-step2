@@ -139,3 +139,6 @@ awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-remote-controls --
 
 # t-monosec-cnt-hist-2
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-cnt-hist-2 --item '{"cnt_hist_id": {"S": "123456"},"simid": {"S": "39011acf-c9ff-42c4-8fd4-eae7367f8875"},"event_datetime": {"N": "1703514798000"},"recv_datetime": {"N": "1703514799000"},"di_trigger": {"N": "2"}}'
+
+# t-monosec-pre-register-devices
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-pre-register-devices --item '{"imei": {"S": "imei0"},"iccid": {"S": "01234567890123456789"},"imsi": {"S": "imsi0"},"device_code": {"S": "MS-C0110"},"contract_id": {"S": "a322ae61-9763-c168-b2b2-1794ca906724"},"dev_reg_datetime": {"N": "1703138511555"},"contract_state": {"N": "1"},"coverage_url": {"S": "https://api.soracom.io/v1"}}'
