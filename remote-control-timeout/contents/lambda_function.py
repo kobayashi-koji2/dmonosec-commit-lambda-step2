@@ -3,6 +3,7 @@ import os
 import traceback
 from decimal import Decimal
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import time
 import textwrap
 
@@ -35,7 +36,7 @@ def send_mail(
     notification_hist_table,
     change_state_mail,
 ):
-    send_datetime = datetime.now()
+    send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
     device_name = (
         device.get("device_data", {}).get("config", {}).get("device_name", device.get("imei"))
     )
@@ -124,13 +125,13 @@ def send_mail(
 
     mail_subject = "イベントが発生しました"
     mail_body = f"""\
-        ■発生日時：{send_datetime.strftime('%y/%m/%d %H:%M:%S')}
+        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}
 
         ■イベント内容
-        {event_detail}
+        {textwrap.dedent(event_detail)}
     """
     mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
 
