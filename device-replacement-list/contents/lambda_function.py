@@ -8,7 +8,6 @@ from aws_lambda_powertools import Logger
 # layer
 import auth
 import db
-import ddb
 import ssm
 
 logger = Logger()
@@ -63,14 +62,9 @@ def lambda_handler(event, context, user_info):
         # デバイス情報取得
         device_list = list()
         for device_id in device_id_list:
-            device_info = ddb.get_device_info(device_id, device_table)
+            device_info = db.get_device_info(device_id, device_table)
             if device_info is None:
-                res_body = {"message": "デバイス情報が存在しません。"}
-                return {
-                    "statusCode": 404,
-                    "headers": res_headers,
-                    "body": json.dumps(res_body, ensure_ascii=False),
-                }
+                continue
 
             # 保守交換対象デバイス一覧生成
             result = {

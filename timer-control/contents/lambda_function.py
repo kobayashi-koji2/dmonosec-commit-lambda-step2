@@ -444,7 +444,8 @@ def __register_hist_info(
     notification_setting = [
         setting
         for setting in notification_settings_list
-        if setting.get("event_trigger") == "do_change"
+        if (setting.get("event_trigger") == "do_change")
+        and (setting.get("terminal_no") == do_info["do_no"])
     ]
 
     # メール通知

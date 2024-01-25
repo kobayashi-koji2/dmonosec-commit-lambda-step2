@@ -355,7 +355,8 @@ def __register_hist_info(
         for setting in device_info.get("device_data", {})
         .get("config", {})
         .get("notification_settings", [])
-        if setting.get("event_trigger") == "do_change"
+        if (setting.get("event_trigger") == "do_change")
+        and (setting.get("terminal_no") == do_info["do_no"])
     ]
     notification_hist_id = ""
     if notification_setting:
