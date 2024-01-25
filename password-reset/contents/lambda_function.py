@@ -12,7 +12,6 @@ import ssm
 import validate
 import db
 import convert
-import auth
 
 logger = Logger()
 
@@ -38,8 +37,7 @@ cognito = boto3.client(
 )
 
 
-@auth.verify_login_user
-def lambda_handler(event, context, user_info):
+def lambda_handler(event, context):
     try:
         ### 0. 事前準備
         # DynamoDBの操作オブジェクト生成
@@ -66,8 +64,7 @@ def lambda_handler(event, context, user_info):
         )
 
         ### 3. パスワード最終更新日時更新
-        user_id = user_info["user_id"]
-        account_info = db.get_account_info(user_id, account_table)
+        account_info = db.get_account_info_by_email_address(body["email_address"], account_table)
         if account_info is None:
             res_body = {"message": "アカウント情報が存在しません。"}
             return {
