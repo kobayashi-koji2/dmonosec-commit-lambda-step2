@@ -7,6 +7,7 @@ from aws_lambda_powertools import Logger
 import auth
 import db
 import ssm
+import convert
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
@@ -76,7 +77,7 @@ def lambda_handler(event, context, user):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
 
     except Exception:
