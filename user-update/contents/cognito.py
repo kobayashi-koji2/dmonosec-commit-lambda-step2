@@ -25,12 +25,17 @@ def create_cognito_user(email_address):
     response = client.admin_create_user(
         UserPoolId="ap-northeast-1_jh1Y2Rjv7",  # TODO 環境ごと動的に取得
         Username=email_address,
+        DesiredDeliveryMediums=["EMAIL"],
         TemporaryPassword=get_random_password_string(8),  # TODO パスワード桁数を要確認
         UserAttributes=[
             {
                 "Name": "email",
                 "Value": email_address,
-            }
+            },
+            {
+                "Name": "email_verified",
+                "Value": "true",
+            },
         ],
     )
     return response["User"]["Username"]
