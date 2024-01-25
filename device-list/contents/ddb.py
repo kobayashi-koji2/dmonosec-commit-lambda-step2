@@ -30,7 +30,7 @@ def get_pre_reg_device_info(pk, table):
     for items in response:
         # レスポンス生成(未登録デバイス)
         pre_reg_device_list.append(
-            {"imei": items["imei"], "device_registration_datetiime": items["dev_reg_date"]}
+            {"device_imei": items["imei"], "device_registration_datetime": items["dev_reg_datetime"]}
         )
 
     # return sorted(pre_reg_device_list, key=itemgetter('dev_reg_datetime'))
