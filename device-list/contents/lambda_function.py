@@ -153,6 +153,7 @@ def lambda_handler(event, context, user_info):
             group_name_list = []
             # デバイス情報取得
             device_info = ddb.get_device_info(item1, tables["device_table"])
+            logger.info({"device_info": device_info})
             if len(device_info["Items"]) == 1:
                 device_info_list.append(device_info["Items"][0])
             elif len(device_info["Items"]) == 0:
@@ -186,17 +187,23 @@ def lambda_handler(event, context, user_info):
             device_state = db.get_device_state(item1, tables["device_state_table"])
             if not device_state:
                 logger.info(f"device current status information does not exist:{item1}")
-                
+
             # 機器異常状態判定
             device_abnormality = 0
-            if device_state.get("device_abnormality") or device_state.get("parameter_abnormality") or device_state.get("fw_update_abnormality"):
+            if (
+                device_state.get("device_abnormality")
+                or device_state.get("parameter_abnormality")
+                or device_state.get("fw_update_abnormality")
+            ):
                 device_abnormality = 1
 
             # デバイス一覧生成
             device_list.append(
                 {
                     "device_id": item1,
-                    "device_name": device_info["Items"][0]["device_data"]["config"]["device_name"],
+                    "device_name": device_info["Items"][0]["device_data"]["config"].get(
+                        "device_name"
+                    ),
                     "device_imei": device_info["Items"][0]["imei"],
                     "group_name_list": group_name_list,
                     "device_order": order,
@@ -231,8 +238,8 @@ def lambda_handler(event, context, user_info):
             "headers": res_headers,
             "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
-    except Exception as e:
-        logger.info(e)
+    except Exception:
+        logger.error("予期しないエラー", exc_info=True)
         body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
