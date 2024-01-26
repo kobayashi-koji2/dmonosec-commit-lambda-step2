@@ -213,14 +213,15 @@ def lambda_handler(event, context, user_info):
         # 接点出力_制御状態・接点出力_制御時間を判定
         do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
         do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
+        do_specified_time = float(do_info["do_specified_time"])
         if do_info["do_control"] == "open":
             do_control = "00"
-            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
-            do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
+            # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
+            do_control_time = re.sub("^0x", "", format(int(do_specified_time * 10), "#06x"))
         elif do_info["do_control"] == "close":
             do_control = "01"
-            do_specified_time = convert.decimal_default_proc(do_info["do_specified_time"])
-            do_control_time = re.sub("^0x", "", format(do_specified_time, "#06x"))
+            # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
+            do_control_time = re.sub("^0x", "", format(int(do_specified_time * 10), "#06x"))
         elif do_info["do_control"] == "toggle":
             do_control = "10"
             do_control_time = "0000"
