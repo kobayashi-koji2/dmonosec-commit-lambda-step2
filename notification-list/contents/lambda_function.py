@@ -48,6 +48,9 @@ def lambda_handler(event, context, user):
         notification_list = []
         for device_id in device_list:
             device = db.get_device_info(device_id, device_table)
+            logger.info({"device": device})
+            if not device:
+                continue
             notification_settings = (
                 device.get("device_data", {}).get("config", {}).get("notification_settings", {})
             )

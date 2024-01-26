@@ -90,6 +90,9 @@ def lambda_handler(event, context, login_user, user_id):
         device_name_list = []
         for device_id in device_id_list:
             device = db.get_device_info(device_id, device_table)
+            logger.info({"device": device})
+            if not device:
+                continue
             device_name = device["device_data"].get("config", {}).get("device_name")
             if not device_name:
                 device_name = "デバイス名設定なし"
