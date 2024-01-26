@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 import boto3
 
 from aws_lambda_powertools import Logger
@@ -28,6 +29,7 @@ def lambda_handler(event, context, user):
         }
         # DynamoDB操作オブジェクト生成
         try:
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
@@ -51,7 +53,8 @@ def lambda_handler(event, context, user):
             }
 
         user_id = validate_result["request_params"]["user_id"]
-        account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
+        user_info = db.get_user_info_by_user_id(user_id, user_table)
+        account = db.get_account_info(user_id, account_table)
         account_config = account.get("user_data", {}).get("config", {})
 
         group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)
@@ -74,21 +77,22 @@ def lambda_handler(event, context, user):
         device_list = []
         for device_id in device_id_list:
             device_info = db.get_device_info(device_id, device_table)
-            device_list.append(
-                {
-                    "device_id": device_id,
-                    "device_name": device_info.get("device_data", {})
-                    .get("config", {})
-                    .get("device_name"),
-                }
-            )
+            if device_info is not None:
+                device_list.append(
+                    {
+                        "device_id": device_id,
+                        "device_name": device_info.get("device_data", {})
+                        .get("config", {})
+                        .get("device_name"),
+                    }
+                )
 
         res_body = {
             "message": "",
             "user_id": user_id,
             "email_address": account.get("email_address"),
             "user_name": account_config.get("user_name"),
-            "user_type": user.get("user_type"),
+            "user_type": user_info.get("user_type"),
             "management_group_list": group_list,
             "management_device_list": device_list,
         }
@@ -99,6 +103,7 @@ def lambda_handler(event, context, user):
         }
     except Exception as e:
         logger.info(e)
+        logger.error(traceback.format_exc())
         body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
