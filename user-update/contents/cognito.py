@@ -10,7 +10,14 @@ logger = Logger()
 
 def get_random_password_string(length):
     pass_chars = string.ascii_letters + string.digits + string.punctuation
-    password = "".join(secrets.choice(pass_chars) for x in range(length))
+    while True:
+        password = "".join(secrets.choice(pass_chars) for x in range(length))
+        upper = sum(c.isupper() for c in password)
+        lower = sum(c.islower() for c in password)
+        digit = sum(c.isdigit() for c in password)
+        punctuation = sum(c in string.punctuation for c in password)
+        if upper >= 1 and lower >= 1 and digit >= 1 and punctuation >= 1:
+            break
     return password
 
 
