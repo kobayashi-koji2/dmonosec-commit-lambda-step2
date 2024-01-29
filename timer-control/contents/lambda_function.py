@@ -182,13 +182,13 @@ def lambda_handler(event, context):
                 do_specified_time = float(do_info["do_specified_time"])
 
                 if do_info["do_control"] == "open":
-                    do_control = "00"
+                    do_control = "01"
                     # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
                     do_control_time = re.sub(
                         "^0x", "", format(int(do_specified_time * 10), "#06x")
                     )
                 elif do_info["do_control"] == "close":
-                    do_control = "01"
+                    do_control = "00"
                     # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
                     do_control_time = re.sub(
                         "^0x", "", format(int(do_specified_time * 10), "#06x")
