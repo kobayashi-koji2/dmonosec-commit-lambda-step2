@@ -124,15 +124,18 @@ def send_mail(
             """
 
     mail_subject = "イベントが発生しました"
-    mail_body = f"""\
+    event_detail = textwrap.dedent(event_detail)
+    mail_body = textwrap.dedent(
+        f"""\
         ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}
 
         ■イベント内容
-        {textwrap.dedent(event_detail)}
     """
+    ).strip()
+    mail_body = mail_body + event_detail
     mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
 
     # 通知履歴登録
