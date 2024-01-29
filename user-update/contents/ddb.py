@@ -58,7 +58,7 @@ def create_user_info(
     else:
         # すでにアカウントがあれば更新
         account_id = account["account_id"]
-        if request_params["user_name"] != account["user_name"]:
+        if request_params["user_name"] != account["user_data"]["config"]["user_name"]:
             account_update_expression = f"SET #email_address_attr = :email_address, #map.#config_attr.#user_name_attr = :user_name"
             account_expression_attribute_values = {
                 ":email_address": request_params["email_address"],

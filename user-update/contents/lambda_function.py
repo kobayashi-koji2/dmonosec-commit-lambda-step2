@@ -57,7 +57,7 @@ def lambda_handler(event, context, user):
             }
 
         # パラメータチェック
-        validate_result = validate.validate(event, user, contract_table, user_table)
+        validate_result = validate.validate(event, user, account_table, contract_table, user_table)
         if validate_result.get("message"):
             return {
                 "statusCode": 400,
@@ -69,7 +69,7 @@ def lambda_handler(event, context, user):
         if event["httpMethod"] == "POST":
             result = ddb.create_user_info(
                 validate_result["request_params"],
-                "contract-dummy",  # TODO ログイン時の契約IDを指定
+                user["contract_id"],
                 validate_result["contract_info"],
                 account_table,
                 ssm.table_names["ACCOUNT_TABLE"],
@@ -105,8 +105,10 @@ def lambda_handler(event, context, user):
 
         # レスポンス用データ取得
         user_id = result[1]
-        account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
-        account_config = account.get("user_data", {}).get("config", {})
+        registed_user = db.get_user_info_by_user_id(user_id, user_table)
+        registed_account = db.get_account_info_by_account_id(
+            registed_user["account_id"], account_table
+        )
 
         group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)
         group_list = []
@@ -142,9 +144,9 @@ def lambda_handler(event, context, user):
         res_body = {
             "message": "",
             "user_id": user_id,
-            "email_address": account.get("email_address"),
-            "user_name": account_config.get("user_name"),
-            "user_type": user.get("user_type"),
+            "email_address": registed_account.get("email_address"),
+            "user_name": registed_account.get("user_data", {}).get("config", {}).get("user_name"),
+            "user_type": registed_user.get("user_type"),
             "management_group_list": group_list,
             "management_device_list": device_list,
         }

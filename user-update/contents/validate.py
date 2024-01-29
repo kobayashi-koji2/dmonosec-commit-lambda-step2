@@ -16,7 +16,7 @@ def isValidEmail(str):
 
 
 # パラメータチェック
-def validate(event, user, contract_table, user_table):
+def validate(event, user, account_table, contract_table, user_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"message": "ユーザの操作権限がありません。"}
@@ -31,10 +31,17 @@ def validate(event, user, contract_table, user_table):
         return {"message": "アカウント情報が存在しません。"}
 
     if http_method == "POST":
-        if "email_address" not in body_params:
+        if "email_address" not in body_params or not isValidEmail(body_params["email_address"]):
             return {"message": "パラメータが不正です"}
-        elif not isValidEmail(body_params["email_address"]):
-            return {"message": "パラメータが不正です"}
+
+        email_address = body_params.get("email_address").lower()
+        account = db.get_account_info_by_email_address(email_address, account_table)
+        if account:
+            duplicate_user = db.get_user_info(
+                account["account_id"], user["contract_id"], user_table
+            )
+            if duplicate_user:
+                return {"message": "メールアドレスが重複しています。"}
 
     if "user_type" not in body_params:
         return {"message": "パラメータが不正です"}
