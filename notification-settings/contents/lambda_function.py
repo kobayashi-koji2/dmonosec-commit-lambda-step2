@@ -49,10 +49,20 @@ def lambda_handler(event, context, user, body):
         # 権限チェック
         for notification in notification_list:
             if notification["device_id"] not in contract["contract_data"]["device_list"]:
-                return {"message": "不正なデバイスIDが指定されています。"}
+                res_body = {"message": "不正なデバイスIDが指定されています。"}
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
             for user_id in notification["notification_target_list"]:
                 if user_id not in contract["contract_data"]["user_list"]:
-                    return {"message": "不正なユーザーIDが指定されています。"}
+                    res_body = {"message": "不正なユーザーIDが指定されています。"}
+                    return {
+                        "statusCode": 400,
+                        "headers": res_headers,
+                        "body": json.dumps(res_body, ensure_ascii=False),
+                    }
 
         # リクエストの通知設定をデバイスIDごとにまとめる
         notificaton_settings_list = {}
