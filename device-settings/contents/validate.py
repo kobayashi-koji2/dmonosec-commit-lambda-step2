@@ -89,9 +89,9 @@ def terminal_check(body, device_id, device_type, tables):
     di_no_list, do_no_list, ai_no_list = [], [], []
     # デバイス種別と端子数
     if (
-        (device_type == 1 and di == 1 and do == 0 and ai == 0)
-        or (device_type == 2 and di == 8 and do == 2 and ai == 0)
-        or (device_type == 3 and di == 8 and do == 2 and ai == 2)
+        (device_type == "PJ1" and di == 1 and do == 0 and ai == 0)
+        or (device_type == "PJ2" and di == 8 and do == 2 and ai == 0)
+        or (device_type == "PJ3" and di == 8 and do == 2 and ai == 2)
     ):
         # 端子番号
         for item in body.get("di_list", {}):

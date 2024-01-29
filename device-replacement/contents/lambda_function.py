@@ -78,26 +78,12 @@ def lambda_handler(event, context, user_info, request_body):
             }
         logger.debug(f"device_info: {device_info}")
 
-        if pre_device_info["device_code"] == "MS-C0100":
-            device_type = 1
-        elif pre_device_info["device_code"] == "MS-C0110":
-            device_type = 2
-        elif pre_device_info["device_code"] == "MS-C0120":
-            device_type = 3
-        else:
-            res_body = {"message": "機器コードの値が不正です。"}
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps(res_body, ensure_ascii=False),
-            }
-
         # 新デバイス情報登録
         put_item = {
             "device_id": device_id,
             "imei": af_device_imei,
             "contract_state": 0,  # 「0:初期受信待ち」で値は固定
-            "device_type": device_type,
+            "device_type": device_info["device_type"],
             "device_data": {
                 "param": {
                     "iccid": pre_device_info["iccid"],

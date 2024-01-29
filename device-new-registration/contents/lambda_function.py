@@ -72,11 +72,11 @@ def lambda_handler(event, context, user_info, request_body):
 
         # デバイス種別の判定
         if pre_device_info["device_code"] == "MS-C0100":
-            device_type = 1
+            device_type = "PJ1"
         elif pre_device_info["device_code"] == "MS-C0110":
-            device_type = 2
+            device_type = "PJ2"
         elif pre_device_info["device_code"] == "MS-C0120":
-            device_type = 3
+            device_type = "PJ3"
         else:
             res_body = {"message": "機器コードの値が不正です。"}
             return {
@@ -212,13 +212,13 @@ def __operation_auth_check(user_info):
 
 def __generate_device_data_config(device_type):
     di_list, do_list = list(), list()
-    # 現状はdevice_typeは 2 のみ来る想定
+    # 現状はdevice_typeは PJ2 のみ来る想定
     di_count, do_count = 8, 2
-    # if device_type == 1:
+    # if device_type == "PJ1":
     #     di_count, do_count = 1, 0
-    # elif device_type == 2:
+    # elif device_type == "PJ2":
     #     di_count, do_count = 8, 2
-    # elif device_type == 3:
+    # elif device_type == "PJ3":
     #     di_count, do_count = 8, 2
 
     for di_no in range(1, di_count + 1):

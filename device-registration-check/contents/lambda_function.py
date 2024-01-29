@@ -67,11 +67,11 @@ def _register_device(pre_device, contract):
 
     # デバイス種別の判定
     if pre_device["device_code"] == "MS-C0100":
-        device_type = 1
+        device_type = "PJ1"
     elif pre_device["device_code"] == "MS-C0110":
-        device_type = 2
+        device_type = "PJ2"
     elif pre_device["device_code"] == "MS-C0120":
-        device_type = 3
+        device_type = "PJ3"
 
     # デバイス情報登録
     device_item = {

@@ -160,6 +160,12 @@ def commandParser(
         nControlResult = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         logger.debug(f"接点出力制御応答 control_result={nControlResult}, nDOState={nDOState}")
+        if nDeviceType == 1:
+            nDeviceType = "PJ1"
+        elif nDeviceType == 2:
+            nDeviceType = "PJ2"
+        elif nDeviceType == 3:
+            nDeviceType = "PJ3"
 
         recv_data = {
             "device_req_no": szSimid + "-" + szReqNo,
@@ -195,7 +201,9 @@ def commandParser(
         logger.debug(f"hist_list={hist_list}, current_state_info={current_state_info}")
 
         # メール通知
-        hist_list = mailNotice(hist_list, device_info, user_table, account_table, notification_hist_table)
+        hist_list = mailNotice(
+            hist_list, device_info, user_table, account_table, notification_hist_table
+        )
         logger.debug(f"hist_list2={hist_list}")
 
     # DB登録データ編集
