@@ -88,14 +88,18 @@ def lambda_handler(event, context, login_user, user_id):
                         "#contract_data": "contract_data",
                         "#user_list": "user_list",
                     },
-                    "ExpressionAttributeValues": {":user_list": contract_user_list},
+                    "ExpressionAttributeValues": {
+                        ":user_list": {"L": [{"S": u} for u in contract_user_list]}
+                    },
                 }
             }
         )
 
         # 通知先から削除対象のユーザーを削除
-        device_list = contract.get("contract_data").get("device_list", [])
-        for device in device_list:
+        device_id_list = contract.get("contract_data").get("device_list", [])
+        for device_id in device_id_list:
+            device = db.get_device_info(device_id, device_table)
+            logger.debug(device.get("device_id"))
             notification_settings = (
                 device.get("device_data").get("config").get("notification_settings", {})
             )
@@ -147,18 +151,25 @@ def lambda_handler(event, context, login_user, user_id):
         # 削除日時設定
         del_datetime = int(time.time() * 1000)
         logger.info({"del_datetime": del_datetime})
-
-        user_data = user.get("user_data", {})
-        if "config" in user_data:
-            user_data["config"]["del_datetime"] = del_datetime
-        else:
-            user_data["config"] = {"del_datetime": del_datetime}
-
-        ddb.update_user_data(user_id, user_data, user_table)
+        transact_items.append(
+            {
+                "Update": {
+                    "TableName": user_table.table_name,
+                    "Key": {"user_id": {"S": user_id}},
+                    "UpdateExpression": "SET #user_data.#config.#del_datetime = :del_datetime",
+                    "ExpressionAttributeNames": {
+                        "#user_data": "user_data",
+                        "#config": "config",
+                        "#del_datetime": "del_datetime",
+                    },
+                    "ExpressionAttributeValues": {":del_datetime": {"N": str(del_datetime)}},
+                }
+            }
+        )
 
         # DB更新
         if not db.execute_transact_write_item(transact_items):
-            logger.error("ユーザー情報削除に失敗")
+            logger.error("ユーザー情報削除に失敗", exc_info=True)
             return {
                 "statusCode": 500,
                 "headers": res_headers,
