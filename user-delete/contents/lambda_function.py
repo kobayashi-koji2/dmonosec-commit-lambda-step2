@@ -99,6 +99,8 @@ def lambda_handler(event, context, login_user, user_id):
         device_id_list = contract.get("contract_data").get("device_list", [])
         for device_id in device_id_list:
             device = db.get_device_info(device_id, device_table)
+            if not device:
+                continue
             logger.debug(device.get("device_id"))
             notification_settings = (
                 device.get("device_data").get("config").get("notification_settings", {})
