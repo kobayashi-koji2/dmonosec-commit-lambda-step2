@@ -54,7 +54,7 @@ def lambda_handler(event, context, user):
 
         user_id = validate_result["request_params"]["user_id"]
         user_info = db.get_user_info_by_user_id(user_id, user_table)
-        account = db.get_account_info(user_id, account_table)
+        account = db.get_account_info_by_account_id(user_info["account_id"], account_table)
         account_config = account.get("user_data", {}).get("config", {})
 
         group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)

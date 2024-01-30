@@ -30,8 +30,10 @@ def lambda_handler(event, context, login_user, user_id):
 
     # DynamoDB操作オブジェクト生成
     try:
+        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+        device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
     except KeyError as e:
         body = {"message": e}
@@ -71,43 +73,76 @@ def lambda_handler(event, context, login_user, user_id):
                 "body": json.dumps({"message": "ユーザーが存在しません。"}, ensure_ascii=False),
             }
 
+        transact_items = []
+
+        # 契約情報から削除対象のユーザーを削除
+        contract_user_list = contract.get("contract_data").get("user_list", [])
+        contract_user_list.remove(user_id)
+        transact_items.append(
+            {
+                "Update": {
+                    "TableName": contract_table.table_name,
+                    "Key": {"contract_id": {"S": contract["contract_id"]}},
+                    "UpdateExpression": "SET #contract_data.#user_list = :user_list",
+                    "ExpressionAttributeNames": {
+                        "#contract_data": "contract_data",
+                        "#user_list": "user_list",
+                    },
+                    "ExpressionAttributeValues": {":user_list": contract_user_list},
+                }
+            }
+        )
+
+        # 通知先から削除対象のユーザーを削除
+        device_list = contract.get("contract_data").get("device_list", [])
+        for device in device_list:
+            notification_settings = (
+                device.get("device_data").get("config").get("notification_settings", {})
+            )
+            update = False
+            for notification_setting in notification_settings:
+                notification_target_list = notification_setting.get("notification_target_list", [])
+                if user_id in notification_target_list:
+                    notification_target_list.remove(user_id)
+                    update = True
+            if update:
+                transact_items.append(
+                    {
+                        "Update": {
+                            "TableName": device_table.table_name,
+                            "Key": {"device_id": {"S": device["device_id"]}},
+                            "UpdateExpression": "SET #device_data.#config.#notification_settings = :notification_settings",
+                            "ExpressionAttributeNames": {
+                                "#device_data": "device_data",
+                                "#config": "config",
+                                "#notification_settings": "notification_settings",
+                            },
+                            "ExpressionAttributeValues": {
+                                ":notification_settings": notification_settings
+                            },
+                        }
+                    }
+                )
+
         # 削除対象のデバイス関係を取得して削除
         device_relation_list = db.get_device_relation(
             f"u-{user_id}", device_relation_table, sk_prefix="d-"
         ) + db.get_device_relation(f"u-{user_id}", device_relation_table, sk_prefix="g-")
         logger.info({"device_relation_list": device_relation_list})
-
-        transact_items = [
-            {
-                "Delete": {
-                    "TableName": device_relation_table.table_name,
-                    "Key": {
-                        "key1": {"S": device_relation["key1"]},
-                        "key2": {"S": device_relation["key2"]},
-                    },
+        transact_items.extend(
+            [
+                {
+                    "Delete": {
+                        "TableName": device_relation_table.table_name,
+                        "Key": {
+                            "key1": {"S": device_relation["key1"]},
+                            "key2": {"S": device_relation["key2"]},
+                        },
+                    }
                 }
-            }
-            for device_relation in device_relation_list
-        ]
-
-        if transact_items and not db.execute_transact_write_item(transact_items):
-            logger.error("デバイス関係の削除に失敗")
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps({"message": "デバイス関係の削除に失敗しました。"}, ensure_ascii=False),
-            }
-
-        # Cognitoのユーザープールからユーザー削除
-        try:
-            cognito.admin_delete_user(UserPoolId=COGNITO_USER_POOL_ID, Username=user_id)
-        except ClientError:
-            logger.error("Cognitoのユーザー削除に失敗", exc_info=True)
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps({"message": "Cognitoのユーザー削除に失敗しました。"}, ensure_ascii=False),
-            }
+                for device_relation in device_relation_list
+            ]
+        )
 
         # 削除日時設定
         del_datetime = int(time.time() * 1000)
@@ -120,6 +155,27 @@ def lambda_handler(event, context, login_user, user_id):
             user_data["config"] = {"del_datetime": del_datetime}
 
         ddb.update_user_data(user_id, user_data, user_table)
+
+        # DB更新
+        if not db.execute_transact_write_item(transact_items):
+            logger.error("ユーザー情報削除に失敗")
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps({"message": "ユーザー情報の削除に失敗しました。"}, ensure_ascii=False),
+            }
+
+        # Cognitoのユーザープールからユーザー削除
+        account = db.get_account_info_by_account_id(user["account_id"], account_table)
+        try:
+            cognito.admin_delete_user(UserPoolId=COGNITO_USER_POOL_ID, Username=account["auth_id"])
+        except ClientError:
+            logger.error("Cognitoのユーザー削除に失敗", exc_info=True)
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps({"message": "Cognitoのユーザー削除に失敗しました。"}, ensure_ascii=False),
+            }
 
         return {"statusCode": 204, "headers": res_headers}
 
