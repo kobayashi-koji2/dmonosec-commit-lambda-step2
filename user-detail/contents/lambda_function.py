@@ -93,6 +93,7 @@ def lambda_handler(event, context, user):
             "email_address": account.get("email_address"),
             "user_name": account_config.get("user_name"),
             "user_type": user_info.get("user_type"),
+            "auth_status": account_config.get("auth_status"),
             "management_group_list": group_list,
             "management_device_list": device_list,
         }
