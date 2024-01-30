@@ -70,7 +70,7 @@ def lambda_handler(event, context, user_info):
         # デバイス情報取得
         for device_id in device_id_list:
             device_info = db.get_device_info(device_id, device_table)
-            logger.info(f"device_info: {device_info}")
+            logger.info({"device_info": device_info})
 
             if device_info is not None:
                 # 現状態情報取得
@@ -85,6 +85,8 @@ def lambda_handler(event, context, user_info):
 
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
                 for do_info in do_list:
+                    if do_info["do_control"] is None:
+                        continue
                     res_item = __generate_response_items(
                         device_id, device_name, device_imei, do_info, di_list, state_info
                     )
@@ -92,15 +94,15 @@ def lambda_handler(event, context, user_info):
 
         ### 5. メッセージ応答
         results = __decimal_to_integer_or_float(results)
-        logger.info(f"results: {results}")
+        logger.info({"results": results})
         res_body = {"message": "", "remote_control_list": results}
         return {
             "statusCode": 200,
             "headers": res_headers,
             "body": json.dumps(res_body, ensure_ascii=False),
         }
-    except Exception as e:
-        logger.info(e)
+    except Exception:
+        logger.error("予期しないエラー", exc_info=True)
         res_body = {"message": "予期しないエラーが発生しました。"}
         return {
             "statusCode": 500,
