@@ -10,8 +10,13 @@ logger = Logger()
 
 # パラメータチェック
 def validate(event, user_info, account_table):
-    auth_id = user_info["user_id"]
+    # ユーザー権限確認
+    operation_auth = __operation_auth_check(user_info)
+    if not operation_auth:
+        return {"message": "ユーザに操作権限がありません。"}
+
     # 1月まではいったん、IDトークンに含まれるusernameとモノセコムユーザーIDは同じ認識で直接ユーザー管理を参照するよう実装
+    auth_id = user_info["user_id"]
     account_info = db.get_account_info(auth_id, account_table)
     if account_info is None:
         return {"message": "アカウント情報が存在しません。"}
@@ -39,3 +44,12 @@ def validate(event, user_info, account_table):
         "path_params": path_params,
         "account_info": account_info,
     }
+
+
+# ユーザー操作権限チェック
+def __operation_auth_check(user_info):
+    user_type = user_info["user_type"]
+    logger.debug(f"ユーザー権限: {user_type}")
+    if user_type == "referrer":
+        return False
+    return True
