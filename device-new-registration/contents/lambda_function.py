@@ -240,9 +240,13 @@ def __generate_device_data_config(device_type):
             "do_on_icon": "state_icon_1",
             "do_off_name": "Close",
             "do_off_icon": "state_icon_2",
+            "do_control": None,
+            "do_specified_time": None,
+            "do_di_return": None,
+            "do_timer_list": [],
         }
         do_list.append(do_item)
 
-    result = {"terminal_settings": {"do_list": do_list, "di_list": di_list}}
+    result = {"device_name": None, "terminal_settings": {"do_list": do_list, "di_list": di_list}}
 
     return result

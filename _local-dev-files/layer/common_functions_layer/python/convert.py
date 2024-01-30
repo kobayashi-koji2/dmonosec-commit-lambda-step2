@@ -33,6 +33,8 @@ def to_dynamo_format(v):
         return {"L": [to_dynamo_format(a) for a in v]}
     if type(v) is dict:
         return {"M": dict_dynamo_format(v)}
+    if v is None:
+        return {"NULL": True}
 
 
 # dict型のDecimalを数値に変換

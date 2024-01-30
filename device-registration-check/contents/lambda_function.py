@@ -91,6 +91,7 @@ def _register_device(pre_device, contract):
                 "coverage_url": pre_device["coverage_url"],
             },
             "config": {
+                "device_name": None,
                 "terminal_settings": {
                     "di_list": [
                         {
@@ -111,10 +112,14 @@ def _register_device(pre_device, contract):
                             "do_on_icon": "state_icon_1",
                             "do_off_name": "Close",
                             "do_off_icon": "state_icon_2",
+                            "do_control": None,
+                            "do_specified_time": None,
+                            "do_di_return": None,
+                            "do_timer_list": [],
                         }
                         for do_no in range(1, 3)
                     ],
-                }
+                },
             },
         },
     }
