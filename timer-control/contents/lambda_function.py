@@ -372,9 +372,7 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
             and remote_control_latest.get("control_result") != "9999"
             and not remote_control_latest.get("link_di_result")
         ):
-            logger.info(
-                "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
-            )
+            logger.info("Not processed because it was judged that it was already under control")
             return True, 1
 
     req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
@@ -599,19 +597,22 @@ def __send_mail(
             そのため、制御を行いませんでした。
             ※タイマー設定「{control_name} {do_timer}」による制御信号を送信しませんでした。
         """
-    logger.debug(f"event_detail: {event_detail}")
+    event_detail = textwrap.dedent(event_detail)
 
     # メール送信
     mail_subject = "イベントが発生しました"
-    mail_body = f"""\
-        ■発生日時：{send_datetime.strftime('%y/%m/%d %H:%M:%S')}
+    mail_body = textwrap.dedent(
+        f"""
+        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}
 
         ■イベント内容
-        {event_detail}
     """
+    ).strip()
+    mail_body = mail_body + event_detail
+    logger.debug(f"mail_body: {mail_body}")
     mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
 
     # 通知履歴登録

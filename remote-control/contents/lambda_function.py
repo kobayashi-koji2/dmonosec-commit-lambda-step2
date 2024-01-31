@@ -149,7 +149,7 @@ def lambda_handler(event, context, user_info):
                 and not remote_control_latest.get("link_di_result")
             ):
                 logger.info(
-                    "Not processed because recv_datetime exists in remote_control_latest (judged as under control)"
+                    "Not processed because it was judged that it was already under control"
                 )
                 regist_result = __register_hist_info(
                     device_info,
@@ -449,18 +449,21 @@ def __send_mail(
         そのため、制御を行いませんでした。
         ※{user_name}が操作を行いました。
     """
+    event_detail = textwrap.dedent(event_detail)
 
     # メール送信
     mail_subject = "イベントが発生しました"
-    mail_body = f"""\
-        ■発生日時：{send_datetime.strftime('%y/%m/%d %H:%M:%S')}
+    mail_body = textwrap.dedent(
+        f"""
+        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}
 
         ■イベント内容
-        {event_detail}
     """
+    ).strip()
+    mail_body = mail_body + event_detail
     logger.debug(f"mail_body: {mail_body}")
     mail.send_email(mail_to_list, mail_subject, textwrap.dedent(mail_body))
 
