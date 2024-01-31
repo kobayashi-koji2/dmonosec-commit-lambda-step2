@@ -63,7 +63,7 @@ def lambda_handler(event, context, user):
                         .get("config", {})
                         .get("device_name", ""),
                         "device_imei": device.get("imei", ""),
-                        "event_trigger": notification_setting.get("device_state", ""),
+                        "event_trigger": notification_setting.get("event_trigger", ""),
                         "terminal_no": notification_setting.get("terminal_no", ""),
                         "event_type": notification_setting.get("event_type", ""),
                         "change_detail": notification_setting.get("change_detail", ""),
