@@ -4,6 +4,14 @@ import re
 from aws_lambda_powertools import Logger
 
 logger = Logger()
+punctuation = r"\*\+\.\?\)\]\}\{\(\[\^\$\-\|\/\"!@#%&,>\\ <':;_~`="
+password_policy = (
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*["
+    + punctuation
+    + r"])[A-Za-z\d{"
+    + punctuation
+    + r"}]{8,}$"
+)
 
 
 # パラメータチェック
@@ -25,6 +33,9 @@ def validate(event):
     ### 「new_password」の型チェック
     if not isinstance(body.get("new_password"), str):
         return {"message": "「new_password」のデータ型が不正です。"}
+    ### 「new_password」の形式チェック
+    if not re.search(password_policy, body.get("new_password").strip()):
+        return {"message": "「new_password」がパスワードポリシー違反です。"}
 
     ### 「access_token」の必須チェック
     if "access_token" not in body:

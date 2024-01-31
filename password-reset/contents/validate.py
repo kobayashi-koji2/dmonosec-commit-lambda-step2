@@ -1,13 +1,17 @@
 import json
-import boto3
+import re
 
 from aws_lambda_powertools import Logger
 
-# layer
-import db
-import convert
-
 logger = Logger()
+punctuation = r"\*\+\.\?\)\]\}\{\(\[\^\$\-\|\/\"!@#%&,>\\ <':;_~`="
+password_policy = (
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*["
+    + punctuation
+    + r"])[A-Za-z\d{"
+    + punctuation
+    + r"}]{8,}$"
+)
 
 
 # パラメータチェック
@@ -30,6 +34,9 @@ def validate(event):
     ### 「new_password」の型チェック
     if not isinstance(body.get("new_password"), str):
         return {"message": "「new_password」のデータ型が不正です。"}
+    ### 「new_password」の形式チェック
+    if not re.search(password_policy, body.get("new_password").strip()):
+        return {"message": "「new_password」がパスワードポリシー違反です。"}
 
     ### 「email_address」の必須チェック
     if "email_address" not in body:
