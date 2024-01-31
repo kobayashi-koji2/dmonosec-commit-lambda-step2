@@ -9,6 +9,7 @@ import db
 import ssm
 import validate
 import ddb
+import convert
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
@@ -65,6 +66,7 @@ def lambda_handler(event, context, user, body):
                     }
 
         # リクエストの通知設定をデバイスIDごとにまとめる
+        contract_device_list = contract.get("contract_data", {}).get("device_list", []).copy()
         notificaton_settings_list = {}
         for notification in notification_list:
             device_id = notification["device_id"]
@@ -79,12 +81,17 @@ def lambda_handler(event, context, user, body):
                 }
             )
             notificaton_settings_list[device_id] = notificaton_settings
+            contract_device_list.remove(device_id)
+
+        # 通知設定がないデバイスの通知設定を空にする
+        for device_id in contract_device_list:
+            notificaton_settings_list[device_id] = []
 
         # デバイス管理テーブルの通知設定更新
         ddb.update_device_notification_settings(notificaton_settings_list, device_table)
 
         # 通知設定を取得しなおして返却
-        device_list = contract.get("contract_data", {}).get("device_list", {})
+        device_list = contract.get("contract_data", {}).get("device_list", [])
         notification_list = []
         for device_id in device_list:
             device = db.get_device_info(device_id, device_table)
@@ -116,7 +123,7 @@ def lambda_handler(event, context, user, body):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False),
+            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
 
     except Exception:
