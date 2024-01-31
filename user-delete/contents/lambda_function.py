@@ -4,6 +4,7 @@ import time
 
 import boto3
 from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Attr, Key
 from aws_lambda_powertools import Logger
 
 import auth
@@ -150,7 +151,7 @@ def lambda_handler(event, context, login_user, user_id):
             ]
         )
 
-        # 削除日時設定
+        # モノセコムユーザー管理テーブルに削除日時を設定
         del_datetime = int(time.time() * 1000)
         logger.info({"del_datetime": del_datetime})
         transact_items.append(
@@ -168,6 +169,36 @@ def lambda_handler(event, context, login_user, user_id):
                 }
             }
         )
+
+        # アカウント管理テーブルに削除日時を設定
+        # モノセコムユーザー管理テーブルからアカウントIDが一致するレコードを取得
+        user_list = user_table.query(
+            IndexName="account_id_index",
+            KeyConditionExpression=Key("account_id").eq(user["account_id"]),
+            FilterExpression=Attr("user_id").ne(user["user_id"]),
+        ).get("Items", [])
+
+        # 他契約で使われていなければ、アカウント管理テーブルに削除日時を設定
+        if not [
+            x
+            for x in user_list
+            if x.get("user_data", {}).get("config", {}).get("del_datetime") is None
+        ]:
+            transact_items.append(
+                {
+                    "Update": {
+                        "TableName": account_table.table_name,
+                        "Key": {"account_id": {"S": user["account_id"]}},
+                        "UpdateExpression": "SET #user_data.#config.#del_datetime = :del_datetime",
+                        "ExpressionAttributeNames": {
+                            "#user_data": "user_data",
+                            "#config": "config",
+                            "#del_datetime": "del_datetime",
+                        },
+                        "ExpressionAttributeValues": {":del_datetime": {"N": str(del_datetime)}},
+                    }
+                }
+            )
 
         # DB更新
         if not db.execute_transact_write_item(transact_items):
