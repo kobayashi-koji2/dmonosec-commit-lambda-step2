@@ -71,11 +71,11 @@ def lambda_handler(event, context, user, body):
             notificaton_settings = notificaton_settings_list.get(device_id, [])
             notificaton_settings.append(
                 {
-                    "event_trigger": notification["event_trigger"],
-                    "terminal_no": notification["terminal_no"],
-                    "event_type": notification["event_type"],
-                    "change_detail": notification["change_detail"],
-                    "notification_target_list": notification["notification_target_list"],
+                    "event_trigger": notification.get("event_trigger", ""),
+                    "terminal_no": notification.get("terminal_no", ""),
+                    "event_type": notification.get("event_type", ""),
+                    "change_detail": notification.get("change_detail", ""),
+                    "notification_target_list": notification.get("notification_target_list", []),
                 }
             )
             notificaton_settings_list[device_id] = notificaton_settings
