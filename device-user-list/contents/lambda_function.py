@@ -56,7 +56,7 @@ def lambda_handler(event, context, user):
         for device_id in contract_device_list:
             device = db.get_device_info(device_id, device_table)
             user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
-            user_id_list = list(set(admin_user_list) & set(user_id_list))
+            user_id_list = list(set(admin_user_list) | set(user_id_list))
             user_list = []
             for user_id in user_id_list:
                 logger.debug(user_id)
