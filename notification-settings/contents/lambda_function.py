@@ -81,7 +81,8 @@ def lambda_handler(event, context, user, body):
                 }
             )
             notificaton_settings_list[device_id] = notificaton_settings
-            contract_device_list.remove(device_id)
+            if device_id in contract_device_list:
+                contract_device_list.remove(device_id)
 
         # 通知設定がないデバイスの通知設定を空にする
         for device_id in contract_device_list:
