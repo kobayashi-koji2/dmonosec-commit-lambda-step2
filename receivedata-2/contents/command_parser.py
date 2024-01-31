@@ -187,7 +187,6 @@ def commandParser(
         # 現状態取得
         device_id = device_info["device_id"]
         device_current_state = ddb.get_device_state(device_id, state_table)
-        logger.debug(f"device_current_state={device_current_state}")
 
         # イベント判定 履歴一覧、現状態作成
         hist_list, current_state_info = eventJudge(
@@ -198,13 +197,11 @@ def commandParser(
             group_table,
             remote_control_table,
         )
-        logger.debug(f"hist_list={hist_list}, current_state_info={current_state_info}")
 
         # メール通知
         hist_list = mailNotice(
             hist_list, device_info, user_table, account_table, notification_hist_table
         )
-        logger.debug(f"hist_list2={hist_list}")
 
     # DB登録データ編集
     # 履歴情報テーブル

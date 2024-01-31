@@ -58,36 +58,30 @@ def get_remote_control_info_by_device_id(device_id, recv_datetime, remote_contro
 
 # 履歴データ挿入
 def put_cnt_hist(db_item, hist_table):
-    logger.debug("put_cnt_hist開始")
     item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
     try:
         hist_table.put_item(Item=item)
-        logger.debug("put_cnt_hist正常終了")
     except ClientError as e:
-        logger.debug(f"put_itemエラー e={e}")
+        logger.debug(f"put_cnt_histエラー e={e}")
 
 
 # 履歴一覧データ挿入
 def put_cnt_hist_list(db_items, hist_list_table):
-    logger.debug("put_cnt_hist_list")
     for db_item in db_items:
         item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
         try:
             hist_list_table.put_item(Item=item)
-            logger.debug("put_cnt_hist_list正常終了")
         except ClientError as e:
-            logger.debug(f"put_itemエラー e={e}")
+            logger.debug(f"put_cnt_hist_listエラー e={e}")
 
 
 # 現状態データ更新
 def update_current_state(db_item, state_table):
     item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
-    logger.debug(f"update_current_state item={item}")
     try:
         state_table.put_item(Item=item)
-        logger.debug("update_current_state正常終了")
     except ClientError as e:
-        logger.debug(f"put_itemエラー e={e}")
+        logger.debug(f"update_current_stateエラー e={e}")
 
 
 # 接点出力制御応答データ更新
@@ -142,9 +136,8 @@ def update_control_res(db_item, remote_control_table):
 
     try:
         remote_control_table.update_item(**option)
-        logger.debug("update_control_res正常終了")
     except ClientError as e:
-        logger.debug(f"update_itemエラー e={e}")
+        logger.debug(f"update_control_resエラー e={e}")
 
 
 # 接点出力制御応答データ更新
@@ -162,13 +155,11 @@ def update_control_res_link_di_result(device_req_no, req_datetime, remote_contro
             ":link_di_result": "0"
         },
     }
-    logger.debug(f"option={option}")
 
     try:
         remote_control_table.update_item(**option)
-        logger.debug("update_control_res_link_di_result正常終了")
     except ClientError as e:
-        logger.debug(f"update_itemエラー e={e}")
+        logger.debug(f"update_control_res_link_di_resultエラー e={e}")
 
 
 # 履歴情報取得
@@ -185,9 +176,8 @@ def put_notice_hist(db_item, notification_hist_table):
     item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
     try:
         notification_hist_table.put_item(Item=item)
-        logger.debug("put_notice_hist正常終了")
     except ClientError as e:
-        logger.debug(f"put_itemエラー e={e}")
+        logger.debug(f"put_notice_histエラー e={e}")
 
 
 # グループ一覧取得
@@ -214,13 +204,10 @@ def get_notice_mailaddress(user_id_list, user_table, account_table):
         users_table_res = user_table.query(
             KeyConditionExpression=Key("user_id").eq(item),
         ).get("Items", [])
-        logger.debug(f"users_table_res ={users_table_res}")
         for items in users_table_res:
             account_id = items["account_id"]
             account_info = account_table.query(
                 KeyConditionExpression=Key("account_id").eq(account_id)
             ).get("Items", [])
-            logger.debug(f"account_info ={account_info}")
             mailaddress_list.append(account_info[0]["email_address"])
-    logger.debug(f"mailaddress_list ={mailaddress_list}")
     return mailaddress_list

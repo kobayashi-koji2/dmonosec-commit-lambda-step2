@@ -66,10 +66,8 @@ def lambda_handler(event, context):
             logger.debug(f"未登録デバイス szSimid={szSimid}")
         else:
             stray_flag = False
-            logger.debug(f"iccid_info={iccid_info}")
             device_id = iccid_info["device_id"]
             device_info = ddb.get_device_info(device_id, device_table)
-            logger.debug(f"device_info={device_info}")
             if device_info is None or len(device_info) == 0:
                 return bytes([1])
 
@@ -98,7 +96,7 @@ def lambda_handler(event, context):
         ##################
         # 初期受信処理
         ##################
-        if (not stray_flag) and (device_info["contract_state"] == 0):
+        if (not stray_flag) and (device_info.get("contract_state") == 0):
             # パラメータ設定
             input_event = {"iccid": szSimid}
             Payload = json.dumps(input_event)
