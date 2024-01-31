@@ -44,11 +44,19 @@ def lambda_handler(event, context, user):
             }
 
         contract = db.get_contract_info(user.get("contract_id"), contract_table)
+        contract_user_list = contract.get("contract_data", {}).get("user_list", {})
+        admin_user_list = []
+        for user_id in contract_user_list:
+            user = db.get_user_info_by_user_id(user_id, user_table)
+            if user.get("user_type") == "admin" or user.get("user_type") == "sub_admin":
+                admin_user_list.append(user_id)
+
         contract_device_list = contract.get("contract_data", {}).get("device_list", {})
         device_list = []
         for device_id in contract_device_list:
             device = db.get_device_info(device_id, device_table)
             user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
+            user_id_list = list(set(admin_user_list) & set(user_id_list))
             user_list = []
             for user_id in user_id_list:
                 logger.debug(user_id)
