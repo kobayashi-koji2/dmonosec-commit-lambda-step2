@@ -2,9 +2,9 @@ import uuid
 
 from aws_lambda_powertools import Logger
 
-import db
-import convert
 import cognito
+import convert
+import db
 
 logger = Logger()
 
@@ -44,6 +44,7 @@ def create_user_info(
                 "config": {
                     "user_name": request_params["user_name"],
                     "auth_status": "unauthenticated",
+                    "password_update_datetime": 0,
                 }
             },
         }
