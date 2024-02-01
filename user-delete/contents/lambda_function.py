@@ -9,6 +9,7 @@ from aws_lambda_powertools import Logger
 
 import auth
 import db
+import convert
 import ddb
 import ssm
 import validate
@@ -83,15 +84,15 @@ def lambda_handler(event, context, login_user, user_id):
             {
                 "Update": {
                     "TableName": contract_table.table_name,
-                    "Key": {"contract_id": {"S": contract["contract_id"]}},
+                    "Key": convert.dict_dynamo_format({"contract_id": contract["contract_id"]}),
                     "UpdateExpression": "SET #contract_data.#user_list = :user_list",
                     "ExpressionAttributeNames": {
                         "#contract_data": "contract_data",
                         "#user_list": "user_list",
                     },
-                    "ExpressionAttributeValues": {
-                        ":user_list": {"L": [{"S": u} for u in contract_user_list]}
-                    },
+                    "ExpressionAttributeValues": convert.dict_dynamo_format(
+                        {":user_list": contract_user_list}
+                    ),
                 }
             }
         )
@@ -104,7 +105,7 @@ def lambda_handler(event, context, login_user, user_id):
                 continue
             logger.debug(device.get("device_id"))
             notification_settings = (
-                device.get("device_data").get("config").get("notification_settings", {})
+                device.get("device_data").get("config").get("notification_settings", [])
             )
             update = False
             for notification_setting in notification_settings:
@@ -117,16 +118,21 @@ def lambda_handler(event, context, login_user, user_id):
                     {
                         "Update": {
                             "TableName": device_table.table_name,
-                            "Key": {"device_id": {"S": device["device_id"]}},
+                            "Key": convert.dict_dynamo_format(
+                                {
+                                    "device_id": device["device_id"],
+                                    "imei": device["imei"],
+                                }
+                            ),
                             "UpdateExpression": "SET #device_data.#config.#notification_settings = :notification_settings",
                             "ExpressionAttributeNames": {
                                 "#device_data": "device_data",
                                 "#config": "config",
                                 "#notification_settings": "notification_settings",
                             },
-                            "ExpressionAttributeValues": {
-                                ":notification_settings": notification_settings
-                            },
+                            "ExpressionAttributeValues": convert.dict_dynamo_format(
+                                {":notification_settings": notification_settings}
+                            ),
                         }
                     }
                 )
@@ -141,10 +147,12 @@ def lambda_handler(event, context, login_user, user_id):
                 {
                     "Delete": {
                         "TableName": device_relation_table.table_name,
-                        "Key": {
-                            "key1": {"S": device_relation["key1"]},
-                            "key2": {"S": device_relation["key2"]},
-                        },
+                        "Key": convert.dict_dynamo_format(
+                            {
+                                "key1": device_relation["key1"],
+                                "key2": device_relation["key2"],
+                            }
+                        ),
                     }
                 }
                 for device_relation in device_relation_list
@@ -158,14 +166,16 @@ def lambda_handler(event, context, login_user, user_id):
             {
                 "Update": {
                     "TableName": user_table.table_name,
-                    "Key": {"user_id": {"S": user_id}},
+                    "Key": convert.dict_dynamo_format({"user_id": user_id}),
                     "UpdateExpression": "SET #user_data.#config.#del_datetime = :del_datetime",
                     "ExpressionAttributeNames": {
                         "#user_data": "user_data",
                         "#config": "config",
                         "#del_datetime": "del_datetime",
                     },
-                    "ExpressionAttributeValues": {":del_datetime": {"N": str(del_datetime)}},
+                    "ExpressionAttributeValues": convert.dict_dynamo_format(
+                        {":del_datetime": del_datetime}
+                    ),
                 }
             }
         )
@@ -195,7 +205,9 @@ def lambda_handler(event, context, login_user, user_id):
                             "#config": "config",
                             "#del_datetime": "del_datetime",
                         },
-                        "ExpressionAttributeValues": {":del_datetime": {"N": str(del_datetime)}},
+                        "ExpressionAttributeValues": convert.dict_dynamo_format(
+                            {":del_datetime": str(del_datetime)}
+                        ),
                     }
                 }
             )
