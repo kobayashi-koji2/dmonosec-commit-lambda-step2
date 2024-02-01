@@ -39,7 +39,7 @@ cognito = boto3.client(
 )
 
 
-@auth.verify_login_user
+@auth.verify_login_user(False)
 def lambda_handler(event, context, user_info):
     try:
         ### 0. 事前準備

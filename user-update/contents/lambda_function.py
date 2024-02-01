@@ -33,7 +33,7 @@ def send_invite_email(email_address):
     mail.send_email([email_address], mail_subject, textwrap.dedent(mail_body))
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user):
     try:
         res_headers = {

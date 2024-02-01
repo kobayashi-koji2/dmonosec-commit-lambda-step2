@@ -19,50 +19,55 @@ class AuthError(Exception):
         self.message = message
 
 
-def verify_login_user(func):
-    def wrapper(event, *args, **kwargs):
-        try:
-            login_user = _get_login_user(event)
-        except AuthError as e:
-            logger.info("ユーザー検証失敗", exc_info=True)
-            return {
-                "statusCode": e.code,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                },
-                "body": json.dumps({"message": e.message}, ensure_ascii=False),
-            }
-        result = func(event, *args, login_user, **kwargs)
-        return result
+def verify_login_user(verify_password_exp=True):
+    def _verify_login_user(func):
+        def wrapper(event, *args, **kwargs):
+            try:
+                login_user = _get_login_user(event, verify_password_exp)
+            except AuthError as e:
+                logger.warning("ユーザー検証失敗", exc_info=True)
+                return {
+                    "statusCode": e.code,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*",
+                    },
+                    "body": json.dumps({"message": e.message}, ensure_ascii=False),
+                }
+            result = func(event, *args, login_user, **kwargs)
+            return result
 
-    return wrapper
+        return wrapper
+
+    return _verify_login_user
 
 
-def _get_login_user(event):
+def _get_login_user(event, verify_password_exp=True):
     try:
         id_token = event["headers"]["Authorization"]
         claims = jwt.get_unverified_claims(id_token)
 
         user_id = claims["cognito:username"]
-        # パスワード有効期限日時
-        password_exp = claims["password_exp"]
+
         # 認証日時
         auth_time = claims["auth_time"]
+        if not isinstance(auth_time, int):
+            auth_time = int(auth_time)
 
-        password_exp = int(password_exp) if isinstance(password_exp, str) else password_exp
-        auth_time = int(auth_time) if isinstance(auth_time, str) else auth_time
+        # パスワード有効期限日時
+        password_exp = claims["password_exp"]
+        if not isinstance(password_exp, int):
+            password_exp = int(password_exp)
 
-    except (JWTError, KeyError, ValueError):
-        logger.info("トークンが不正", exc_info=True)
-        raise AuthError(401, "認証情報が不正です。")
+    except (JWTError, KeyError, ValueError, TypeError) as e:
+        raise AuthError(401, "認証情報が不正です。") from e
 
     user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
     login_user = db.get_user_info_by_user_id(user_id, user_table)
 
     if not login_user:
         raise AuthError(401, "認証情報が不正です。")
-    if auth_time > password_exp:
+    if verify_password_exp and auth_time > password_exp:
         raise AuthError(401, "パスワードの有効期限が切れています。")
 
     return login_user

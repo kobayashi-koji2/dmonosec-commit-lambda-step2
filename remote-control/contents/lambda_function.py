@@ -41,7 +41,7 @@ iot = boto3.client("iot-data", region_name=AWS_DEFAULT_REGION)
 aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         ### 0. DynamoDBの操作オブジェクト生成

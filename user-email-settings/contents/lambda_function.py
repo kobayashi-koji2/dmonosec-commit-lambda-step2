@@ -16,7 +16,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 cognito = boto3.client("cognito-idp")
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 @validate.validate_parameter
 def lambda_handler(event, context, user, body):
     res_headers = {

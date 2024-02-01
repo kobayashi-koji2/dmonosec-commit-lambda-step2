@@ -30,7 +30,7 @@ dynamodb = boto3.resource(
 )
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])

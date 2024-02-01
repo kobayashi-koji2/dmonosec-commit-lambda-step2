@@ -19,7 +19,7 @@ SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 logger = Logger()
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, login_user):
     try:
         res_headers = {

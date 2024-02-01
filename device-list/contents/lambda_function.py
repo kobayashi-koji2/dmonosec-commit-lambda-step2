@@ -22,7 +22,7 @@ region_name = os.environ.get("AWS_REGION")
 logger = Logger()
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     logger.info(region_name)
     try:

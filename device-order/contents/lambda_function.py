@@ -31,7 +31,7 @@ dynamodb = boto3.resource(
 )
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         ### 1. 入力情報チェック

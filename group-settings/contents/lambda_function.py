@@ -19,7 +19,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         res_headers = {

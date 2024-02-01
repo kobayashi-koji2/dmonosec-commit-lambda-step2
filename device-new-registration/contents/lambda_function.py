@@ -35,7 +35,7 @@ dynamodb = boto3.resource(
 )
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 @validate.validate_request_body
 def lambda_handler(event, context, user_info, request_body):
     try:

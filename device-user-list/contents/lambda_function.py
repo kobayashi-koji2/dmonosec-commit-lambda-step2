@@ -12,7 +12,7 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user):
     res_headers = {
         "Content-Type": "application/json",

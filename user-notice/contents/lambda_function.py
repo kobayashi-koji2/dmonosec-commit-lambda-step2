@@ -16,7 +16,7 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 @validate.validate_parameter
 def lambda_handler(event, context, login_user, user_id):
     res_headers = {

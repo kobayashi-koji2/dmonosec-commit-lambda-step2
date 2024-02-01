@@ -30,7 +30,7 @@ dynamodb = boto3.resource(
 )
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         ### 0. DynamoDBの操作オブジェクト生成
@@ -77,7 +77,9 @@ def lambda_handler(event, context, user_info):
                 state_info = db.get_device_state(device_id, device_state_table)
                 logger.info(f"state_info: {state_info}")
                 device_imei = device_info["imei"]
-                device_name = device_info.get("device_data", {}).get("config", {}).get("device_name", "")
+                device_name = (
+                    device_info.get("device_data", {}).get("config", {}).get("device_name", "")
+                )
                 # 接点出力一覧
                 do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
                 # 接点入力一覧

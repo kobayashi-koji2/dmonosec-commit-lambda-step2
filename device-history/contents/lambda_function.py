@@ -163,7 +163,7 @@ def create_response(request_params, hist_list):
     }
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         res_headers = {

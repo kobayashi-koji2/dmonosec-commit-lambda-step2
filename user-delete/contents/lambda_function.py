@@ -19,7 +19,7 @@ cognito = boto3.client("cognito-idp")
 COGNITO_USER_POOL_ID = os.environ["COGNITO_USER_POOL_ID"]
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 @validate.validate_parameter
 def lambda_handler(event, context, login_user, user_id):
     res_headers = {

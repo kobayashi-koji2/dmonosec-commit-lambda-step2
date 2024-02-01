@@ -22,7 +22,7 @@ response_headers = {
 }
 
 
-@auth.verify_login_user
+@auth.verify_login_user()
 def lambda_handler(event, context, user_info):
     try:
         # DynamoDB操作オブジェクト生成
