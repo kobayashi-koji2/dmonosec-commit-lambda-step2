@@ -14,7 +14,7 @@ logger = Logger()
 def lambda_handler(event, context):
     try:
         # アカウント情報取得
-        auth_id = event["request"].get("userAttributes","").get("custom:auth_id","")
+        auth_id = event["request"].get("userAttributes").get("custom:auth_id","")
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         account = db.get_account_info(auth_id, account_table)
 
