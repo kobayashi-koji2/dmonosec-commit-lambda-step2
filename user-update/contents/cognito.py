@@ -45,7 +45,21 @@ def create_cognito_user(email_address):
             },
         ],
     )
-    return response["User"]["Username"]
+
+    auth_id = response["User"]["Username"]
+
+    client.admin_update_user_attributes(
+        UserPoolId="ap-northeast-1_jh1Y2Rjv7",  # TODO 環境ごと動的に取得
+        Username=auth_id,
+        UserAttributes=[
+            {
+                'Name': 'custom:auth_id',
+                'Value': auth_id
+            }
+        ]
+    )
+
+    return auth_id
 
 
 def update_cognito_user(auth_id, email_address):

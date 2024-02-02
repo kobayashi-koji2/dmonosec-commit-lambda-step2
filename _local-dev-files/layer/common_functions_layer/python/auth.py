@@ -47,7 +47,7 @@ def _get_login_user(event, verify_password_exp=True):
         id_token = event["headers"]["Authorization"]
         claims = jwt.get_unverified_claims(id_token)
 
-        user_id = claims["cognito:username"]
+        user_id = claims["custom:auth_id"]
 
         # 認証日時
         auth_time = claims["auth_time"]
