@@ -5,6 +5,9 @@ from operator import itemgetter
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
+from aws_lambda_powertools import Logger
+
+logger = Logger()
 
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client(
@@ -142,43 +145,67 @@ def execute_transact_write_item(transact_items):
         client.transact_write_items(TransactItems=transact_items)
         return True
     except Exception as e:
-        print(e)
-        print(traceback.format_exc())
+        logger.error(e)
+        logger.error(traceback.format_exc())
         return False
 
 
 # モノセコムユーザ情報取得
 def get_user_info(pk, sk, table):
-    response = table.query(
+    user_info = table.query(
         IndexName="account_id_index",
         KeyConditionExpression=Key("account_id").eq(pk) & Key("contract_id").eq(sk),
     ).get("Items", [])
+    # del_datetimeの項目が存在しないか、値がNullの情報（削除済み以外のユーザー情報）のみを取得
+    response = [
+        item
+        for item in user_info
+        if item.get("user_data", {}).get("config", {}).get("del_datetime") is None
+    ]
     return response
 
 
 def get_user_info_by_user_id(user_id, table):
     response = table.get_item(Key={"user_id": user_id}).get("Item", {})
+    # del_datetimeの項目が存在しないか、値がNullの情報（削除済み以外のユーザー情報）のみを取得
+    if response.get("user_data", {}).get("config", {}).get("del_datetime") is not None:
+        return {}
     return response
 
 
 # アカウント情報取得
 def get_account_info(pk, table):
-    response = table.query(
+    account_info = table.query(
         IndexName="auth_id_index", KeyConditionExpression=Key("auth_id").eq(pk)
     ).get("Items", [])
+    # del_datetimeの項目が存在しないか、値がNullの情報（削除済み以外のアカウント情報）のみを取得
+    response = [
+        item
+        for item in account_info
+        if item.get("user_data", {}).get("config", {}).get("del_datetime") is None
+    ]
     return response[0] if response else None
 
 
 def get_account_info_by_email_address(email_address, table):
-    response = table.query(
+    account_info = table.query(
         IndexName="email_address_index",
         KeyConditionExpression=Key("email_address").eq(email_address),
     ).get("Items", [])
+    # del_datetimeの項目が存在しないか、値がNullの情報（削除済み以外のアカウント情報）のみを取得
+    response = [
+        item
+        for item in account_info
+        if item.get("user_data", {}).get("config", {}).get("del_datetime") is None
+    ]
     return response[0] if response else None
 
 
 def get_account_info_by_account_id(account_id, table):
     response = table.get_item(Key={"account_id": account_id}).get("Item", {})
+    # del_datetimeの項目が存在しないか、値がNullの情報（削除済み以外のアカウント情報）のみを取得
+    if response.get("user_data", {}).get("config", {}).get("del_datetime") is not None:
+        return {}
     return response
 
 
@@ -193,6 +220,15 @@ def get_device_info(device_id, device_table):
     device_list = device_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").eq(1),
+    ).get("Items", [])
+    return device_list[0] if device_list else None
+
+
+# デバイス情報取得(契約状態:使用不可以外)
+def get_device_info_other_than_unavailable(device_id, table):
+    device_list = table.query(
+        KeyConditionExpression=Key("device_id").eq(device_id),
+        FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
     return device_list[0] if device_list else None
 

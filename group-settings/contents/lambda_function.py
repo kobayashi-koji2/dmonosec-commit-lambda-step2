@@ -89,7 +89,7 @@ def lambda_handler(event, context, user_info):
         device_list = []
         for device_id in device_id_list:
             logger.info(device_id)
-            device_info = db.get_device_info(device_id, device_table)
+            device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
             logger.info(device_info)
             if not device_info:
                 continue

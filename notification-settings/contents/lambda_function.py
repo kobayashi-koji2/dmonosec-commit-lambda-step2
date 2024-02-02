@@ -95,7 +95,7 @@ def lambda_handler(event, context, user, body):
         device_list = contract.get("contract_data", {}).get("device_list", [])
         notification_list = []
         for device_id in device_list:
-            device = db.get_device_info(device_id, device_table)
+            device = db.get_device_info_other_than_unavailable(device_id, device_table)
             notification_settings = (
                 device.get("device_data", {}).get("config", {}).get("notification_settings", {})
             )

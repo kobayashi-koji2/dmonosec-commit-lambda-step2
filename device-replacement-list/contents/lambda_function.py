@@ -62,7 +62,7 @@ def lambda_handler(event, context, user_info):
         # デバイス情報取得
         device_list = list()
         for device_id in device_id_list:
-            device_info = db.get_device_info(device_id, device_table)
+            device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
             if device_info is None:
                 continue
 

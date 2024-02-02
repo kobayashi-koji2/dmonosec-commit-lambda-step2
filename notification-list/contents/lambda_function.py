@@ -47,7 +47,7 @@ def lambda_handler(event, context, user):
         logger.debug(device_list)
         notification_list = []
         for device_id in device_list:
-            device = db.get_device_info(device_id, device_table)
+            device = db.get_device_info_other_than_unavailable(device_id, device_table)
             logger.info({"device": device})
             if not device:
                 continue
