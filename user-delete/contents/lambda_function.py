@@ -224,7 +224,21 @@ def lambda_handler(event, context, login_user, user_id):
         # Cognitoのユーザープールからユーザー削除
         account = db.get_account_info_by_account_id(user["account_id"], account_table)
         try:
-            cognito.admin_delete_user(UserPoolId=COGNITO_USER_POOL_ID, Username=account["auth_id"])
+            cognito_user = cognito.list_users(
+                UserPoolId=COGNITO_USER_POOL_ID,
+                AttributesToGet=["custom:auth_id"],
+                Filter=f"email=\"{account['email_address']}\"",
+            )
+            logger.debug(cognito_user)
+            if cognito_user["Users"]:
+                for attr in cognito_user["Users"][0]["Attributes"]:
+                    if attr["Name"] == "custom:auth_id":
+                        if attr["Value"] == account["auth_id"]:
+                            cognito.admin_delete_user(
+                                UserPoolId=COGNITO_USER_POOL_ID,
+                                Username=cognito_user["Users"][0]["Username"],
+                            )
+                        break
         except ClientError:
             logger.error("Cognitoのユーザー削除に失敗", exc_info=True)
             return {
