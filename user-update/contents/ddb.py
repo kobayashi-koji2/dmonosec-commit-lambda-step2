@@ -9,10 +9,6 @@ import db
 logger = Logger()
 
 
-def generate_group_id():
-    return str(uuid.uuid4()).replace("-", "")
-
-
 def create_user_info(
     request_params,
     contract_id,
@@ -35,7 +31,7 @@ def create_user_info(
         # なければCogitoユーザーを作成し、アカウント管理テーブルに登録
         auth_id = cognito.create_cognito_user(request_params["email_address"])
 
-        account_id = generate_group_id()
+        account_id = str(uuid.uuid4())
         account_item = {
             "account_id": account_id,
             "email_address": request_params["email_address"],
@@ -89,7 +85,7 @@ def create_user_info(
     #################################################
     # モノセコムユーザ管理テーブル
     #################################################
-    user_id = generate_group_id()
+    user_id = str(uuid.uuid4())
     user_item = {
         "user_id": user_id,
         "account_id": account_id,

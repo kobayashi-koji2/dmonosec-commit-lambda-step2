@@ -9,10 +9,6 @@ import convert
 logger = Logger()
 
 
-def generate_group_id():
-    return str(uuid.uuid4()).replace("-", "")
-
-
 def create_group_info(
     group_info,
     contract,
@@ -21,7 +17,7 @@ def create_group_info(
     device_relation_table_name,
 ):
     # グループID生成
-    group_id = generate_group_id()
+    group_id = str(uuid.uuid4())
     # トランザクション書き込み用オブジェクト
     transact_items = []
     # テーブル更新用キー
