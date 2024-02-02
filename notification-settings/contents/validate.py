@@ -30,7 +30,7 @@ BODY_SCHEMA = {
                         "type": "string",
                     },
                     "change_detail": {
-                        "type": "string",
+                        "type": "integer",
                     },
                     "notification_target_list": {
                         "type": "array",
