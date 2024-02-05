@@ -9,6 +9,7 @@ from datetime import datetime
 
 import boto3
 from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
 
 # layer
 import auth
@@ -18,6 +19,8 @@ import ddb
 import mail
 import ssm
 import validate
+
+patch_all()
 
 logger = Logger()
 

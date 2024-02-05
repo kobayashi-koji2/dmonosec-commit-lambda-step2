@@ -3,9 +3,12 @@ import math
 
 import boto3
 from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
 
 import db
 import ssm
+
+patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 logger = Logger()
@@ -14,7 +17,7 @@ logger = Logger()
 def lambda_handler(event, context):
     try:
         # アカウント情報取得
-        auth_id = event["request"].get("userAttributes").get("custom:auth_id","")
+        auth_id = event["request"].get("userAttributes").get("custom:auth_id", "")
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         account = db.get_account_info(auth_id, account_table)
 

@@ -4,12 +4,15 @@ import os
 
 from aws_lambda_powertools import Logger
 import boto3
+from aws_xray_sdk.core import patch_all
 
 import auth
 import ssm
 import convert
 import validate
 import ddb
+
+patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 logger = Logger()

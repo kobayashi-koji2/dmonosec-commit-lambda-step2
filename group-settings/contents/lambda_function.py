@@ -6,12 +6,15 @@ from aws_lambda_powertools import Logger
 import ssm
 import boto3
 from botocore.exceptions import ClientError
+from aws_xray_sdk.core import patch_all
 
 import auth
 import convert
 import db
 import validate
 import group
+
+patch_all()
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))

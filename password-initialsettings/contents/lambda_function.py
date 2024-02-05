@@ -4,6 +4,7 @@ import time
 import traceback
 
 from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
 import boto3
 
 # layer
@@ -11,6 +12,8 @@ import ssm
 import db
 import convert
 import auth
+
+patch_all()
 
 logger = Logger()
 

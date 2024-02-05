@@ -6,8 +6,7 @@ import validate
 import re
 from botocore.exceptions import ClientError
 from aws_lambda_powertools import Logger
-
-dynamodb = boto3.resource("dynamodb")
+from aws_xray_sdk.core import patch_all
 from boto3.dynamodb.conditions import Key
 
 # layer
@@ -16,6 +15,9 @@ import db
 import ssm
 import convert
 
+patch_all()
+
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 region_name = os.environ.get("AWS_REGION")
 

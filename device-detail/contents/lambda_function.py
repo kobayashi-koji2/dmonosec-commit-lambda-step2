@@ -9,12 +9,15 @@ from botocore.exceptions import ClientError
 from decimal import Decimal
 import traceback
 from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
 
 # layer
 import db
 import ssm
 import convert
 import auth
+
+patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 

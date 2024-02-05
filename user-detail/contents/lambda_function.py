@@ -4,6 +4,7 @@ import traceback
 import boto3
 
 from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
 from botocore.exceptions import ClientError
 
 import auth
@@ -12,6 +13,8 @@ import db
 import convert
 
 import validate
+
+patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
