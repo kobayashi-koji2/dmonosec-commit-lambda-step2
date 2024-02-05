@@ -18,7 +18,7 @@ logger = Logger()
 # 環境変数
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
-AWS_COGNITO_CLIENT_ID = os.environ["AWS_COGNITO_CLIENT_ID"]
+COGNITO_USER_POOL_CLIENT_ID = os.environ["COGNITO_USER_POOL_CLIENT_ID"]
 # 正常レスポンスヘッダー内容
 res_headers = {
     "Content-Type": "application/json",
@@ -57,7 +57,7 @@ def lambda_handler(event, context):
 
         ### 2. Cognitoパスワード再設定
         cognito.confirm_forgot_password(
-            ClientId=AWS_COGNITO_CLIENT_ID,
+            ClientId=COGNITO_USER_POOL_CLIENT_ID,
             Username=body["email_address"],
             ConfirmationCode=body["auth_code"],
             Password=body["new_password"],
