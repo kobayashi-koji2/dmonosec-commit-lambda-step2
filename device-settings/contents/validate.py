@@ -159,7 +159,7 @@ def input_check(param):
         "di_off_icon": icon_list,
         "do_on_icon": icon_list,
         "do_off_icon": icon_list,
-        "do_control": ["open", "close", "toggle"],
+        "do_control": ["","open", "close", "toggle"],
     }
 
     # 正規表現
