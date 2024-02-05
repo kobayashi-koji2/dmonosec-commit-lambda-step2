@@ -41,8 +41,8 @@ def lambda_handler(event, context, user_info):
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
 
         ### 1. アカウント情報更新
-        user_id = user_info["user_id"]
-        account_info = db.get_account_info(user_id, account_table)
+        account_id = user_info["account_id"]
+        account_info = db.get_account_info_by_account_id(account_id, account_table)
         if account_info is None:
             res_body = {"message": "アカウント情報が存在しません。"}
             return {
