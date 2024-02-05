@@ -66,9 +66,10 @@ def lambda_handler(event, context, login_user, user_id):
 
         # 削除対象ユーザーの存在チェック
         user = db.get_user_info_by_user_id(user_id, user_table)
+        account = db.get_account_info_by_account_id(user["account_id"], account_table)
         logger.info({"user": user})
 
-        if not user:
+        if not user or not account:
             return {
                 "statusCode": 404,
                 "headers": res_headers,
@@ -222,7 +223,6 @@ def lambda_handler(event, context, login_user, user_id):
             }
 
         # Cognitoのユーザープールからユーザー削除
-        account = db.get_account_info_by_account_id(user["account_id"], account_table)
         try:
             cognito_user = cognito.list_users(
                 UserPoolId=COGNITO_USER_POOL_ID,
