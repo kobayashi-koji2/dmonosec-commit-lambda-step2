@@ -87,7 +87,7 @@ def lambda_handler(event, context, user_info):
 
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
                 for do_info in do_list:
-                    if do_info["do_control"] is None:
+                    if not do_info["do_control"]:
                         continue
                     res_item = __generate_response_items(
                         device_id, device_name, device_imei, do_info, di_list, state_info
