@@ -13,7 +13,6 @@ services:
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
-      - AWS_COGNITO_CLIENT_ID=4vecet7gg4u42io119fh3blls
     volumes:
       - ./contents:/var/task
     ports:

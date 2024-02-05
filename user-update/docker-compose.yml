@@ -15,6 +15,7 @@ services:
       - MAIL_FROM_ADDRESS=mun-yamashita@secom.co.jp
       - WEB_DOMAIN=d3hdq58d7rxji5.cloudfront.net
       - POWERTOOLS_LOG_LEVEL=DEBUG
+      - COGNITO_USER_POOL_ID=dummy
     volumes:
       - ./contents:/var/task
     ports:
