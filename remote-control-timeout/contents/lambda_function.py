@@ -77,21 +77,21 @@ def send_mail(
     if not change_state_mail:
         if remote_control.get("control_trigger") == "manual_control":
             event_detail = f"""\
-                【画面操作による制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きませんでした。
-                ※{user_name}が操作を行いました。
+                　【画面操作による制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きませんでした。
+                　※{user_name}が操作を行いました。
             """
         elif remote_control.get("control_trigger") == "on_timer_control":
             event_detail = f"""\
-                【タイマーによる制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きませんでした。
-                ※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きませんでした。
+                　※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
         elif remote_control.get("control_trigger") == "off_timer_control":
             event_detail = f"""\
-                【タイマーによる制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きませんでした。
-                ※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きませんでした。
+                　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
     else:
         di_no = remote_control.get("link_di_no")
@@ -106,21 +106,21 @@ def send_mail(
         di_name = di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
         if remote_control.get("control_trigger") == "manual_control":
             event_detail = f"""\
-                【画面操作による制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                ※{user_name}が操作を行いました。
+                　【画面操作による制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
+                　※{user_name}が操作を行いました。
             """
         elif remote_control.get("control_trigger") == "on_timer_control":
             event_detail = f"""\
-                【タイマーによる制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                ※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
+                　※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
         elif remote_control.get("control_trigger") == "off_timer_control":
             event_detail = f"""\
-                【タイマーによる制御（失敗）】
-                制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                ※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
+                　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
 
     mail_subject = "イベントが発生しました"
@@ -162,7 +162,6 @@ def lambda_handler(event, context):
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
-            cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
