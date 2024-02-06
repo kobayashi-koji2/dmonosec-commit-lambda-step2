@@ -40,12 +40,15 @@ def lambda_handler(event, context, user, body):
         }
 
     try:
-        account = db.get_account_info(user["user_id"], account_table)
+        account_id = user["account_id"]
+        account = db.get_account_info_by_account_id(account_id, account_table)
         if account is None:
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps({"message": "アカウント情報が存在しません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "アカウント情報が存在しません。"}, ensure_ascii=False
+                ),
             }
 
         try:
@@ -57,7 +60,9 @@ def lambda_handler(event, context, user, body):
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps({"message": "ユーザー属性(email)の検証に失敗しました。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "ユーザー属性(email)の検証に失敗しました。"}, ensure_ascii=False
+                ),
             }
 
         ddb.update_account_email(account["account_id"], body["new_email"], account_table)
