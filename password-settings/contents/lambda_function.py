@@ -61,11 +61,17 @@ def lambda_handler(event, context, user_info):
 
         ### 2. パスワード変更
         # Cognitoパスワード変更
-        response = cognito.change_password(
-            PreviousPassword=body["password"],
-            ProposedPassword=body["new_password"],
-            AccessToken=body["access_token"],
-        )
+        try:
+            cognito.change_password(
+                PreviousPassword=body["password"],
+                ProposedPassword=body["new_password"],
+                AccessToken=body["access_token"],
+            )
+        except cognito.exceptions.NotAuthorizedException:
+            res_body = {"message": "パスワードが不正です。"}
+            respons["statusCode"] = 400
+            respons["body"] = json.dumps(res_body, ensure_ascii=False)
+            return respons
 
         # パスワード最終更新日時更新
         account_id = user_info["account_id"]
