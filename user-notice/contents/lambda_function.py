@@ -59,12 +59,14 @@ def lambda_handler(event, context, login_user, user_id):
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps({"message": "ユーザーに対しての操作権限がありません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "ユーザーに対しての操作権限がありません。"}, ensure_ascii=False
+                ),
             }
 
         # 通知対象ユーザーの存在チェック
         user = db.get_user_info_by_user_id(user_id, user_table)
-        account = db.get_account_info(user_id, account_table)
+        account = db.get_account_info_by_account_id(user["account_id"], account_table)
         logger.info({"user": user})
 
         if not user or not account:
@@ -83,7 +85,9 @@ def lambda_handler(event, context, login_user, user_id):
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps({"message": "指定のユーザーは通知対象ではありません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "指定のユーザーは通知対象ではありません。"}, ensure_ascii=False
+                ),
             }
         device_id_list = list(set(device_id_list))
         logger.info({"device_id_list": device_id_list})
