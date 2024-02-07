@@ -74,6 +74,26 @@ def lambda_handler(event, context, user, body):
         for notification in notification_list:
             device_id = notification["device_id"]
             notificaton_settings = notificaton_settings_list.get(device_id, [])
+
+            # 重複チェック
+            for notification_setting in notificaton_settings:
+                if (
+                    notification_setting.get("event_trigger", "")
+                    == notification.get("event_trigger", "")
+                    and notification_setting.get("terminal_no", "")
+                    == notification.get("terminal_no", "")
+                    and notification_setting.get("event_type", "")
+                    == notification.get("event_type", "")
+                    and notification_setting.get("change_detail", "")
+                    == notification.get("change_detail", "")
+                ):
+                    res_body = {"message": "同じ設定が重複しています。"}
+                    return {
+                        "statusCode": 400,
+                        "headers": res_headers,
+                        "body": json.dumps(res_body, ensure_ascii=False),
+                    }
+
             notificaton_settings.append(
                 {
                     "event_trigger": notification.get("event_trigger", ""),
