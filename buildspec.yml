@@ -41,7 +41,7 @@ phases:
         do
           echo $dir
           ecr_repository_uri=${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com/${global_name}-ecr-${dir}
-          docker build -t ${dir}:latest -f ${dir}/Dockerfile .
+          docker build -t ${dir}:latest -f ${dir}/Dockerfile . --no-cache=true
           docker tag ${dir}:latest ${ecr_repository_uri}:${image_tag}
           docker push ${ecr_repository_uri}:${image_tag}
         done
