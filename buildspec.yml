@@ -4,10 +4,6 @@ env:
     # ビルド環境側 環境変数
     SWITCH_ROLE: FALSE
 phases:
-  install:
-    runtime-versions:
-      # pythonのバージョン指定
-      python: 3.9
   pre_build:
     commands:
       - echo 'CodeBuildプロジェクト側 環境変数'
@@ -30,27 +26,31 @@ phases:
         else
           echo 'シングルアカウントでデプロイ実行'
         fi
-      - |
       - echo 'SWITCH_ROLE:'${SWITCH_ROLE}
   build:
     commands:
-      - dirs=`find * -maxdepth 0 -type d -not -path '_local-dev-files'`
-      - echo 'zip化してs3へコピー'
+      # 直下にDockerfileがあるディレクトリを取得
+      - dirs=`find * -maxdepth 1 -type f -path "*/Dockerfile" -not -path "_local-dev-files*" | sed -e "s/\/Dockerfile$//"`
+      - echo ${dirs}
+      # コミットIDをイメージのタグに設定
+      - image_tag=${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}
+      - echo ${image_tag}
+      - aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com
       - |
         for dir in $dirs;
         do
           echo $dir
-          cd ${dir}/contents
-          zip -r ${dir}.zip ./
-          aws s3 cp ${dir}.zip s3://${global_name}-s3-codebuild-lambda-2/lambda/
-          cd ../../
+          ecr_repository_uri=${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com/${global_name}-ecr-${dir}
+          docker build -t ${dir}:latest -f ${dir}/Dockerfile .
+          docker tag ${dir}:latest ${ecr_repository_uri}:${image_tag}
+          docker push ${ecr_repository_uri}:${image_tag}
         done
-      - |
-      - echo 'lambdaを更新(ソースコードのデプロイ)'
+      - echo 'lambdaを更新(イメージのデプロイ)'
       - |
         for dir in $dirs;
         do
           echo $dir
-          aws lambda update-function-code --function-name ${global_name}-lambda-${dir} --s3-bucket ${global_name}-s3-codebuild-lambda-2 --s3-key lambda/${dir}.zip
+          aws lambda update-function-code \
+            --function-name ${global_name}-lambda-${dir} \
+            --image-uri ${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com/${global_name}-ecr-${dir}:${image_tag}
         done
-      - |
