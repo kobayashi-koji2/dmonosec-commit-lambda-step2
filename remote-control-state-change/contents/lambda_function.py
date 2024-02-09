@@ -8,7 +8,6 @@ from aws_xray_sdk.core import patch_all
 import boto3
 
 import auth
-import ddb
 import db
 import ssm
 
@@ -33,7 +32,6 @@ def lambda_handler(event, context, user_info):
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
-            cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -78,7 +76,9 @@ def lambda_handler(event, context, user_info):
             return {
                 "statusCode": 400,
                 "headers": response_headers,
-                "body": json.dumps({"message": "端末の操作権限がありません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "端末の操作権限がありません。"}, ensure_ascii=False
+                ),
             }
 
         # デバイス操作権限チェック（管理者, 副管理者でない場合）
@@ -101,25 +101,24 @@ def lambda_handler(event, context, user_info):
         # 状態変化通知確認
         recv_datetime = remote_control["recv_datetime"]
         limit_datetime = recv_datetime + 20000  # 20秒
-        control_result = "1"
 
         logger.info(int(time.time() * 1000))
         while int(time.time() * 1000) <= limit_datetime:
-            cnt_hist_list = ddb.get_cnt_hist_list_by_sim_id(
-                remote_control["iccid"],
-                cnt_hist_table,
-                recv_datetime,
-                limit_datetime,
-            )
-            logger.info(f"cnt_hist_list: {cnt_hist_list}")
-            for cnt_hist in cnt_hist_list:
-                if remote_control["link_di_no"] == cnt_hist["di_trigger"]:
-                    control_result = "0"
-                    break
-
-            if control_result == "0":
-                break
-
+            remote_control = db.get_remote_control(device_req_no, remote_control_table)
+            if remote_control.get("link_di_result") is not None:
+                control_result = "0" if remote_control["link_di_result"] == "0" else "1"
+                return {
+                    "statusCode": 200,
+                    "headers": response_headers,
+                    "body": json.dumps(
+                        {
+                            "message": "",
+                            "device_req_no": device_req_no,
+                            "control_result": control_result,
+                        },
+                        ensure_ascii=False,
+                    ),
+                }
             time.sleep(1)
 
         return {
@@ -129,7 +128,7 @@ def lambda_handler(event, context, user_info):
                 {
                     "message": "",
                     "device_req_no": device_req_no,
-                    "control_result": control_result,
+                    "control_result": "1",
                 },
                 ensure_ascii=False,
             ),
@@ -140,5 +139,7 @@ def lambda_handler(event, context, user_info):
         return {
             "statusCode": 500,
             "headers": response_headers,
-            "body": json.dumps({"message": "予期しないエラーが発生しました。"}, ensure_ascii=False),
+            "body": json.dumps(
+                {"message": "予期しないエラーが発生しました。"}, ensure_ascii=False
+            ),
         }
