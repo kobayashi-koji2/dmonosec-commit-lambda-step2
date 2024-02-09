@@ -8,7 +8,6 @@ from aws_xray_sdk.core import patch_all
 import boto3
 
 import auth
-import ddb
 import db
 import ssm
 
