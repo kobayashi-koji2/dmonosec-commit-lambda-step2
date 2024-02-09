@@ -33,7 +33,6 @@ def lambda_handler(event, context, user_info):
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
-            cnt_hist_table = dynamodb.Table(ssm.table_names["CNT_HIST_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
