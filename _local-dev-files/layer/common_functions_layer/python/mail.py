@@ -14,7 +14,7 @@ def send_email(to_address_list, subject, body):
     client = boto3.client("ses", region_name=region_name, endpoint_url=endpoint_url)
 
     for to_address in to_address_list:
-        response = client.send_email(
+        client.send_email(
             Source=from_address,
             Destination={"ToAddresses": [to_address]},
             Message={
@@ -28,5 +28,3 @@ def send_email(to_address_list, subject, body):
                 },
             },
         )
-
-    return response
