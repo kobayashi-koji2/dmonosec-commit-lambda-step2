@@ -212,10 +212,11 @@ def commandParser(
         logger.debug(f"接点出力制御応答テーブル dbItem={recv_data}")
         ddb.update_control_res(recv_data, remote_control_table)
 
-    if hist_list and not stray_flag:
-        # 履歴一覧テーブル
-        logger.debug(f"履歴一覧 dbItem={hist_list}")
-        ddb.put_cnt_hist_list(hist_list, hist_list_table)
+    if not stray_flag:
+        if hist_list:
+            # 履歴一覧テーブル
+            logger.debug(f"履歴一覧 dbItem={hist_list}")
+            ddb.put_cnt_hist_list(hist_list, hist_list_table)
 
         # 現状態テーブル
         if hist_flg:
