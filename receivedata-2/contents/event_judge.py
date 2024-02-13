@@ -355,9 +355,6 @@ def eventJudge(
         event_info = {}
         event_info["event_type"] = "do_change"
         event_info["event_datetime"] = recv_data.get("event_datetime")
-        remote_control_info = ddb.get_remote_control_info_by_device_id(
-            device_info.get("device_id"), recv_data.get("recv_datetime"), remote_control_table
-        )
         do_list = list(reversed(list(recv_data.get("do_state", []))))
         do_trigger = recv_data.get("do_trigger")
         for i in range(2):
@@ -544,14 +541,13 @@ def eventJudge(
     # 遠隔制御（状態変化通知）
     if recv_data.get("message_type") in ["0001"]:
         event_info = {}
-        remote_control_info = ddb.get_remote_control_info_by_device_id(
-            device_info.get("device_id"), recv_data.get("recv_datetime"), remote_control_table
-        )
-        logger.debug(f"remote_control_info={remote_control_info}")
-        if remote_control_info is not None and "link_di_no" in remote_control_info:
-            di_trigger = recv_data.get("di_trigger")
-            list_di_no = int(remote_control_info.get("link_di_no"))
-            if di_trigger != 0 and di_trigger == list_di_no:
+        di_trigger = recv_data.get("di_trigger")
+        if di_trigger != 0:
+            remote_control_info = ddb.get_remote_control_info_by_device_id(
+                device_info.get("device_id"), recv_data.get("recv_datetime"), remote_control_table, di_trigger
+            )
+            logger.debug(f"remote_control_info={remote_control_info}")
+            if remote_control_info is not None:
                 event_info["event_datetime"] = remote_control_info.get("req_datetime")
                 event_info["do_no"] = remote_control_info.get("do_no")
                 if remote_control_info.get("control_trigger") == "manual_control":

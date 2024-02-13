@@ -46,14 +46,19 @@ def get_remote_control_info(device_req_no, remote_control_table):
 
 
 # 接点出力制御応答デバイスIDキー取得
-def get_remote_control_info_by_device_id(device_id, recv_datetime, remote_control_table):
+def get_remote_control_info_by_device_id(device_id, recv_datetime, remote_control_table, di_trigger):
     start_recv_datetime = recv_datetime - 20000
     remote_control_info = remote_control_table.query(
         IndexName="device_id_index",
         KeyConditionExpression=Key("device_id").eq(device_id)
         & Key("recv_datetime").between(start_recv_datetime, recv_datetime),
+        ScanIndexForward=False,
     ).get("Items")
-    return remote_control_info[0] if remote_control_info else None
+    if remote_control_info:
+        for item in remote_control_info:
+            if item["link_di_no"] == di_trigger and "link_di_result" not in item:
+                return item
+    return None
 
 
 # 履歴データ挿入
