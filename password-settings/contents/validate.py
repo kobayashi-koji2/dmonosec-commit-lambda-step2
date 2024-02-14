@@ -20,22 +20,22 @@ def validate(event):
     body = json.loads(event.get("body", {}))
     if not body:
         return {"message": "リクエストボディが不正です。"}
-    ### 「password」の必須チェック
+    ### 「現在のパスワード」の必須チェック
     if "password" not in body:
-        return {"message": "「password」が存在しません。"}
-    ### 「password」の型チェック
+        return {"message": "「現在のパスワード」が存在しません。"}
+    ### 「現在のパスワード」の型チェック
     if not isinstance(body.get("password"), str):
-        return {"message": "「password」のデータ型が不正です。"}
+        return {"message": "「現在のパスワード」のデータ型が不正です。"}
 
-    ### 「new_password」の必須チェック
+    ### 「新しいパスワード」の必須チェック
     if "new_password" not in body:
-        return {"message": "「new_password」が存在しません。"}
-    ### 「new_password」の型チェック
+        return {"message": "「新しいパスワード」が存在しません。"}
+    ### 「新しいパスワード」の型チェック
     if not isinstance(body.get("new_password"), str):
-        return {"message": "「new_password」のデータ型が不正です。"}
-    ### 「new_password」の形式チェック
+        return {"message": "「新しいパスワード」のデータ型が不正です。"}
+    ### 「新しいパスワード」の形式チェック
     if not re.search(password_policy, body.get("new_password").strip()):
-        return {"message": "「new_password」がパスワードポリシー違反です。"}
+        return {"message": "「新しいパスワード」がパスワードポリシー違反です。"}
 
     ### 「access_token」の必須チェック
     if "access_token" not in body:
