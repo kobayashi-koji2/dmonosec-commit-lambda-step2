@@ -71,7 +71,7 @@ def lambda_handler(event, context, user_info, request_body):
             }
         logger.debug(f"pre_device_info: {pre_device_info}")
 
-        device_info = db.get_device_info(device_id, device_table)
+        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         if device_info is None:
             res_body = {"message": "保守交換対象のデバイス情報が存在しません。"}
             return {
@@ -98,7 +98,9 @@ def lambda_handler(event, context, user_info, request_body):
                     "dev_user_reg_datetime": int(time.time() * 1000),
                     "service": "monosc",
                 },
-                "config": device_info["device_data"]["config"],  # デバイスの「設定情報」は元々の値を引継ぐ
+                "config": device_info["device_data"][
+                    "config"
+                ],  # デバイスの「設定情報」は元々の値を引継ぐ
             },
         }
         put_item_fmt = convert.dict_dynamo_format(put_item)

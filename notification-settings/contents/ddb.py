@@ -12,7 +12,7 @@ def update_device_notification_settings(notificaton_settings_list, device_table)
     transact_items = []
 
     for device_id, notificaton_settings in notificaton_settings_list.items():
-        device = db.get_device_info(device_id, device_table)
+        device = db.get_device_info_other_than_unavailable(device_id, device_table)
         notificaton_settings_fmt = convert.to_dynamo_format(notificaton_settings)
         update_device = {
             "Update": {
