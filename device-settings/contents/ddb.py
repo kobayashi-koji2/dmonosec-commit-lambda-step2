@@ -9,9 +9,12 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 
 
-# デバイス情報取得(デバイスID+IMEI)
-def get_device_info_by_id_imei(pk, sk, table):
-    response = table.get_item(Key={"device_id": pk, "imei": sk})
+# デバイス情報取得(契約状態:使用不可以外)
+def get_device_info(pk, table):
+    response = table.query(
+        KeyConditionExpression=Key("device_id").eq(pk),
+        FilterExpression=Attr("contract_state").ne(2),
+    )
     return response
 
 
@@ -20,7 +23,8 @@ def update_device_settings(device_id, imei, device_settings, table):
     map_attribute_name = "device_data"
     sub_attribute_name1 = "config"
     sub_attribute_name2 = "terminal_settings"
-    device_name = device_settings.get("device_name", {})
+    device_name = device_settings.get("device_name")
+    device_healthy_period = device_settings.get("device_healthy_period")
     di_new_val = device_settings.get("di_list", {})
     do_new_val = device_settings.get("do_list", {})
     ai_new_val = device_settings.get("ai_list", {})
@@ -53,8 +57,9 @@ def update_device_settings(device_id, imei, device_settings, table):
         if ai_no is not None:
             ai["ai_no"] = Decimal(ai_no)
 
-    di_key, do_key, ai_key, device_name_key = "di_list", "do_list", "ai_list", "device_name"
+    di_key, do_key, ai_key, device_name_key, device_healthy_period_key = "di_list", "do_list", "ai_list", "device_name", "device_healthy_period"
     update_expression = "SET #map.#sub1.#device_name_key = :device_name,\
+                        #map.#sub1.#device_healthy_period_key = :device_healthy_period,\
                         #map.#sub1.#sub2.#di_key = :di_new_val,\
                         #map.#sub1.#sub2.#do_key = :do_new_val,\
                         #map.#sub1.#sub2.#ai_key = :ai_new_val"
@@ -63,6 +68,7 @@ def update_device_settings(device_id, imei, device_settings, table):
         ":do_new_val": do_new_val,
         ":ai_new_val": ai_new_val,
         ":device_name": device_name,
+        ":device_healthy_period": device_healthy_period,
     }
     expression_attribute_name = {
         "#map": map_attribute_name,
@@ -72,6 +78,7 @@ def update_device_settings(device_id, imei, device_settings, table):
         "#do_key": do_key,
         "#ai_key": ai_key,
         "#device_name_key": device_name_key,
+        "#device_healthy_period_key": device_healthy_period_key,
     }
     table.update_item(
         Key={"device_id": device_id, "imei": imei},

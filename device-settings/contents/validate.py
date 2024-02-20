@@ -18,7 +18,7 @@ def validate(event, user_info, tables):
     body = event.get("body", {})
     if not headers or not pathParam or not body:
         return {"message": "リクエストパラメータが不正です。"}
-    if "Authorization" not in headers or "device_id" not in pathParam or "device_imei" not in body:
+    if "Authorization" not in headers or "device_id" not in pathParam:
         return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
@@ -34,27 +34,26 @@ def validate(event, user_info, tables):
     ##################
     # 2 デバイス操作権限チェック
     ##################
-    device_info = ddb.get_device_info_by_id_imei(
-        device_id, body["device_imei"], tables["device_table"]
-    )
+    device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
     logger.info(f"device_id: {device_id}")
-    logger.info(f"device_imei: {body['device_imei']}")
     logger.info(f"device_info: {device_info}")
-    if "Item" not in device_info:
+    if len(device_info) == 0:
         return {"message": "デバイス情報が存在しません。"}
+    elif len(device_info) >= 2:
+        return {"message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"}
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
     # 端子設定チェック
-    terminal = terminal_check(body, device_id, device_info["Item"]["device_type"], tables)
+    terminal = terminal_check(body, device_id, device_info[0]["device_type"], tables)
     if not terminal:
         return {"message": "デバイス種別と端子設定が一致しません。"}
 
     input = input_check(body)
     if not input:
         return {"message": "入力パラメータが不正です。"}
-    return {"device_id": device_id, "body": body}
+    return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
 
 
 # 操作権限チェック

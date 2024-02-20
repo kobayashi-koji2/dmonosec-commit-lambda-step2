@@ -1,12 +1,11 @@
 import json
 import boto3
 import validate
+import generate_detail
 import os
-import re
 import ddb
 from botocore.exceptions import ClientError
 import traceback
-from decimal import Decimal
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 
@@ -37,6 +36,7 @@ def lambda_handler(event, context, user_info):
                 "user_table": dynamodb.Table(ssm.table_names["USER_TABLE"]),
                 "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
                 "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
+                "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
             }
@@ -48,7 +48,7 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        # パラメータチェック
+        # パラメータチェックおよびimei取得
         validate_result = validate.validate(event, user_info, tables)
         if validate_result.get("message"):
             return {
@@ -59,7 +59,7 @@ def lambda_handler(event, context, user_info):
         # デバイス設定更新
         body = validate_result["body"]
         device_id = validate_result["device_id"]
-        imei = body["device_imei"]
+        imei = validate_result["imei"]
         convert_param = convert.float_to_decimal(body)
         logger.info(f"デバイスID:{device_id}")
         logger.info(f"IMEI:{imei}")
@@ -75,47 +75,33 @@ def lambda_handler(event, context, user_info):
                     res_body, ensure_ascii=False, default=convert.decimal_default_proc
                 ),
             }
-        else:
-            # デバイス設定取得
-            device_info = ddb.get_device_info_by_id_imei(device_id, imei, tables["device_table"])[
-                "Item"
-            ]
-            device_info_param = device_info.get("device_data", {}).get("param", {})
-            device_info_config = device_info.get("device_data", {}).get("config", {})
 
+        # デバイス情報取得
+        try:
+            # デバイス設定取得
+            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+            # デバイス現状態取得
+            device_state = db.get_device_state(device_id, tables["device_state_table"])
             # グループ情報取得
             group_id_list = db.get_device_relation_group_id_list(
                 device_id, tables["device_relation_table"]
             )
-            group_list = []
-            for gruop_id in group_id_list:
-                group_info = db.get_group_info(gruop_id, tables["group_table"])
+            group_info_list = []
+            for group_id in group_id_list:
+                group_info = db.get_group_info(group_id, tables["group_table"])
                 if group_info:
-                    group_list.append(
-                        {
-                            "group_id": group_info["group_id"],
-                            "group_name": group_info["group_data"]["config"]["group_name"],
-                        }
-                    )
+                    group_info_list.append(group_info)
+            # デバイス詳細情報生成
+            res_body = generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
 
-        res_body = num_to_str(
-            {
-                "message": "",
-                "device_id": device_info["device_id"],
-                "device_name": device_info_config.get("device_name", ""),
-                "device_code": device_info_param.get("device_code", ""),
-                "device_iccid": device_info_param.get("iccid", ""),
-                "device_imei": device_info["imei"],
-                "device_type": device_info["device_type"],
-                "group_list": group_list,
-                "di_list": device_info_config.get("terminal_settings", {}).get("di_list", {}),
-                "do_list": device_info_config.get("terminal_settings", {}).get("do_list", {}),
-                "do_timer_list": device_info_config.get("terminal_settings", {}).get(
-                    "do_timer_list", {}
-                ),
-                "ai_list": device_info_config.get("terminal_settings", {}).get("ai_list", {}),
+        except ClientError as e:
+            logger.info(e)
+            body = {"message": "デバイス詳細の取得に失敗しました。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(body, ensure_ascii=False),
             }
-        )
         logger.info(f"レスポンス:{res_body}")
         return {
             "statusCode": 200,
@@ -131,14 +117,3 @@ def lambda_handler(event, context, user_info):
             "headers": res_headers,
             "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
         }
-
-
-def num_to_str(obj):
-    if isinstance(obj, dict):
-        return {key: num_to_str(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [num_to_str(item) for item in obj]
-    elif isinstance(obj, (int, float, Decimal)):
-        return str(obj)
-    else:
-        return obj
