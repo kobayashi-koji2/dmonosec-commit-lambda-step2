@@ -37,6 +37,7 @@ def get_device_detail(device_info, device_state, group_info_list):
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,
         "battery_near_status": device_state.get("battery_near_state", 0),
+        "device_healthy_period": device_info["device_data"]["config"].get("device_healthy_period", 0),
         "signal_status": device_state.get("signal_state", 0),
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", "")
@@ -50,16 +51,22 @@ def terminal_info_fmt(terminal_settings, device_state):
     di_list, do_list, terminal_info = [], [], []
     for item in terminal_settings.get("di_list", {}):
         di_no = item["di_no"]
-        key = f"di{di_no}_state"
+        di_state_key = f"di{di_no}_state"
+        di_healthy_state_key = f"di{di_no}_healthy_state"
+        di_last_change_datetime_key = f"di{di_no}_last_change_datetime"
         di_list.append(
             {
                 "di_no": di_no,
                 "di_name": item.get("di_name", ""),
-                "di_state": device_state.get(key, ""),
+                "di_state": device_state.get(di_state_key, ""),
                 "di_on_name": item.get("di_on_name", ""),
                 "di_on_icon": item.get("di_on_icon", ""),
                 "di_off_name": item.get("di_off_name", ""),
                 "di_off_icon": item.get("di_off_icon", ""),
+                "di_healthy_type": item.get("di_healthy_type", ""),
+                "di_healthy_period": item.get("di_healthy_period", 0),
+                "di_healthy_state": device_state.get(di_healthy_state_key, 0),
+                "di_last_change_datetime": device_state.get(di_last_change_datetime_key, 0)
             }
         )
 
@@ -72,6 +79,7 @@ def terminal_info_fmt(terminal_settings, device_state):
                 {
                     "do_onoff_control": timer_item.get("do_onoff_control", ""),
                     "do_time": timer_item.get("do_time", ""),
+                    "do_weekday": timer_item.get("do_weekday", "")
                 }
             )
         do_list.append(

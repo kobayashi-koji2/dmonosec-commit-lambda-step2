@@ -4,9 +4,7 @@ import validate
 import generate_detail
 import ddb
 import os
-import re
 from botocore.exceptions import ClientError
-from decimal import Decimal
 import traceback
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
@@ -99,9 +97,8 @@ def lambda_handler(event, context, user_info):
                 if group_info:
                     group_info_list.append(group_info)
             # 4.4 デバイス詳細情報生成
-            res_body = num_to_str(
-                generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
-            )
+            res_body = generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
+
         except ClientError as e:
             logger.info(e)
             body = {"message": "デバイス詳細の取得に失敗しました。"}
@@ -125,14 +122,3 @@ def lambda_handler(event, context, user_info):
             "headers": res_headers,
             "body": json.dumps(body, ensure_ascii=False),
         }
-
-
-def num_to_str(obj):
-    if isinstance(obj, dict):
-        return {key: num_to_str(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [num_to_str(item) for item in obj]
-    elif isinstance(obj, (int, float, Decimal)):
-        return str(obj)
-    else:
-        return obj
