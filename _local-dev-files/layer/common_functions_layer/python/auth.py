@@ -43,6 +43,29 @@ def verify_login_user(verify_password_exp=True):
     return _verify_login_user
 
 
+def verify_login_user_list(verify_password_exp=True):
+    def _verify_login_user_list(func):
+        def wrapper(event, *args, **kwargs):
+            try:
+                login_user_list = _get_login_user_list(event, verify_password_exp)
+            except AuthError as e:
+                logger.warning("ユーザー検証失敗", exc_info=True)
+                return {
+                    "statusCode": e.code,
+                    "headers": {
+                        "Content-Type": "application/json",
+                        "Access-Control-Allow-Origin": "*",
+                    },
+                    "body": json.dumps({"message": e.message}, ensure_ascii=False),
+                }
+            result = func(event, *args, login_user_list, **kwargs)
+            return result
+
+        return wrapper
+
+    return _verify_login_user_list
+
+
 def _get_login_user(event, verify_password_exp=True):
     try:
         id_token = event["headers"]["Authorization"]
@@ -88,3 +111,45 @@ def _get_login_user(event, verify_password_exp=True):
         raise AuthError(401, "パスワードの有効期限が切れています。")
 
     return login_user
+
+
+def _get_login_user_list(event, verify_password_exp=True):
+    try:
+        id_token = event["headers"]["Authorization"]
+        claims = jwt.get_unverified_claims(id_token)
+
+        auth_id = claims["custom:auth_id"]
+
+        # 認証日時
+        auth_time = claims["auth_time"]
+        if not isinstance(auth_time, int):
+            auth_time = int(auth_time)
+
+        # パスワード有効期限日時
+        password_exp = claims["password_exp"]
+        if not isinstance(password_exp, int):
+            password_exp = int(password_exp)
+
+    except (JWTError, KeyError, ValueError, TypeError) as e:
+        raise AuthError(401, "認証情報が不正です。") from e
+
+    account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
+    account = db.get_account_info(auth_id, account_table)
+    if not account:
+        raise AuthError(401, "認証情報が不正です。")
+
+    user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+    res = user_table.query(
+        IndexName="account_id_index",
+        KeyConditionExpression=Key("account_id").eq(account["account_id"]),
+    ).get("Items", [])
+    user_list = [
+        item
+        for item in res
+        if item.get("user_data", {}).get("config", {}).get("del_datetime") is None
+    ]
+
+    if verify_password_exp and auth_time > password_exp:
+        raise AuthError(401, "パスワードの有効期限が切れています。")
+
+    return user_list
