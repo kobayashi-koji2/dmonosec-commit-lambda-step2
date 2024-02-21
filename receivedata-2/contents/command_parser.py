@@ -1,4 +1,7 @@
+import os
 import ddb
+import json
+import boto3
 import logging
 import uuid
 from event_judge import eventJudge
@@ -6,6 +9,8 @@ from mail_notice import mailNotice
 from aws_lambda_powertools import Logger
 
 logger = Logger()
+
+DEVICE_HEALTHY_CHECK_LAMBDA_NAME = os.environ["DEVICE_HEALTHY_CHECK_LAMBDA_NAME"]
 
 
 def getByteArray(Payload, index, len):
@@ -222,6 +227,18 @@ def commandParser(
         if hist_flg:
             logger.debug(f"現状態テーブル dbItem={current_state_info}")
             ddb.update_current_state(current_state_info, state_table)
+
+            # デバイスヘルシー判定
+            if current_state_info.get("device_healthy_state") == 1:
+                # パラメータ設定
+                input_event = {"event_trigger": "lambda-receivedata-2", "device_id": device_id, "event_datetime": nEventTime}
+                Payload = json.dumps(input_event)
+
+                # 呼び出し
+                boto3.client("lambda").invoke(
+                    FunctionName=DEVICE_HEALTHY_CHECK_LAMBDA_NAME, InvocationType="Event", Payload=Payload
+                )
+                logger.debug("デバイスヘルシー判定エラー")
 
     logger.debug("commandParser終了")
     return bytes([1])

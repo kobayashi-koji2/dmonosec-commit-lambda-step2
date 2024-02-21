@@ -1,10 +1,10 @@
 version: '3'
 services:
   app:
-    container_name: receivedata-2
+    container_name: device-healthy-check-trigger
     build:
       context: ../
-      dockerfile: ./receivedata-2/Dockerfile
+      dockerfile: ./device-healthy-check-trigger/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
@@ -13,27 +13,7 @@ services:
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
-      - INITIAL_LAMBDA_NAME=lmonosc-lambda-initialreceive-2
       - DEVICE_HEALTHY_CHECK_LAMBDA_NAME=lmonosc-lambda-device-healthy-check
-      - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
-      - RECV_FUTURE_TIME=86400000
-      - RECV_PAST_TIME=31536000000
-      - RSSI_HIGH_MIN=-72
-      - RSSI_HIGH_MAX=-51
-      - RSSI_MID_MIN=-84
-      - RSSI_MID_MAX=-73
-      - RSSI_LOW_MIN=-102
-      - RSSI_LOW_MAX=-85
-      - SINR_HIGH_MIN=20
-      - SINR_HIGH_MAX=30
-      - SINR_MID_MIN=10
-      - SINR_MID_MAX=19
-      - SINR_LOW_MIN=0
-      - SINR_LOW_MAX=9
-      - SIGNAL_HIGH=0
-      - SIGNAL_MID=1
-      - SIGNAL_LOW=2
-      - NO_SIGNAL=3
     volumes:
       - ./contents:/var/task
     ports:
