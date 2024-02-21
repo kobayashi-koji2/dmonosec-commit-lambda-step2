@@ -25,6 +25,8 @@ def update_device_settings(device_id, imei, device_settings, table):
     sub_attribute_name2 = "terminal_settings"
     device_name = device_settings.get("device_name")
     device_healthy_period = device_settings.get("device_healthy_period")
+    if device_healthy_period is not None:
+        device_healthy_period = Decimal(device_healthy_period)
     di_new_val = device_settings.get("di_list", {})
     do_new_val = device_settings.get("do_list", {})
     ai_new_val = device_settings.get("ai_list", {})
@@ -32,6 +34,10 @@ def update_device_settings(device_id, imei, device_settings, table):
         di_no = di.get("di_no")
         if di is not None:
             di["di_no"] = Decimal(di_no)
+
+        di_healthy_period = di.get("di_healthy_period")
+        if di_healthy_period is not None:
+            di["di_healthy_period"] = Decimal(di_healthy_period)
 
     for do in do_new_val:
         do_no = do.get("do_no")
