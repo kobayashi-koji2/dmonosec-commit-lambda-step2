@@ -1,12 +1,10 @@
 import json
-import boto3
 import ddb
 import re
 from aws_lambda_powertools import Logger
 
 # layer
 import db
-import convert
 
 logger = Logger()
 
@@ -53,6 +51,13 @@ def validate(event, user_info, tables):
     input = input_check(body)
     if not input:
         return {"message": "入力パラメータが不正です。"}
+
+    # 接点入力_未変化検出_単位と接点入力_未変化検出_期間の整合性をチェック
+    # ※接点入力_未変化検出_単位が空文字列の場合、接点入力_未変化検出_期間を 0 でリセットする
+    is_di_healthy_data_ok = di_healthy_data_check_and_reset(body)
+    if not is_di_healthy_data_ok:
+        return {"message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"}
+
     return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
 
 
@@ -115,6 +120,34 @@ def terminal_check(body, device_id, device_type, tables):
     return False
 
 
+# 接点入力_未変化検出_単位と接点入力_未変化検出_期間の整合性をチェック
+# ※接点入力_未変化検出_単位が空文字列の場合、接点入力_未変化検出_期間を 0 でリセットする
+def di_healthy_data_check_and_reset(body):
+    for item in body.get("di_list", []):
+        if "di_healthy_type" in item and "di_healthy_period" in item:
+            if item["di_healthy_type"] == "":
+                item["di_healthy_period"] = 0
+            elif item["di_healthy_type"] == "day" and 1 <= float(item["di_healthy_period"]) <= 100:
+                # 接点入力_未変化検出_単位が "day" の場合、接点入力_未変化検出_期間は 1-100 の範囲のみ許可
+                continue
+            elif item["di_healthy_type"] == "hour" and 1 <= float(item["di_healthy_period"]) <= 23:
+                # 接点入力_未変化検出_単位が "hour" の場合、接点入力_未変化検出_期間は 1-23 の範囲のみ許可
+                continue
+            else:
+                return False
+        elif "di_healthy_type" in item:
+            if item["di_healthy_type"] == "":
+                item["di_healthy_period"] = 0
+            else:
+                return False
+        elif "di_healthy_period" in item:
+            return False
+        else:
+            # 接点入力_未変化検出_単位と接点入力_未変化検出_期間がいずれも指定されていない場合、スキップ
+            continue
+    return True
+
+
 # 入力チェック
 # 画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
@@ -138,7 +171,11 @@ def input_check(param):
     }
 
     # 桁数の制限
-    int_float_value_limits = {"do_specified_time": {0.4, 6553.5}, "do_onoff_control": {0, 1}}
+    int_float_value_limits = {
+        "di_healthy_period": {0, 100},
+        "do_specified_time": {0.4, 6553.5},
+        "do_onoff_control": {0, 1}
+    }
 
     # アイコン(TBD) コード一覧参照
     icon_list = [
@@ -156,13 +193,22 @@ def input_check(param):
     str_format = {
         "di_on_icon": icon_list,
         "di_off_icon": icon_list,
+        "di_healthy_type": ["", "day", "hour"],
         "do_on_icon": icon_list,
         "do_off_icon": icon_list,
-        "do_control": ["","open", "close", "toggle"],
+        "do_control": ["", "open", "close", "toggle"],
+    }
+
+    # 特定の数値に一致
+    int_float_format = {
+        "device_healthy_period": [0, 3, 4, 5, 6, 7]
     }
 
     # 正規表現
-    regex = {"do_time": re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")}  # hh:mm形式 00:00から23:59
+    regex = {
+        "do_time": re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$"),  # hh:mm形式 00:00から23:59
+        "do_weekday": re.compile(r"^$|^([0-6],)*[0-6]$")  # 空文字もしくは 1,3,5 のような形式
+    }
 
     # dict型の全要素を探索して入力値をチェック
     def check_dict_value(param):
@@ -180,8 +226,16 @@ def input_check(param):
                         except ValueError:
                             logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
                             invalid_data_type_list.append(key)
+                    if key in int_float_format:
+                        try:
+                            if float(value) not in int_float_format[key]:
+                                logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
+                                invalid_format_list.append(key)
+                        except ValueError:
+                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            invalid_data_type_list.append(key)
                     # 文字数
-                    elif key in str_value_limits:
+                    if key in str_value_limits:
                         min_length, max_length = str_value_limits[key]
                         string_length = len(value)
                         if not min_length <= string_length <= max_length:
@@ -202,11 +256,15 @@ def input_check(param):
                         logger.info(f"Key:{key}  value:{value} - reason:データ型が不正です。")
                         invalid_data_type_list.append(key)
                     # 桁数
-                    elif key in int_float_value_limits:
+                    if key in int_float_value_limits:
                         min_value, max_value = int_float_value_limits[key]
                         if not float(min_value) <= float(value) <= float(max_value):
                             logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
                             out_range_list.append(key)
+                    # 数値フォーマット
+                    if key in int_float_format and value not in int_float_format[key]:
+                        logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
+                        invalid_format_list.append(key)
                 else:
                     check_dict_value(value)
         elif isinstance(param, list):
