@@ -55,6 +55,15 @@ def lambda_handler(event, context, user, body):
             cognito.verify_user_attribute(
                 AccessToken=body["access_token"], AttributeName="email", Code=body["auth_code"]
             )
+        except cognito.exceptions.ExpiredCodeException:
+            res_body = {
+                "message": "認証コードの有効期限が切れています。再度メールアドレスの変更をお試しください。"
+            }
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         except ClientError:
             logger.error("ユーザー属性(email)の検証に失敗", exc_info=True)
             return {

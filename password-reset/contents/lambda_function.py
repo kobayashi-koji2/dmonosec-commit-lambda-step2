@@ -59,12 +59,22 @@ def lambda_handler(event, context):
         body = val_result["request_body"]
 
         ### 2. Cognitoパスワード再設定
-        cognito.confirm_forgot_password(
-            ClientId=COGNITO_USER_POOL_CLIENT_ID,
-            Username=body["email_address"],
-            ConfirmationCode=body["auth_code"],
-            Password=body["new_password"],
-        )
+        try:
+            cognito.confirm_forgot_password(
+                ClientId=COGNITO_USER_POOL_CLIENT_ID,
+                Username=body["email_address"],
+                ConfirmationCode=body["auth_code"],
+                Password=body["new_password"],
+            )
+        except cognito.exceptions.ExpiredCodeException:
+            res_body = {
+                "message": "認証コードの有効期限が切れています。再度パスワード再設定をお試しください。"
+            }
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         ### 3. パスワード最終更新日時更新
         account_info = db.get_account_info_by_email_address(body["email_address"], account_table)
