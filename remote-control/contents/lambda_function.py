@@ -448,9 +448,8 @@ def __send_mail(
 
     event_detail = f"""\
         【画面制御による制御（不実施）】
-        他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
-        そのため、制御を行いませんでした。
-        ※{user_name}が操作を行いました。
+        他のユーザー操作、タイマーまたは連動設定により{do_name}を制御中だったため、制御を行いませんでした。
+        ※{user_name}が操作しました。
     """
     event_detail = textwrap.dedent(event_detail)
 
