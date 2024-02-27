@@ -6,6 +6,7 @@ import time
 import traceback
 import uuid
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import boto3
 from aws_lambda_powertools import Logger
@@ -423,7 +424,8 @@ def __send_mail(
     notification_hist_table,
 ):
     # メール送信内容の設定
-    send_datetime = datetime.now()
+    send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
+
     device_config = device_info.get("device_data", {}).get("config", {})
     device_name = device_config.get("device_name", device_info.get("imei"))
     group_name_list = [g["group_name"] for g in group_list]

@@ -6,6 +6,7 @@ import traceback
 import uuid
 import re
 import textwrap
+from zoneinfo import ZoneInfo
 
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
@@ -548,7 +549,8 @@ def __send_mail(
     notification_hist_table,
 ):
     # メール送信内容の設定
-    send_datetime = datetime.now()
+    send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
+
     device_config = device_info.get("device_data", {}).get("config", {})
     device_name = device_config.get("device_name", device_info.get("imei"))
     group_name_list = [g["group_name"] for g in group_list]
