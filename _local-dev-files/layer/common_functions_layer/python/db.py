@@ -216,11 +216,11 @@ def get_contract_info(contract_id, contract_table):
 
 
 # デバイス情報取得
-def get_device_info(device_id, device_table):
+def get_device_info(device_id, device_table, consistent_read=False):
     device_list = device_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").eq(1),
-        ConsistentRead=True,
+        ConsistentRead=consistent_read,
     ).get("Items", [])
     return device_list[0] if device_list else None
 

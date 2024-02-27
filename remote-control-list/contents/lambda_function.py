@@ -72,7 +72,7 @@ def lambda_handler(event, context, user_info):
         results = list()
         # デバイス情報取得
         for device_id in device_id_list:
-            device_info = db.get_device_info(device_id, device_table)
+            device_info = db.get_device_info(device_id, device_table, consistent_read=True)
             logger.info({"device_info": device_info})
 
             if device_info is not None:
