@@ -57,6 +57,6 @@ def validate(event, user, contract_table, device_relation_table, remote_controls
 def operation_auth_check(user):
     user_type = user["user_type"]
     logger.debug(f"権限:{user_type}")
-    if user_type == "admin" or user_type == "sub_admin":
-        return True
-    return False
+    if user_type == "referrer":
+        return False
+    return True

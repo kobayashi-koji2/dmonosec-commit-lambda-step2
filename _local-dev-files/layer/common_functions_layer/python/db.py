@@ -220,6 +220,7 @@ def get_device_info(device_id, device_table):
     device_list = device_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").eq(1),
+        ConsistentRead=True,
     ).get("Items", [])
     return device_list[0] if device_list else None
 
