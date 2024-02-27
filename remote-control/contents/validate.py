@@ -15,9 +15,7 @@ def validate(event, user_info, account_table):
     if not operation_auth:
         return {"message": "ユーザに操作権限がありません。"}
 
-    # 1月まではいったん、IDトークンに含まれるusernameとモノセコムユーザーIDは同じ認識で直接ユーザー管理を参照するよう実装
-    auth_id = user_info["user_id"]
-    account_info = db.get_account_info(auth_id, account_table)
+    account_info = db.get_account_info_by_account_id(user_info["account_id"], account_table)
     if account_info is None:
         return {"message": "アカウント情報が存在しません。"}
     logger.info(f"account_info: {account_info}")
