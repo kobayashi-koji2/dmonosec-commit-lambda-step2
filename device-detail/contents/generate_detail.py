@@ -101,7 +101,8 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
                     "trigger_device_id": automation_item["trigger_device_id"],
                     "trigger_event_type": automation_item["trigger_event_type"],
                     "trigger_terminal_no": automation_item["trigger_terminal_no"],
-                    "trigger_event_detail": automation_item["trigger_event_detail"],
+                    "trigger_event_detail_state": automation_item["trigger_event_detail_state"],
+                    "trigger_event_detail_flag": automation_item["trigger_event_detail_flag"],
                     "control_do_no": automation_item["control_do_no"],
                     "control_di_state": automation_item["control_di_state"],
                 }
