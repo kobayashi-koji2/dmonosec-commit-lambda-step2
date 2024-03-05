@@ -98,6 +98,7 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
         for automation_item in automation_info.get(do_no, []):
             do_automation_list.append(
                 {
+                    "automation_id": automation_item["automation_id"],
                     "trigger_device_id": automation_item["trigger_device_id"],
                     "trigger_event_type": automation_item["trigger_event_type"],
                     "trigger_terminal_no": automation_item["trigger_terminal_no"],
