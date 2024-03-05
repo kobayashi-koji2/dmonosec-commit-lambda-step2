@@ -14,6 +14,7 @@ variable hist_list_table_name {}
 variable notification_hist_table_name {} 
 variable pre_register_devices_table_name {} 
 variable cnt_hist_table_name {}
+variable control_status_name {}
 variable remote_control_name {}
 variable device_relation_name {}
 variable req_no_counter_table {}

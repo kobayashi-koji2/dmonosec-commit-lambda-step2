@@ -240,10 +240,10 @@ def lambda_handler(event, context):
             )
 
             # 接点衆力制御応答テーブルに制御結果（タイムアウト）を登録
-            ddb.update_remote_control_result(
+            ddb.update_remote_control_result_timeout(
                 remote_control.get("device_req_no"),
                 remote_control.get("req_datetime"),
-                "9999",
+                link_di_no,
                 remote_controls_table,
             )
 
@@ -296,10 +296,9 @@ def lambda_handler(event, context):
                 )
 
                 # 接点衆力制御応答テーブルに接点入力状態変化の結果（タイムアウト）を登録
-                ddb.update_link_di_result(
+                ddb.update_link_di_result_timeout(
                     remote_control.get("device_req_no"),
                     remote_control.get("req_datetime"),
-                    "9999",
                     remote_controls_table,
                 )
 

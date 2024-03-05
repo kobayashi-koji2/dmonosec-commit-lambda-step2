@@ -56,6 +56,7 @@ def lambda_handler(event, context, user_info):
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             req_no_counter_table = dynamodb.Table(ssm.table_names["REQ_NO_COUNTER_TABLE"])
+            control_status_table = dynamodb.Table(ssm.table_names["CONTROL_STATUS_TABLE"])
             remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
             hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
@@ -80,6 +81,8 @@ def lambda_handler(event, context, user_info):
             }
         user_name = val_result["account_info"]["user_data"]["config"]["user_name"]
         email_address = val_result["account_info"]["email_address"]
+        device_id = val_result["path_params"]["device_id"]
+        do_no = int(val_result["path_params"]["do_no"])
 
         ### 2. デバイス捜査権限チェック（共通）
         # デバイスID一覧取得
@@ -96,7 +99,6 @@ def lambda_handler(event, context, user_info):
         device_list = contract_info["contract_data"]["device_list"]
 
         # デバイス操作権限チェック
-        device_id = val_result["path_params"]["device_id"]
         if device_id not in device_list:
             res_body = {"message": "デバイスの操作権限がありません。"}
             return {
@@ -136,8 +138,25 @@ def lambda_handler(event, context, user_info):
         logger.info(f"device_info: {device_info}")
 
         ### 5. 制御中判定
-        # 最新制御情報取得
-        do_no = int(val_result["path_params"]["do_no"])
+        # 制御状況を追加（同時処理の排他制御）
+        do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+        do_info = [do for do in do_list if int(do["do_no"]) == do_no][0]
+        if ("do_di_return" in do_info) and do_info["do_di_return"]:
+            # 紐づけありの場合は、30秒後に制御状況を自動削除
+            delete_second = 30
+        else:
+            # 紐づけなしの場合は、10秒後に制御状況を自動削除
+            delete_second = 10
+        if not ddb.check_control_status(device_id, do_no, delete_second, control_status_table):
+            res_body = {"message": "他のユーザー操作、タイマーまたは連動により制御中です。"}
+            logger.info(res_body)
+            return {
+                "statusCode": 200,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
+
+        # 最新制御情報を確認
         remote_control_latest = ddb.get_remote_control_latest(
             device_info["device_id"], do_no, remote_controls_table
         )
@@ -298,6 +317,11 @@ def lambda_handler(event, context, user_info):
             Payload=json.dumps(payload, ensure_ascii=False),
         )
         logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
+
+        # 制御状況を削除
+        control_status_table.delete_item(
+            Key={"device_id": device_id, "do_no": do_no},
+        )
 
         ### 9. メッセージ応答
         res_body = {"message": "", "device_req_no": device_req_no}

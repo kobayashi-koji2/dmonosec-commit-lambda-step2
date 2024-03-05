@@ -120,20 +120,27 @@ def put_hist_list(
 
 
 # 接点出力制御結果更新
-def update_remote_control_result(
-    device_req_no, req_datetime, control_result, remote_controls_table
+def update_remote_control_result_timeout(
+    device_req_no, req_datetime, link_di_no, remote_controls_table
 ):
-    remote_controls_table.update_item(
-        Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
-        UpdateExpression="SET control_result = :new_value",
-        ExpressionAttributeValues={":new_value": control_result},
-    )
+    if link_di_no > 0:
+        remote_controls_table.update_item(
+            Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
+            UpdateExpression="SET control_result = :control_result, link_di_result = :link_di_result",
+            ExpressionAttributeValues={":control_result": "9999", ":link_di_result": "9999"},
+        )
+    else:
+        remote_controls_table.update_item(
+            Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
+            UpdateExpression="SET control_result = :control_result",
+            ExpressionAttributeValues={":control_result": "9999"},
+        )
 
 
 # 接点入力状態変化通知結果更新
-def update_link_di_result(device_req_no, req_datetime, link_di_result, remote_controls_table):
+def update_link_di_result_timeout(device_req_no, req_datetime, remote_controls_table):
     remote_controls_table.update_item(
         Key={"device_req_no": device_req_no, "req_datetime": req_datetime},
         UpdateExpression="SET link_di_result = :new_value",
-        ExpressionAttributeValues={":new_value": link_di_result},
+        ExpressionAttributeValues={":new_value": "9999"},
     )

@@ -540,6 +540,42 @@ resource "aws_dynamodb_table" "cnt_hist" {
 
 }
 
+#制御状況テーブル
+resource "aws_dynamodb_table" "control_status" {
+  name           = "${var.global_name}-ddb-t-monosec-control-status"
+  hash_key       = "device_id"
+  range_key      = "do_no"
+  stream_enabled = "false"
+  table_class    = "STANDARD"
+
+  attribute {
+    name = "device_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "do_no"
+    type = "N"
+  }
+
+  ttl {
+    attribute_name = "del_datetime"
+    enabled        = true
+  }
+
+  billing_mode = "PAY_PER_REQUEST"
+
+  point_in_time_recovery {
+    enabled = "true"
+  }
+
+  server_side_encryption {
+    enabled = true 
+  }
+
+  tags = var.tags
+}
+
 #接点出力制御応答テーブル
 resource "aws_dynamodb_table" "remote_controls" {
   name           = "${var.global_name}-ddb-t-monosec-remote-controls"
