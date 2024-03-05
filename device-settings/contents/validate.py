@@ -58,6 +58,11 @@ def validate(event, user_info, tables):
     if not is_di_healthy_data_ok:
         return {"message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"}
 
+    # 接点出力連動制御一覧の整合性をチェック
+    is_do_automation_list_ok = do_automation_list_check(body)
+    if not is_do_automation_list_ok:
+        return {"message": "接点出力連動制御一覧の値が不正です。"}
+
     return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
 
 
@@ -148,6 +153,37 @@ def di_healthy_data_check_and_reset(body):
     return True
 
 
+# 接点出力連動制御一覧の整合性をチェック
+def do_automation_list_check(body):
+    for do_list_item in body.get("do_list", []):
+        for do_automation_item in do_list_item.get("do_automation_list", []):
+            trigger_event_type = do_automation_item.get("trigger_event_type")
+            trigger_terminal_no = do_automation_item.get("trigger_terminal_no")
+            trigger_event_detail_state = do_automation_item.get("trigger_event_detail_state")
+            trigger_event_detail_flag = do_automation_item.get("trigger_event_detail_flag")
+
+            if (
+                trigger_event_type != "di_change_state"
+                and trigger_event_type != "di_change_healthy"
+                and trigger_terminal_no is not None
+            ):
+                # トリガーイベント項目に「接点入力(接点状態)」・「接点入力(変化検出状態)」のいずれも指定されておらず、かつトリガー接点端子番号が指定されている場合、エラー
+                logger.info(f"接点出力連動制御一覧の値が不正です {do_automation_item}")
+                return False
+
+            if trigger_event_type != "di_change_state" and trigger_event_detail_state is not None:
+                # トリガーイベント項目に「接点入力(接点状態)」が指定されておらず、かつトリガーイベント詳細(状態)が指定されている場合、エラー
+                logger.info(f"接点出力連動制御一覧の値が不正です {do_automation_item}")
+                return False
+
+            if trigger_event_type == "di_change_state" and trigger_event_detail_flag is not None:
+                # トリガーイベント項目に「接点入力(接点状態)」が指定されており、かつトリガーイベント詳細(フラグ)が指定されている場合、エラー
+                logger.info(f"接点出力連動制御一覧の値が不正です {do_automation_item}")
+                return False
+
+    return True
+
+
 # 入力チェック
 # 画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
@@ -197,11 +233,24 @@ def input_check(param):
         "do_on_icon": icon_list,
         "do_off_icon": icon_list,
         "do_control": ["", "open", "close", "toggle"],
+        "trigger_event_type": [
+            "di_change_state",
+            "di_change_healthy",
+            "device_unhealthy",
+            "battery_near",
+            "device_abnormality",
+            "parameter_abnormality",
+            "fw_update_abnormality",
+            "power_on"
+        ]
     }
 
     # 特定の数値に一致
     int_float_format = {
-        "device_healthy_period": [0, 3, 4, 5, 6, 7]
+        "device_healthy_period": [0, 3, 4, 5, 6, 7],
+        "trigger_event_detail_state": [0, 1],
+        "trigger_event_detail_flag": [0, 1],
+        "control_di_state": [0, 1, 9]
     }
 
     # 正規表現

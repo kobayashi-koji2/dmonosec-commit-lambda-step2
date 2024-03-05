@@ -1,9 +1,15 @@
+import uuid
 from decimal import Decimal
+from itertools import chain
 
 from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
+
+import convert
+import db
+import ssm
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb")
@@ -14,6 +20,15 @@ def get_device_info(pk, table):
     response = table.query(
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
+    )
+    return response
+
+
+# 連動制御情報取得
+def get_automation_info_list(control_device_id, table):
+    response = table.query(
+        IndexName="control_device_id_index",  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+        KeyConditionExpression=Key("control_device_id").eq(control_device_id)
     )
     return response
 
@@ -93,3 +108,123 @@ def update_device_settings(device_id, imei, device_settings, table):
         ExpressionAttributeNames=expression_attribute_name,
     )
     return
+
+
+# 連動制御情報更新
+def sync_automation_info_list(control_device_id, convert_param, table):
+    # DynamoDBから現在の項目を取得
+    current_automation_info_list = table.query(
+        IndexName="control_device_id_index",  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+        KeyConditionExpression=Key("control_device_id").eq(control_device_id)
+    ).get("Items", [])
+    automation_id_to_delete = {item["automation_id"] for item in current_automation_info_list}
+
+    # リクエストボディで受け取った項目を整形
+    automation_info_list = chain.from_iterable(
+        [
+            do_list_item["do_automation_list"] for do_list_item in convert_param.get("do_list", [])
+            if "do_automation_list" in do_list_item
+        ]
+    )
+    transact_items = []
+    for automation_info in automation_info_list:
+        trigger_terminal_no = automation_info.get("trigger_terminal_no")
+        if trigger_terminal_no is not None:
+            automation_info["trigger_terminal_no"] = Decimal(trigger_terminal_no)
+
+        trigger_event_detail_state = automation_info.get("trigger_event_detail_state")
+        if trigger_event_detail_state is not None:
+            automation_info["trigger_event_detail_state"] = Decimal(trigger_event_detail_state)
+
+        trigger_event_detail_flag = automation_info.get("trigger_event_detail_flag")
+        if trigger_event_detail_flag is not None:
+            automation_info["trigger_event_detail_flag"] = Decimal(trigger_event_detail_flag)
+
+        control_do_no = automation_info.get("control_do_no")
+        if control_do_no is not None:
+            automation_info["control_do_no"] = Decimal(control_do_no)
+
+        control_di_state = automation_info.get("control_di_state")
+        if control_di_state is not None:
+            automation_info["control_di_state"] = Decimal(control_di_state)
+
+        if automation_info.get("automation_id") == "":
+            # アイテムを作成
+            transact_items.append(_create_new_automation_info_format(automation_info, control_device_id))
+        else:
+            # アイテムを更新
+            transact_items.append(_update_existing_automation_info_format(automation_info, control_device_id))
+            automation_id_to_delete.discard(automation_info["automation_id"])
+
+    for automation_id in automation_id_to_delete:
+        # アイテムを削除
+        transact_items.append(_delete_automation_info_format(automation_id))
+
+    transact_result = db.execute_transact_write_item(transact_items)
+    return transact_result
+
+
+def _create_new_automation_info_format(automation_info, control_device_id):
+    item = convert.dict_dynamo_format({
+        "automation_id": str(uuid.uuid4()),
+        "trigger_device_id": automation_info.get("trigger_device_id"),
+        "trigger_event_type": automation_info.get("trigger_event_type"),
+        "trigger_terminal_no": automation_info.get("trigger_terminal_no"),
+        "trigger_event_detail_state": automation_info.get("trigger_event_detail_state"),
+        "trigger_event_detail_flag": automation_info.get("trigger_event_detail_flag"),
+        "control_device_id": control_device_id,
+        "control_do_no": automation_info.get("control_do_no"),
+        "control_di_state": automation_info.get("control_di_state"),
+    })
+    return {
+        "Put": {
+            "TableName": ssm.table_names["AUTOMATION_TABLE"],  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+            "Item": item,
+            "ConditionExpression": "attribute_not_exists(automation_id)"
+        }
+    }
+
+
+def _update_existing_automation_info_format(automation_info, control_device_id):
+    return {
+        "Update": {
+            "TableName": ssm.table_names["AUTOMATION_TABLE"],  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+            "Key": {
+                "automation_id": convert.to_dynamo_format(automation_info.get("automation_id"))
+            },
+            "UpdateExpression": "set trigger_device_id = :trigger_device_id, \
+                                trigger_event_type = :trigger_event_type, \
+                                trigger_terminal_no = :trigger_terminal_no, \
+                                trigger_event_detail_state = :trigger_event_detail_state, \
+                                trigger_event_detail_flag = :trigger_event_detail_flag, \
+                                control_device_id = :control_device_id, \
+                                control_do_no = :control_do_no, \
+                                control_di_state = :control_di_state",
+            "ExpressionAttributeValues": {
+                ":trigger_device_id": convert.to_dynamo_format(automation_info.get("trigger_device_id")),
+                ":trigger_event_type": convert.to_dynamo_format(automation_info.get("trigger_event_type")),
+                ":trigger_terminal_no": convert.to_dynamo_format(automation_info.get("trigger_terminal_no")),
+                ":trigger_event_detail_state": convert.to_dynamo_format(
+                    automation_info.get("trigger_event_detail_state")
+                ),
+                ":trigger_event_detail_flag": convert.to_dynamo_format(
+                    automation_info.get("trigger_event_detail_flag")
+                ),
+                ":control_device_id": convert.to_dynamo_format(control_device_id),
+                ":control_do_no": convert.to_dynamo_format(automation_info.get("control_do_no")),
+                ":control_di_state": convert.to_dynamo_format(automation_info.get("control_di_state")),
+            },
+            "ConditionExpression": "attribute_exists(automation_id)"
+        }
+    }
+
+
+def _delete_automation_info_format(automation_id):
+    return {
+        "Delete": {
+            "TableName": ssm.table_names["AUTOMATION_TABLE"],  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+            "Key": {
+                "automation_id": convert.to_dynamo_format(automation_id)
+            },
+        }
+    }
