@@ -98,6 +98,9 @@ def update_control_res(db_item, remote_control_table):
     )
     for cnt_state in res["Items"]:
         req_datetime = cnt_state["req_datetime"]
+        # 制御結果記録済みの場合は未更新
+        if "control_result" in cnt_state:
+            return
 
     logger.debug(f"req_datetime={req_datetime}")
     option = {

@@ -514,6 +514,9 @@ def eventJudge(
         if remote_control_info is None or "link_di_no" in remote_control_info and remote_control_info["link_di_no"] != 0:
             logger.debug("紐づけ接点有の為、履歴一覧未記録")
             return hist_list, current_state_info
+        if "control_result" in remote_control_info:
+            logger.debug("制御結果記録済みの為、履歴一覧未記録")
+            return hist_list, current_state_info
         logger.debug(f"remote_control_info={remote_control_info}")
         event_info["event_datetime"] = remote_control_info.get("req_datetime")
         event_info["do_no"] = remote_control_info.get("do_no")
