@@ -23,5 +23,6 @@ device_relation_name = "lmonosc-ddb-t-monosec-device-relation"
 req_no_counter_table = "lmonosc-ddb-t-monosec-req-no-counter-2"
 soracom_authkey = "lmonosc-ssm-soracom-authkey-2"
 soracom_secret = "lmonosc-ssm-soracom-secret-2"
+automation_table = "lmonosc-ddb-t-monosec-automations"
 
 num = "2"

@@ -19,5 +19,6 @@ variable device_relation_name {}
 variable req_no_counter_table {}
 variable soracom_authkey {}
 variable soracom_secret {}
+variable automation_table{}
 
 variable "num"{}

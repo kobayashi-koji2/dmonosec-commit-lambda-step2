@@ -647,3 +647,29 @@ resource "aws_dynamodb_table" "operator" {
   tags = var.tags
 }
 
+#連動制御管理テーブル
+resource "aws_dynamodb_table" "automations" {
+  name           = "${var.global_name}-ddb-t-monosec-automations"
+  hash_key       = "automation_id"
+  stream_enabled = "false"
+  table_class    = "STANDARD"
+
+  attribute {
+    name = "automation_id"
+    type = "N"
+  }
+  
+  billing_mode = "PAY_PER_REQUEST"
+
+  point_in_time_recovery {
+    enabled = "true"
+  }
+
+  server_side_encryption {
+    enabled = true 
+  }
+
+  tags = var.tags
+
+}
+
