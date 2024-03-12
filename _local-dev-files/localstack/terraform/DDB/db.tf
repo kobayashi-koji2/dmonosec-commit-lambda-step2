@@ -648,14 +648,14 @@ resource "aws_dynamodb_table" "operator" {
 }
 
 #連動制御管理テーブル
-resource "aws_dynamodb_table" "control_device_id_index" {
-  name           = "${var.global_name}-ddb-t-monosec-control_device_id_index"
+resource "aws_dynamodb_table" "automations" {
+  name           = "${var.global_name}-ddb-t-monosec-automations"
   hash_key       = "control_device_id"
   stream_enabled = "false"
   table_class    = "STANDARD"
 
   attribute {
-    name = "automation_id"
+    name = "control_device_id"
     type = "S"
   }
   
