@@ -648,18 +648,24 @@ resource "aws_dynamodb_table" "operator" {
 }
 
 #連動制御管理テーブル
-resource "aws_dynamodb_table" "automations" {
-  name           = "${var.global_name}-ddb-t-monosec-automations"
-  hash_key       = "automation_id"
+resource "aws_dynamodb_table" "control_device_id_index" {
+  name           = "${var.global_name}-ddb-t-monosec-control_device_id_index"
+  hash_key       = "control_device_id"
   stream_enabled = "false"
   table_class    = "STANDARD"
 
   attribute {
     name = "automation_id"
-    type = "N"
+    type = "S"
   }
   
   billing_mode = "PAY_PER_REQUEST"
+
+  global_secondary_index {
+    hash_key        = "control_device_id"
+    name            = "control_device_id_index"
+    projection_type = "ALL"
+  }
 
   point_in_time_recovery {
     enabled = "true"
