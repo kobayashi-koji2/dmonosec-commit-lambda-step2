@@ -647,19 +647,35 @@ resource "aws_dynamodb_table" "operator" {
   tags = var.tags
 }
 
-#連動制御管理テーブル
+#連動制御設定管理テーブル
 resource "aws_dynamodb_table" "automations" {
   name           = "${var.global_name}-ddb-t-monosec-automations"
-  hash_key       = "control_device_id"
+  hash_key       = "automation_id"
   stream_enabled = "false"
   table_class    = "STANDARD"
+
+  attribute {
+    name = "automation_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "trigger_device_id"
+    type = "S"
+  }
 
   attribute {
     name = "control_device_id"
     type = "S"
   }
-  
+
   billing_mode = "PAY_PER_REQUEST"
+
+  global_secondary_index {
+    hash_key        = "trigger_device_id"
+    name            = "trigger_device_id_index"
+    projection_type = "ALL"
+  }
 
   global_secondary_index {
     hash_key        = "control_device_id"
@@ -676,6 +692,4 @@ resource "aws_dynamodb_table" "automations" {
   }
 
   tags = var.tags
-
 }
-
