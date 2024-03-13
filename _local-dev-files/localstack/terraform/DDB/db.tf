@@ -43,7 +43,7 @@ resource "aws_dynamodb_table" "account" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -69,7 +69,7 @@ resource "aws_dynamodb_table" "imei" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -95,7 +95,7 @@ resource "aws_dynamodb_table" "iccid" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -121,7 +121,7 @@ resource "aws_dynamodb_table" "contract" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -152,7 +152,7 @@ resource "aws_dynamodb_table" "user" {
 
   global_secondary_index {
     hash_key        = "account_id"
-    range_key       = "contract_id" 
+    range_key       = "contract_id"
     name            = "account_id_index"
     projection_type = "ALL"
   }
@@ -164,7 +164,7 @@ resource "aws_dynamodb_table" "user" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -207,7 +207,7 @@ resource "aws_dynamodb_table" "device" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -233,7 +233,7 @@ resource "aws_dynamodb_table" "group" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -272,7 +272,7 @@ resource "aws_dynamodb_table" "device_relation" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -299,7 +299,7 @@ resource "aws_dynamodb_table" "state" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -354,7 +354,7 @@ resource "aws_dynamodb_table" "hist_list" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -408,7 +408,7 @@ resource "aws_dynamodb_table" "operation_log" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -442,7 +442,7 @@ resource "aws_dynamodb_table" "notification_hist" {
 
   global_secondary_index {
     hash_key        = "contract_id"
-    range_key       = "notification_datetime"  
+    range_key       = "notification_datetime"
     name            = "contract_id_index"
     projection_type = "ALL"
   }
@@ -452,7 +452,7 @@ resource "aws_dynamodb_table" "notification_hist" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -489,7 +489,7 @@ resource "aws_dynamodb_table" "pre_register_devices" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -533,7 +533,7 @@ resource "aws_dynamodb_table" "cnt_hist" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -572,14 +572,14 @@ resource "aws_dynamodb_table" "remote_controls" {
 
   global_secondary_index {
     hash_key        = "device_id"
-    range_key       = "recv_datetime" 
+    range_key       = "recv_datetime"
     name            = "device_id_index"
     projection_type = "ALL"
   }
 
   global_secondary_index {
     hash_key        = "device_id"
-    range_key       = "req_datetime" 
+    range_key       = "req_datetime"
     name            = "device_id_req_datetime_index"
     projection_type = "ALL"
   }
@@ -589,7 +589,7 @@ resource "aws_dynamodb_table" "remote_controls" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -615,7 +615,7 @@ resource "aws_dynamodb_table" "req_no_counter" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -641,7 +641,7 @@ resource "aws_dynamodb_table" "operator" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
@@ -650,16 +650,32 @@ resource "aws_dynamodb_table" "operator" {
 #連動制御管理テーブル
 resource "aws_dynamodb_table" "automations" {
   name           = "${var.global_name}-ddb-t-monosec-automations"
-  hash_key       = "control_device_id"
+  hash_key       = "automation_id"
   stream_enabled = "false"
   table_class    = "STANDARD"
+
+  attribute {
+    name = "automation_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "trigger_device_id"
+    type = "S"
+  }
 
   attribute {
     name = "control_device_id"
     type = "S"
   }
-  
+
   billing_mode = "PAY_PER_REQUEST"
+
+  global_secondary_index {
+    hash_key        = "trigger_device_id"
+    name            = "trigger_device_id_index"
+    projection_type = "ALL"
+  }
 
   global_secondary_index {
     hash_key        = "control_device_id"
@@ -672,10 +688,8 @@ resource "aws_dynamodb_table" "automations" {
   }
 
   server_side_encryption {
-    enabled = true 
+    enabled = true
   }
 
   tags = var.tags
-
 }
-
