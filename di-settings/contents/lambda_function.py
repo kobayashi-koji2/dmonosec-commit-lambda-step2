@@ -33,13 +33,11 @@ def lambda_handler(event, context, user_info):
         # DynamoDB操作オブジェクト生成
         try:
             tables = {
-                "user_table": dynamodb.Table(ssm.table_names["USER_TABLE"]),
                 "device_table": dynamodb.Table(ssm.table_names["DEVICE_TABLE"]),
                 "group_table": dynamodb.Table(ssm.table_names["GROUP_TABLE"]),
                 "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
-                "automation_table": dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"])  # TODO 連動制御管理テーブル追加時に変更の可能性あり
             }
         except KeyError as e:
             body = {"message": e}
@@ -77,19 +75,6 @@ def lambda_handler(event, context, user_info):
                 ),
             }
 
-        # 連動制御情報更新
-        result = ddb.sync_automation_info_list(device_id, convert_param, tables["automation_table"])
-        if not result:
-            logger.info("連動制御情報更新エラー")
-            res_body = {"message": "連動制御情報の更新に失敗しました。"}
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps(
-                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
-                ),
-            }
-
         # デバイス情報取得
         try:
             # デバイス設定取得
@@ -105,10 +90,8 @@ def lambda_handler(event, context, user_info):
                 group_info = db.get_group_info(group_id, tables["group_table"])
                 if group_info:
                     group_info_list.append(group_info)
-            # 連動制御情報取得
-            automation_info_list = ddb.get_automation_info_list(device_id, tables["automation_table"]).get("Items", [])
             # デバイス詳細情報生成
-            res_body = generate_detail.get_device_detail(device_info[0], device_state, group_info_list, automation_info_list)
+            res_body = generate_detail.get_device_detail(device_info[0], device_state, group_info_list)
 
         except ClientError as e:
             logger.info(e)
