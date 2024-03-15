@@ -1,6 +1,5 @@
 import json
 import ddb
-import re
 from aws_lambda_powertools import Logger
 
 # layer
@@ -38,7 +37,9 @@ def validate(event, user_info, tables):
     if len(device_info) == 0:
         return {"message": "デバイス情報が存在しません。"}
     elif len(device_info) >= 2:
-        return {"message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"}
+        return {
+            "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
+        }
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
@@ -56,7 +57,9 @@ def validate(event, user_info, tables):
     # ※接点入力_未変化検出_単位が空文字列の場合、接点入力_未変化検出_期間を 0 でリセットする
     is_di_healthy_data_ok = di_healthy_data_check_and_reset(body)
     if not is_di_healthy_data_ok:
-        return {"message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"}
+        return {
+            "message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"
+        }
     return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
 
 
@@ -84,9 +87,7 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
 
 # 端子設定チェック
 def terminal_check(body, device_id, device_type, tables):
-    di = (
-        len(body.get("di_list", {}))
-    )
+    di = len(body.get("di_list", {}))
     di_no_list = []
     # デバイス種別と端子数
     if (
@@ -98,13 +99,9 @@ def terminal_check(body, device_id, device_type, tables):
         for item in body.get("di_list", {}):
             di_no_list.append(item.get("di_no"))
         # 端子番号の範囲
-        if (
-            all(1 <= int(num) <= di for num in di_no_list)
-        ):
+        if all(1 <= int(num) <= di for num in di_no_list):
             # 端子番号の重複
-            if (
-                len(set(di_no_list)) == len(di_no_list)
-            ):
+            if len(set(di_no_list)) == len(di_no_list):
                 return True
     return False
 
@@ -136,10 +133,11 @@ def di_healthy_data_check_and_reset(body):
             continue
     return True
 
+
 # 入力チェック
 # 画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
-    out_range_list, null_list, invalid_format_list, invalid_data_type_list = [], [], [], []
+    out_range_list, invalid_format_list, invalid_data_type_list = [], [], [], []
 
     # 文字数の制限
     # デバイス名、接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
@@ -149,13 +147,11 @@ def input_check(param):
         "di_on_name": {0, 10},
         "di_on_icon": {1, 30},
         "di_off_name": {0, 10},
-        "di_off_icon": {1, 30}
+        "di_off_icon": {1, 30},
     }
 
     # 桁数の制限
-    int_float_value_limits = {
-        "di_healthy_period": {0, 100}
-    }
+    int_float_value_limits = {"di_healthy_period": {0, 100}}
 
     # アイコン(TBD) コード一覧参照
     icon_list = [
@@ -177,9 +173,7 @@ def input_check(param):
     }
 
     # 特定の数値に一致
-    int_float_format = {
-        "device_healthy_period": [0, 3, 4, 5, 6, 7]
-    }
+    int_float_format = {"device_healthy_period": [0, 3, 4, 5, 6, 7]}
 
     # dict型の全要素を探索して入力値をチェック
     def check_dict_value(param):
@@ -192,25 +186,35 @@ def input_check(param):
                         min_value, max_value = int_float_value_limits[key]
                         try:
                             if not float(min_value) <= float(value) <= float(max_value):
-                                logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                                logger.info(
+                                    f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
+                                )
                                 out_range_list.append(key)
                         except ValueError:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
+                            )
                             invalid_data_type_list.append(key)
                     if key in int_float_format:
                         try:
                             if float(value) not in int_float_format[key]:
-                                logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
+                                logger.info(
+                                    f"Key:{key}  value:{value} - reason:数値の値が不正です。"
+                                )
                                 invalid_format_list.append(key)
                         except ValueError:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
+                            )
                             invalid_data_type_list.append(key)
                     # 文字数
                     if key in str_value_limits:
                         min_length, max_length = str_value_limits[key]
                         string_length = len(value)
                         if not min_length <= string_length <= max_length:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字数の制限を超えています。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字数の制限を超えています。"
+                            )
                             out_range_list.append(key)
                     # 文字列フォーマット
                     if key in str_format and value not in str_format[key]:
@@ -226,7 +230,9 @@ def input_check(param):
                     if key in int_float_value_limits:
                         min_value, max_value = int_float_value_limits[key]
                         if not float(min_value) <= float(value) <= float(max_value):
-                            logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
+                            )
                             out_range_list.append(key)
                     # 数値フォーマット
                     if key in int_float_format and value not in int_float_format[key]:

@@ -17,6 +17,7 @@ def get_device_info(pk, table):
     )
     return response
 
+
 # デバイス設定更新
 def update_device_settings(device_id, imei, device_settings, table):
     map_attribute_name = "device_data"
@@ -35,9 +36,7 @@ def update_device_settings(device_id, imei, device_settings, table):
 
     di_key = "di_list"
     update_expression = "SET #map.#sub1.#sub2.#di_key = :di_new_val"
-    expression_attribute_values = {
-        ":di_new_val": di_new_val
-    }
+    expression_attribute_values = {":di_new_val": di_new_val}
     expression_attribute_name = {
         "#map": map_attribute_name,
         "#sub1": sub_attribute_name1,

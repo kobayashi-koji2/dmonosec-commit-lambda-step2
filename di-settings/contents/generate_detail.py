@@ -1,19 +1,10 @@
-import re
-
 from aws_lambda_powertools import Logger
 
 logger = Logger()
 
 
 def get_device_detail(device_info, device_state, group_info_list):
-    last_receiving_time = ""
     group_list = []
-    # 最終受信日時取得
-    if device_state:
-        pattern = re.compile(r".*update_datetime$")
-        matching_keys = [key for key in device_state.keys() if pattern.match(key)]
-        matching_values = {key: device_state[key] for key in matching_keys}
-        last_receiving_time = max(matching_values.values())
     for item in group_info_list:
         group_list.append(
             {
@@ -33,8 +24,9 @@ def get_device_detail(device_info, device_state, group_info_list):
 
     return device_detail
 
+
 def terminal_info_fmt(terminal_settings, device_state):
-    di_list, terminal_info = [], []
+    di_list = []
     for item in terminal_settings.get("di_list", {}):
         di_no = item["di_no"]
         di_state_key = f"di{di_no}_state"
@@ -52,7 +44,7 @@ def terminal_info_fmt(terminal_settings, device_state):
                 "di_healthy_type": item.get("di_healthy_type", ""),
                 "di_healthy_period": item.get("di_healthy_period", 0),
                 "di_healthy_state": device_state.get(di_healthy_state_key, 0),
-                "di_last_change_datetime": device_state.get(di_last_change_datetime_key, 0)
+                "di_last_change_datetime": device_state.get(di_last_change_datetime_key, 0),
             }
         )
 
