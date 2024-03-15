@@ -1,10 +1,10 @@
 version: '3'
 services:
   app:
-    container_name: device-settings
+    container_name: do-settings
     build:
       context: ../
-      dockerfile: ./device-settings/Dockerfile
+      dockerfile: ./do-settings/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
