@@ -38,7 +38,9 @@ def validate(event, user_info, tables):
     if len(device_info) == 0:
         return {"message": "デバイス情報が存在しません。"}
     elif len(device_info) >= 2:
-        return {"message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"}
+        return {
+            "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
+        }
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
@@ -56,7 +58,9 @@ def validate(event, user_info, tables):
     # ※接点入力_未変化検出_単位が空文字列の場合、接点入力_未変化検出_期間を 0 でリセットする
     is_di_healthy_data_ok = di_healthy_data_check_and_reset(body)
     if not is_di_healthy_data_ok:
-        return {"message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"}
+        return {
+            "message": "接点入力_未変化検出_単位と接点入力_未変化検出_期間が整合していません。"
+        }
 
     # 接点出力連動制御一覧の整合性をチェック
     is_do_automation_list_ok = do_automation_list_check(body)
@@ -210,7 +214,7 @@ def input_check(param):
     int_float_value_limits = {
         "di_healthy_period": {0, 100},
         "do_specified_time": {0.4, 6553.5},
-        "do_onoff_control": {0, 1}
+        "do_onoff_control": {0, 1},
     }
 
     # アイコン(TBD) コード一覧参照
@@ -241,8 +245,8 @@ def input_check(param):
             "device_abnormality",
             "parameter_abnormality",
             "fw_update_abnormality",
-            "power_on"
-        ]
+            "power_on",
+        ],
     }
 
     # 特定の数値に一致
@@ -250,13 +254,13 @@ def input_check(param):
         "device_healthy_period": [0, 3, 4, 5, 6, 7],
         "trigger_event_detail_state": [0, 1],
         "trigger_event_detail_flag": [0, 1],
-        "control_di_state": [0, 1, 9]
+        "control_di_state": [0, 1, 9],
     }
 
     # 正規表現
     regex = {
         "do_time": re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$"),  # hh:mm形式 00:00から23:59
-        "do_weekday": re.compile(r"^$|^([0-6],)*[0-6]$")  # 空文字もしくは 1,3,5 のような形式
+        "do_weekday": re.compile(r"^$|^([0-6],)*[0-6]$"),  # 空文字もしくは 1,3,5 のような形式
     }
 
     # dict型の全要素を探索して入力値をチェック
@@ -270,25 +274,35 @@ def input_check(param):
                         min_value, max_value = int_float_value_limits[key]
                         try:
                             if not float(min_value) <= float(value) <= float(max_value):
-                                logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                                logger.info(
+                                    f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
+                                )
                                 out_range_list.append(key)
                         except ValueError:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
+                            )
                             invalid_data_type_list.append(key)
                     if key in int_float_format:
                         try:
                             if float(value) not in int_float_format[key]:
-                                logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
+                                logger.info(
+                                    f"Key:{key}  value:{value} - reason:数値の値が不正です。"
+                                )
                                 invalid_format_list.append(key)
                         except ValueError:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
+                            )
                             invalid_data_type_list.append(key)
                     # 文字数
                     if key in str_value_limits:
                         min_length, max_length = str_value_limits[key]
                         string_length = len(value)
                         if not min_length <= string_length <= max_length:
-                            logger.info(f"Key:{key}  value:{value} - reason:文字数の制限を超えています。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:文字数の制限を超えています。"
+                            )
                             out_range_list.append(key)
                     # 文字列フォーマット
                     if key in str_format and value not in str_format[key]:
@@ -308,7 +322,9 @@ def input_check(param):
                     if key in int_float_value_limits:
                         min_value, max_value = int_float_value_limits[key]
                         if not float(min_value) <= float(value) <= float(max_value):
-                            logger.info(f"Key:{key}  value:{value} - reason:桁数の制限を超えています。")
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
+                            )
                             out_range_list.append(key)
                     # 数値フォーマット
                     if key in int_float_format and value not in int_float_format[key]:
