@@ -137,7 +137,7 @@ def di_healthy_data_check_and_reset(body):
 # 入力チェック
 # 画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
-    out_range_list, invalid_format_list, invalid_data_type_list = [], [], [], []
+    out_range_list, invalid_format_list, invalid_data_type_list = [], [], []
 
     # 文字数の制限
     # 接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
