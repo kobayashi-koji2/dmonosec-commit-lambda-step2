@@ -140,9 +140,8 @@ def input_check(param):
     out_range_list, invalid_format_list, invalid_data_type_list = [], [], [], []
 
     # 文字数の制限
-    # デバイス名、接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
+    # 接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
     str_value_limits = {
-        "device_name": {0, 30},
         "di_name": {0, 30},
         "di_on_name": {0, 10},
         "di_on_icon": {1, 30},
@@ -172,9 +171,6 @@ def input_check(param):
         "di_healthy_type": ["", "day", "hour"],
     }
 
-    # 特定の数値に一致
-    int_float_format = {"device_healthy_period": [0, 3, 4, 5, 6, 7]}
-
     # dict型の全要素を探索して入力値をチェック
     def check_dict_value(param):
         if isinstance(param, dict):
@@ -195,18 +191,7 @@ def input_check(param):
                                 f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
                             )
                             invalid_data_type_list.append(key)
-                    if key in int_float_format:
-                        try:
-                            if float(value) not in int_float_format[key]:
-                                logger.info(
-                                    f"Key:{key}  value:{value} - reason:数値の値が不正です。"
-                                )
-                                invalid_format_list.append(key)
-                        except ValueError:
-                            logger.info(
-                                f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
-                            )
-                            invalid_data_type_list.append(key)
+
                     # 文字数
                     if key in str_value_limits:
                         min_length, max_length = str_value_limits[key]
@@ -234,10 +219,6 @@ def input_check(param):
                                 f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
                             )
                             out_range_list.append(key)
-                    # 数値フォーマット
-                    if key in int_float_format and value not in int_float_format[key]:
-                        logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
-                        invalid_format_list.append(key)
                 else:
                     check_dict_value(value)
         elif isinstance(param, list):
