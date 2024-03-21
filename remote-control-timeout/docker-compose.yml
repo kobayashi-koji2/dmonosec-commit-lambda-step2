@@ -14,6 +14,8 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - MAIL_FROM_ADDRESS=mun-yamashita@secom.co.jp
       - POWERTOOLS_LOG_LEVEL=DEBUG
+      - NOTIFICATION_HIST_TTL=94694400000
+      - HIST_LIST_TTL=94694400000
     volumes:
       - ./contents:/var/task
     ports:

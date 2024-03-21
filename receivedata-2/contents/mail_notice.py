@@ -1,3 +1,4 @@
+import os
 import ddb
 import uuid
 import time
@@ -9,6 +10,7 @@ import mail
 
 logger = Logger()
 
+NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 
 def diNameToState(terminal_state_name, device_info):
     di_list = device_info.get("device_data", {}).get("config", {}).get("terminal_settings", {}).get("di_list", [])
@@ -222,7 +224,8 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                     'notification_hist_id': str(uuid.uuid4()),
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
                     'notification_datetime': szNoticeDatetime,
-                    'notification_user_list': notification_settings.get('notification_target_list')
+                    'expire_datetime': szNoticeDatetime + NOTIFICATION_HIST_TTL,
+                    'notification_user_list': notification_settings.get('notification_target_list'),
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
 

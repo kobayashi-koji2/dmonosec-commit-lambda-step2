@@ -1,3 +1,4 @@
+import os
 import decimal
 import json
 import time
@@ -11,6 +12,8 @@ from botocore.exceptions import ClientError
 import convert
 
 logger = Logger()
+
+NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 
 
 def get_req_no_count_info(sim_id, table):
@@ -79,10 +82,12 @@ def put_notification_hist(
     unix_time = int(time.mktime(notification_datetime.timetuple()) * 1000)
     unix_microsecond = int(notification_datetime.microsecond / 1000)
     setting_datetime = unix_time + unix_microsecond
+    ttl_datetime = setting_datetime + NOTIFICATION_HIST_TTL
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,
         "notification_datetime": setting_datetime,
+        "expire_datetime": ttl_datetime,
         "notification_user_list": notification_user_list,
     }
     item = json.loads(json.dumps(notice_hist_item), parse_float=decimal.Decimal)
