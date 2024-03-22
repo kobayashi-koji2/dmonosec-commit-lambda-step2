@@ -1,4 +1,5 @@
 import os
+import re
 import ddb
 import json
 import boto3
@@ -6,11 +7,15 @@ import logging
 import uuid
 from event_judge import eventJudge
 from mail_notice import mailNotice
+from automation_trigger import automationTrigger
 from aws_lambda_powertools import Logger
+
+sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 
 logger = Logger()
 
-DEVICE_HEALTHY_CHECK_LAMBDA_NAME = os.environ["DEVICE_HEALTHY_CHECK_LAMBDA_NAME"]
+DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
+CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
 
 def getByteArray(Payload, index, len):
@@ -116,6 +121,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
+            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
@@ -147,6 +153,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
+            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
@@ -229,16 +236,47 @@ def commandParser(
             ddb.update_current_state(current_state_info, state_table)
 
             # デバイスヘルシー判定
-            if current_state_info.get("device_healthy_state") == 1:
-                # パラメータ設定
-                input_event = {"event_trigger": "lambda-receivedata-2", "device_id": device_id, "event_datetime": nEventTime}
-                Payload = json.dumps(input_event)
+            queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
+            if current_state_info.get("device_healthy_state") == 1 and\
+                current_state_info.get("device_abnormality_last_update_datetime") != device_current_state.get("device_abnormality_last_update_datetime"):
+                body = {
+                    "event_trigger": "lambda-receivedata-2",
+                    "event_type": "device_unhealthy",
+                    "event_datetime": szRecvDatetime,
+                    "device_id": device_id
+                }
 
-                # 呼び出し
-                boto3.client("lambda").invoke(
-                    FunctionName=DEVICE_HEALTHY_CHECK_LAMBDA_NAME, InvocationType="Event", Payload=Payload
+                queue.send_message(
+                    DelaySeconds=0,
+                    MessageBody=(
+                        json.dumps(body)
+                    )
                 )
-                logger.debug("デバイスヘルシー判定エラー")
+
+            # 接点入力未変化判定
+            for i in range(1, 9):
+                di_healthy_state_key = f"di{i}_healthy_state"
+                di_healthy_state = current_state_info.get(di_healthy_state_key)
+                di_last_change_datetime = f"di{i}_last_change_datetime"
+                if di_healthy_state == 1 and current_state_info.get(di_last_change_datetime) != device_current_state.get(di_last_change_datetime):
+                    body = {
+                        "event_trigger": "lambda-receivedata-2",
+                        "event_type": "di_unhealthy",
+                        "event_datetime": szRecvDatetime,
+                        "device_id": device_id,
+                        "di_no": i
+                    }
+
+                    queue.send_message(
+                        DelaySeconds=0,
+                        MessageBody=(
+                            json.dumps(body)
+                        )
+                    )
+
+        if hist_list:
+            # 連動制御呼び出し
+            automationTrigger(hist_list, device_info)
 
     logger.debug("commandParser終了")
     return bytes([1])
