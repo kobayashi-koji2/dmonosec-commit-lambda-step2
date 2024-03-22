@@ -3,6 +3,7 @@ import decimal
 import re
 import uuid
 import json
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import textwrap
@@ -20,7 +21,7 @@ import mail
 logger = Logger()
 
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
-LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
+# LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
 
 aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 iot = boto3.client("iot-data", region_name=AWS_DEFAULT_REGION)
@@ -203,7 +204,11 @@ def _send_not_exec_mail(
                 )
             group_name = "、".join(group_name_list)
 
-            do_name = control_do.get("do_name") if control_do.get("do_name") else f"接点出力{control_do.get('do_no')}"
+            do_name = (
+                control_do.get("do_name")
+                if control_do.get("do_name")
+                else f"接点出力{control_do.get('do_no')}"
+            )
 
             di_no = control_do.get("link_di_no")
             di = [
@@ -231,7 +236,7 @@ def _send_not_exec_mail(
                 elif automation["trigger_event_detail_state"] == 1:
                     event_detail_name = "オープン"
             elif automation["trigger_event_type"] == "di_change_healthy":
-                event_type_name = f"接点入力{di[0].get("di_no")}未変化検出"
+                event_type_name = f"接点入力{di[0].get('di_no')}未変化検出"
                 if automation["trigger_event_detail_flag"] == 0:
                     event_detail_name = "接点入力検出復旧"
                 elif automation["trigger_event_detail_flag"] == 1:
