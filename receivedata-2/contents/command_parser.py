@@ -12,9 +12,10 @@ from aws_lambda_powertools import Logger
 
 sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 
-DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
-
 logger = Logger()
+
+DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
+CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
 
 def getByteArray(Payload, index, len):
@@ -120,6 +121,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
+            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
@@ -151,6 +153,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
+            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),

@@ -1,21 +1,17 @@
 version: '3'
 services:
   app:
-    container_name: remote-control-timeout
+    container_name: history-data-backup
     build:
       context: ../
-      dockerfile: ./remote-control-timeout/Dockerfile
+      dockerfile: ./history-data-backup/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
-      - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
-      - MAIL_FROM_ADDRESS=mun-yamashita@secom.co.jp
       - POWERTOOLS_LOG_LEVEL=DEBUG
-      - NOTIFICATION_HIST_TTL=94694400000
-      - HIST_LIST_TTL=94694400000
     volumes:
       - ./contents:/var/task
     ports:
@@ -33,6 +29,7 @@ services:
       - ../_local-dev-files/localstack/ready.d:/etc/localstack/init/ready.d
       - ../_local-dev-files/localstack/terraform:/usr/local/terraform
   dynamodb-admin:
+    container_name: dynamodb-admin
     image: aaronshaf/dynamodb-admin:latest
     ports:
       - 8081:8001

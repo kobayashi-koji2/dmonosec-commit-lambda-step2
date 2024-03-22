@@ -28,6 +28,8 @@ logger = Logger()
 # 環境変数
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
+REMOTE_CONTROLS_TTL = int(os.environ["REMOTE_CONTROLS_TTL"])
+CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
 # レスポンスヘッダー
 res_headers = {
@@ -277,13 +279,15 @@ def lambda_handler(event, context, user_info):
         # 要求データを接点出力制御応答TBLへ登録
         device_req_no = icc_id + "-" + req_no
         do_di_return = convert.decimal_default_proc(do_info["do_di_return"])
+        now_unixtime = int(time.time() * 1000)
         put_items = [
             {
                 "Put": {
                     "TableName": ssm.table_names["REMOTE_CONTROL_TABLE"],
                     "Item": {
                         "device_req_no": {"S": device_req_no},
-                        "req_datetime": {"N": str(int(time.time() * 1000))},
+                        "req_datetime": {"N": str(now_unixtime)},
+                        "expire_datetime": {"N": str(now_unixtime + REMOTE_CONTROLS_TTL)},
                         "device_id": {"S": device_id},
                         "contract_id": {"S": contract_id},
                         "control": {"S": do_info["do_control"]},
@@ -402,10 +406,12 @@ def __register_hist_info(
         )
 
     # 履歴情報登録
+    now_unixtime = int(time.time() * 1000)
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": int(time.time() * 1000),
+        "event_datetime": now_unixtime,
+        "expire_datetime": now_unixtime + CNT_HIST_TTL,
         "hist_data": {
             "device_name": device_info["device_data"]["config"]["device_name"],
             "group_list": group_list,

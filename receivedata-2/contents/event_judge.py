@@ -21,6 +21,7 @@ SIGNAL_HIGH = int(os.environ["SIGNAL_HIGH"])
 SIGNAL_MID = int(os.environ["SIGNAL_MID"])
 SIGNAL_LOW = int(os.environ["SIGNAL_LOW"])
 NO_SIGNAL = int(os.environ["NO_SIGNAL"])
+HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 
 
 def createHistListData(recv_data, device_info, event_info, device_relation_table, group_table):
@@ -37,6 +38,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
         "hist_id": str(uuid.uuid4()),
         "event_datetime": event_info.get("event_datetime"),
         "recv_datetime": recv_data.get("recv_datetime"),
+        "expire_datetime": recv_data.get("recv_datetime") + HIST_LIST_TTL,
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
             "group_list": group_list,
