@@ -7,6 +7,7 @@ import logging
 import uuid
 from event_judge import eventJudge
 from mail_notice import mailNotice
+from automation_trigger import automationTrigger
 from aws_lambda_powertools import Logger
 
 sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
@@ -269,6 +270,10 @@ def commandParser(
                             json.dumps(body)
                         )
                     )
+
+        if hist_list:
+            # 連動制御呼び出し
+            automationTrigger(hist_list, device_info)
 
     logger.debug("commandParser終了")
     return bytes([1])
