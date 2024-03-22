@@ -13,7 +13,7 @@ services:
       - endpoint_url=http://localstack:4566
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
-      - DEVICE_HEALTHY_CHECK_LAMBDA_NAME=lmonosc-lambda-device-healthy-check
+      - DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME=lmonosc-sqs-q-monosec-device-healthy-check
     volumes:
       - ./contents:/var/task
     ports:

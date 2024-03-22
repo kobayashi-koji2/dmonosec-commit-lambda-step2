@@ -14,7 +14,7 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - INITIAL_LAMBDA_NAME=lmonosc-lambda-initialreceive-2
-      - DEVICE_HEALTHY_CHECK_LAMBDA_NAME=lmonosc-lambda-device-healthy-check
+      - DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME=lmonosc-sqs-q-monosec-device-healthy-check
       - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
       - RECV_FUTURE_TIME=86400000
       - RECV_PAST_TIME=31536000000
