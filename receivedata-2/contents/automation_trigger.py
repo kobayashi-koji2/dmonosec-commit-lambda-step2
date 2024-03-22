@@ -1,4 +1,4 @@
-import automation_control
+import automation
 from aws_lambda_powertools import Logger
 
 logger = Logger()
@@ -22,13 +22,13 @@ def automationTrigger(hist_list, device_info):
         # 接点入力変化
         if hist["hist_data"]["event_type"] == "di_change":
             event_detail = diNameToEventDetail(hist["hist_data"]["terminal_state_name"], device_info)
-            automation_control(hist["device_id"], "di_change_state", hist["hist_data"]["terminal_no"], event_detail, None)
+            automation.automation_control(hist["device_id"], "di_change_state", hist["hist_data"]["terminal_no"], event_detail, None)
         # バッテリー残量、デバイス異常、パラメータ異常、FW更新異常
         elif hist["hist_data"]["event_type"] in ["battery_near", "device_abnormality", "parameter_abnormality", "fw_update_abnormality"]:
-            automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, hist["hist_data"]["occurrence_flag"])
+            automation.automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, hist["hist_data"]["occurrence_flag"])
         # 電源オン
         elif hist["hist_data"]["event_type"]  == "power_on":
-            automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, 1)
+            automation.automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, 1)
         # その他
         else:
             continue
