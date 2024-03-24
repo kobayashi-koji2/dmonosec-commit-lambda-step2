@@ -44,6 +44,10 @@ def validate(event, user_info, tables):
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
+    # 端子設定チェック
+    terminal = terminal_check(body, device_id, device_info[0]["device_type"], tables)
+    if not terminal:
+        return {"message": "デバイス種別と端子設定が一致しません。"}
 
     input = input_check(body)
     if not input:
@@ -74,17 +78,41 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     return True
 
 
+# 端子設定チェック
+def terminal_check(body, device_id, device_type, tables):
+    do = len(body.get("do_list", {}))
+    do_no_list = []
+    # デバイス種別と端子数
+    if (
+        (device_type == "PJ1" and do == 0)
+        or (device_type == "PJ2" and do == 2)
+        or (device_type == "PJ3" and do == 2)
+    ):
+        # 端子番号
+        for item in body.get("do_list", {}):
+            do_no_list.append(item.get("do_no"))
+        # 端子番号の範囲
+        if all(1 <= int(num) <= do for num in do_no_list):
+            # 端子番号の重複
+            if len(set(do_no_list)) == len(do_no_list):
+                return True
+    return False
+
+
 # 入力チェック
 # 画面一覧に記載のされている入力制限のみチェック
 def input_check(param):
     out_range_list, invalid_format_list, invalid_data_type_list = [], [], []
 
     # 文字数の制限
-    # デバイス名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
-    str_value_limits = {"device_name": {0, 30}}
+    # 接点名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
+    str_value_limits = {"do_name": {0, 30}}
 
-    # 特定の数値に一致
-    int_float_format = {"device_healthy_period": [0, 3, 4, 5, 6, 7]}
+    # 桁数の制限
+    int_float_value_limits = {"do_specified_time": {0.4, 6553.5}}
+
+    # 特定の文字列に一致
+    str_format = {"do_control": ["", "open", "close", "toggle"]}
 
     # dict型の全要素を探索して入力値をチェック
     def check_dict_value(param):
@@ -92,13 +120,15 @@ def input_check(param):
             for key, value in param.items():
                 # 文字列
                 if isinstance(value, str):
-                    if key in int_float_format:
+                    # データ型
+                    if key in int_float_value_limits:
+                        min_value, max_value = int_float_value_limits[key]
                         try:
-                            if float(value) not in int_float_format[key]:
+                            if not float(min_value) <= float(value) <= float(max_value):
                                 logger.info(
-                                    f"Key:{key}  value:{value} - reason:数値の値が不正です。"
+                                    f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
                                 )
-                                invalid_format_list.append(key)
+                                out_range_list.append(key)
                         except ValueError:
                             logger.info(
                                 f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
@@ -113,16 +143,24 @@ def input_check(param):
                                 f"Key:{key}  value:{value} - reason:文字数の制限を超えています。"
                             )
                             out_range_list.append(key)
+                    # 文字列フォーマット
+                    if key in str_format and value not in str_format[key]:
+                        logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                        invalid_format_list.append(key)
                 # 数値
                 elif isinstance(value, (int, float)):
                     # データ型
                     if key in str_value_limits:
                         logger.info(f"Key:{key}  value:{value} - reason:データ型が不正です。")
                         invalid_data_type_list.append(key)
-                    # 数値フォーマット
-                    if key in int_float_format and value not in int_float_format[key]:
-                        logger.info(f"Key:{key}  value:{value} - reason:数値の値が不正です。")
-                        invalid_format_list.append(key)
+                    # 桁数
+                    if key in int_float_value_limits:
+                        min_value, max_value = int_float_value_limits[key]
+                        if not float(min_value) <= float(value) <= float(max_value):
+                            logger.info(
+                                f"Key:{key}  value:{value} - reason:桁数の制限を超えています。"
+                            )
+                            out_range_list.append(key)
                 else:
                     check_dict_value(value)
         elif isinstance(param, list):

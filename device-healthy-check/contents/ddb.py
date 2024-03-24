@@ -35,18 +35,52 @@ def get_device_state(device_id, device_state_table):
     return device_state[0] if device_state else None
 
 
+# 履歴一覧データ挿入
+def put_cnt_hist_list(db_items, hist_list_table):
+    for db_item in db_items:
+        item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
+        try:
+            hist_list_table.put_item(Item=item)
+        except ClientError as e:
+            logger.debug(f"put_cnt_hist_listエラー e={e}")
+
+
 # 現状態データ更新
-def update_current_state(device_id, device_healthy_state, state_table):
+def update_current_state(device_id, db_item, state_table):
     option = {
         "Key": {
-            "device_id": device_id
+            "device_id": device_id,
         },
-        "UpdateExpression": "set #device_healthy_state = :device_healthy_state",
+        "UpdateExpression": "set #di1_healthy_state = :di1_healthy_state, \
+                            #di2_healthy_state = :di2_healthy_state, \
+                            #di3_healthy_state = :di3_healthy_state, \
+                            #di4_healthy_state = :di4_healthy_state, \
+                            #di5_healthy_state = :di5_healthy_state, \
+                            #di6_healthy_state = :di6_healthy_state, \
+                            #di7_healthy_state = :di7_healthy_state, \
+                            #di8_healthy_state = :di8_healthy_state, \
+                            #device_healthy_state = :device_healthy_state",
         "ExpressionAttributeNames": {
+            "#di1_healthy_state": "di1_healthy_state",
+            "#di2_healthy_state": "di2_healthy_state",
+            "#di3_healthy_state": "di3_healthy_state",
+            "#di4_healthy_state": "di4_healthy_state",
+            "#di5_healthy_state": "di5_healthy_state",
+            "#di6_healthy_state": "di6_healthy_state",
+            "#di7_healthy_state": "di7_healthy_state",
+            "#di8_healthy_state": "di8_healthy_state",
             "#device_healthy_state": "device_healthy_state",
         },
         "ExpressionAttributeValues": {
-            ":device_healthy_state": device_healthy_state,
+            ":di1_healthy_state": db_item["di1_healthy_state"],
+            ":di2_healthy_state": db_item["di2_healthy_state"],
+            ":di3_healthy_state": db_item["di3_healthy_state"],
+            ":di4_healthy_state": db_item["di4_healthy_state"],
+            ":di5_healthy_state": db_item["di5_healthy_state"],
+            ":di6_healthy_state": db_item["di6_healthy_state"],
+            ":di7_healthy_state": db_item["di7_healthy_state"],
+            ":di8_healthy_state": db_item["di8_healthy_state"],
+            ":device_healthy_state": db_item["device_healthy_state"],
         },
     }
     logger.debug(f"option={option}")
@@ -54,25 +88,7 @@ def update_current_state(device_id, device_healthy_state, state_table):
     try:
         state_table.update_item(**option)
     except ClientError as e:
-        logger.debug(f"update_current_state e={e}")
-
-
-# 履歴データ挿入
-def put_cnt_hist(db_item, hist_table):
-    item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
-    try:
-        hist_table.put_item(Item=item)
-    except ClientError as e:
-        logger.debug(f"put_cnt_histエラー e={e}")
-
-
-# 履歴一覧データ挿入
-def put_cnt_hist_list(db_item, hist_list_table):
-    item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
-    try:
-        hist_list_table.put_item(Item=item)
-    except ClientError as e:
-        logger.debug(f"put_cnt_hist_listエラー e={e}")
+        logger.debug(f"update_current_stateエラー e={e}")
 
 
 # 通知履歴挿入

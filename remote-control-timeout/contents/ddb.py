@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import decimal
@@ -12,6 +13,8 @@ import db
 
 logger = Logger()
 
+NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
+HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 
 # 接点出力制御応答取得
 def get_remote_control_info(device_req_no, remote_controls_table):
@@ -30,11 +33,12 @@ def put_notification_hist(
     contract_id, notification_user_list, notification_datetime, notification_hist_table
 ):
     notification_hist_id = str(uuid.uuid4())
+    now_datetime = int(time.mktime(notification_datetime.timetuple()) * 1000) + int(notification_datetime.microsecond / 1000)
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,
-        "notification_datetime": int(time.mktime(notification_datetime.timetuple()) * 1000)
-        + int(notification_datetime.microsecond / 1000),
+        "notification_datetime": now_datetime,
+        "expire_datetime": now_datetime + NOTIFICATION_HIST_TTL,
         "notification_user_list": notification_user_list,
     }
     item = json.loads(json.dumps(notice_hist_item), parse_float=decimal.Decimal)
@@ -92,11 +96,13 @@ def put_hist_list(
                 }
             )
 
+    ttl_datetime = int(time.time() * 1000) + HIST_LIST_TTL
     hist_list_item = {
         "device_id": device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": remote_control.get("req_datetime"),
         "recv_datetime": remote_control.get("req_datetime"),  # TODO 仕様確認中
+        "expire_datetime": ttl_datetime,
         "hist_data": {
             "device_name": device.get("device_data").get("config").get("device_name"),
             "imei": device.get("imei"),

@@ -10,9 +10,10 @@ from aws_xray_sdk.core import patch_all
 patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
+sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
-DEVICE_HEALTHY_CHECK_LAMBDA_NAME = os.environ["DEVICE_HEALTHY_CHECK_LAMBDA_NAME"]
+DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
 
 logger = Logger()
 
@@ -35,14 +36,19 @@ def lambda_handler(event, context):
             return 0
 
         # デバイスヘルシーチェック処理呼び出し
+        queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
         for contract_id in contract_id_list:
             # パラメータ設定
-            input_event = {"event_trigger": "lambda-device-healthy-check-trigger", "contract_id": contract_id}
-            Payload = json.dumps(input_event)
+            body = {
+                "event_trigger": "lambda-device-healthy-check-trigger",
+                "contract_id": contract_id
+            }
 
-            # 呼び出し
-            boto3.client("lambda").invoke(
-                FunctionName=DEVICE_HEALTHY_CHECK_LAMBDA_NAME, InvocationType="Event", Payload=Payload
+            queue.send_message(
+                DelaySeconds=0,
+                MessageBody=(
+                    json.dumps(body)
+                )
             )
 
         logger.debug("lambda_handler正常終了")

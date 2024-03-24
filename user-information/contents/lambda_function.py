@@ -41,7 +41,7 @@ def lambda_handler(event, context, user):
             "user_id": user.get("user_id"),
             "email_address": account.get("email_address"),
             "user_type": user.get("user_type"),
-            "last_list_page": user.get("user_data", {}).get("config", {}).get("last_page"),
+            "display_information": user.get("user_data", {}).get("display_information"),
         }
         return {
             "statusCode": 200,

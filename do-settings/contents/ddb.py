@@ -23,25 +23,39 @@ def get_device_info(pk, table):
 def update_device_settings(device_id, imei, device_settings, table):
     map_attribute_name = "device_data"
     sub_attribute_name1 = "config"
-    # sub_attribute_name2 = "terminal_settings"
-    device_name = device_settings.get("device_name")
-    device_healthy_period = device_settings.get("device_healthy_period")
-    if device_healthy_period is not None:
-        device_healthy_period = Decimal(device_healthy_period)
+    sub_attribute_name2 = "terminal_settings"
+    do_new_val = device_settings.get("do_list", {})
 
-    device_name_key, device_healthy_period_key = ("device_name", "device_healthy_period")
-    update_expression = "SET #map.#sub1.#device_name_key = :device_name,\
-                        #map.#sub1.#device_healthy_period_key = :device_healthy_period"
+    for do in do_new_val:
+        do_no = do.get("do_no")
+        if do is not None:
+            do["do_no"] = Decimal(do_no)
+
+        do_specified_time = do.get("do_specified_time")
+        if do_specified_time is not None:
+            do["do_specified_time"] = Decimal(do_specified_time)
+
+        do_di_return = do.get("do_di_return")
+        if do_di_return is not None:
+            do["do_di_return"] = Decimal(do_di_return)
+
+        do_timer_list = do.get("do_timer_list", [])
+        for do_timer in do_timer_list:
+            do_onoff_control = do_timer.get("do_onoff_control")
+            if do_onoff_control is not None:
+                do_timer["do_onoff_control"] = Decimal(do_onoff_control)
+
+    do_key = "do_list"
+    update_expression = "SET #map.#sub1.#sub2.#do_key = :do_new_val"
+
     expression_attribute_values = {
-        ":device_name": device_name,
-        ":device_healthy_period": device_healthy_period,
+        ":do_new_val": do_new_val,
     }
     expression_attribute_name = {
         "#map": map_attribute_name,
         "#sub1": sub_attribute_name1,
-        # "#sub2": sub_attribute_name2,
-        "#device_name_key": device_name_key,
-        "#device_healthy_period_key": device_healthy_period_key,
+        "#sub2": sub_attribute_name2,
+        "#do_key": do_key,
     }
     table.update_item(
         Key={"device_id": device_id, "imei": imei},

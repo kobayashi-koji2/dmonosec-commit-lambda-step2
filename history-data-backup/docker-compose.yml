@@ -1,19 +1,17 @@
 version: '3'
 services:
   app:
-    container_name: device-healthy-check-trigger
+    container_name: history-data-backup
     build:
       context: ../
-      dockerfile: ./device-healthy-check-trigger/Dockerfile
+      dockerfile: ./history-data-backup/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
       - AWS_SECRET_ACCESS_KEY=dummy
       - AWS_SESSION_TOKEN=dummy
       - endpoint_url=http://localstack:4566
-      - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
-      - DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME=lmonosc-sqs-q-monosec-device-healthy-check
     volumes:
       - ./contents:/var/task
     ports:

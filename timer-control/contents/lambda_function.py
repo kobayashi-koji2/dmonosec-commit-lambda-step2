@@ -27,6 +27,8 @@ logger = Logger()
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
+REMOTE_CONTROLS_TTL = int(os.environ["REMOTE_CONTROLS_TTL"])
+CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 # 正常レスポンス内容
 respons = {
     "statusCode": 200,
@@ -240,13 +242,15 @@ def lambda_handler(event, context):
                     logger.info(respons)
                     return respons
 
+                now_datetime = int(time.time() * 1000)
                 put_items = [
                     {
                         "Put": {
                             "TableName": remote_controls_table.name,
                             "Item": {
                                 "device_req_no": {"S": device_req_no},
-                                "req_datetime": {"N": str(int(time.time() * 1000))},
+                                "req_datetime": {"N": str(now_datetime)},
+                                "expire_datetime": {"N": str(now_datetime + REMOTE_CONTROLS_TTL)},
                                 "device_id": {"S": device_id},
                                 "contract_id": {"S": contract_id},
                                 "control": {"S": do_info["do_control"]},
@@ -510,10 +514,12 @@ def __register_hist_info(
         elif do_onoff_control == 1:
             hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
 
+    now_datetime = int(time.time() * 1000)
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": int(time.time() * 1000),
+        "event_datetime": now_datetime,
+        "expire_datetime": now_datetime + CNT_HIST_TTL,
         "hist_data": hist_data,
     }
     item = convert.dict_dynamo_format(item)
