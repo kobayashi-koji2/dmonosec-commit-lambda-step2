@@ -8,6 +8,8 @@ from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from decimal import Decimal
+from datetime import datetime
+from dateutil import relativedelta
 
 import db
 
@@ -33,12 +35,13 @@ def put_notification_hist(
     contract_id, notification_user_list, notification_datetime, notification_hist_table
 ):
     notification_hist_id = str(uuid.uuid4())
-    now_datetime = int(time.mktime(notification_datetime.timetuple()) * 1000) + int(notification_datetime.microsecond / 1000)
+    now_unixtime = int(time.mktime(notification_datetime.timetuple()) * 1000) + int(notification_datetime.microsecond / 1000)
+    expire_datetime = int((notification_datetime + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,
-        "notification_datetime": now_datetime,
-        "expire_datetime": now_datetime + NOTIFICATION_HIST_TTL,
+        "notification_datetime": now_unixtime,
+        "expire_datetime": expire_datetime,
         "notification_user_list": notification_user_list,
     }
     item = json.loads(json.dumps(notice_hist_item), parse_float=decimal.Decimal)
@@ -96,13 +99,14 @@ def put_hist_list(
                 }
             )
 
-    ttl_datetime = int(time.time() * 1000) + HIST_LIST_TTL
+    expire_datetime = int((datetime.datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
+    
     hist_list_item = {
         "device_id": device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": remote_control.get("req_datetime"),
         "recv_datetime": remote_control.get("req_datetime"),  # TODO 仕様確認中
-        "expire_datetime": ttl_datetime,
+        "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device.get("device_data").get("config").get("device_name"),
             "imei": device.get("imei"),

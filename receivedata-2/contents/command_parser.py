@@ -17,7 +17,7 @@ sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 logger = Logger()
 
 DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
-CNT_HIST_TTL_YEAR = int(os.environ["CNT_HIST_TTL_YEAR"])
+CNT_HIST_TTL= int(os.environ["CNT_HIST_TTL"])
 
 def getByteArray(Payload, index, len):
     start = index[0]
@@ -56,9 +56,7 @@ def commandParser(
     )
 
     # TTL有効期限
-    szExpireDatetime = datetime.fromtimestamp(szRecvDatetime) + relativedelta.relativedelta(years=CNT_HIST_TTL_YEAR)
-    szExpireDatetime = int(szExpireDatetime.timestamp())
-    logger.debug(f"szExpireDatetime={szExpireDatetime}")
+    szExpireDatetime = int((datetime.fromtimestamp(szRecvDatetime / 1000) + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
 
     ### コマンド共通部 ###
     index = [0]

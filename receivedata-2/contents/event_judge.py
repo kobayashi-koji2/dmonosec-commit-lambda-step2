@@ -1,6 +1,8 @@
 import os
 import ddb
 import uuid
+from datetime import datetime 
+from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 
 logger = Logger()
@@ -33,12 +35,13 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
     logger.debug(f"group_list={group_list}")
 
     # 共通部
+    expire_datetime = int((datetime.fromtimestamp(recv_data.get("recv_datetime") / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
     hist_list_data = {
         "device_id": device_info.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": event_info.get("event_datetime"),
         "recv_datetime": recv_data.get("recv_datetime"),
-        "expire_datetime": recv_data.get("recv_datetime") + HIST_LIST_TTL,
+        "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
             "group_list": group_list,

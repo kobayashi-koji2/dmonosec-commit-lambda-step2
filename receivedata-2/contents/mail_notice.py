@@ -4,6 +4,7 @@ import uuid
 import time
 import textwrap
 from datetime import datetime, timezone, timedelta
+from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 
 import mail
@@ -270,6 +271,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                 mail_address_list = ddb.get_notice_mailaddress(notification_settings.get('notification_target_list'), user_table, account_table)
                 now = datetime.now()
                 szNoticeDatetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+                szExpireDatetime = int((datetime.fromtimestamp(szNoticeDatetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
                 JST = timezone(timedelta(hours=+9), 'JST')
                 event_dt = datetime.fromtimestamp(int(hist_list_data.get('event_datetime')) / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
                 recv_dt = datetime.fromtimestamp(int(hist_list_data.get('recv_datetime')) / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
@@ -296,7 +298,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                     'notification_hist_id': str(uuid.uuid4()),
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
                     'notification_datetime': szNoticeDatetime,
-                    'expire_datetime': szNoticeDatetime + NOTIFICATION_HIST_TTL,
+                    'expire_datetime': szExpireDatetime,
                     'notification_user_list': notification_settings.get('notification_target_list'),
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)

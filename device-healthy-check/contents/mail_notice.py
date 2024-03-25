@@ -4,6 +4,7 @@ import uuid
 import time
 import textwrap
 from datetime import datetime, timezone, timedelta
+from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 
 import mail
@@ -113,11 +114,12 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                 mail.send_email(mail_address_list, mail_subject, mail_body)
 
                 # 通知履歴保存
+                expire_datetime = int((datetime.fromtimestamp(now_datetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
                 notice_hist_info = {
                     'notification_hist_id': str(uuid.uuid4()),
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
                     'notification_datetime': now_datetime,
-                    'expire_datetime': now_datetime + NOTIFICATION_HIST_TTL,
+                    'expire_datetime': expire_datetime,
                     'notification_user_list': notification_settings.get('notification_target_list')
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
