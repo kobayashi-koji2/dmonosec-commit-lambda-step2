@@ -36,7 +36,7 @@ services:
       - NO_SIGNAL=3
       - NOTIFICATION_HIST_TTL=94694400000
       - HIST_LIST_TTL=94694400000
-      - CNT_HIST_TTL=94694400000
+      - CNT_HIST_TTL_YEAR=3
     volumes:
       - ./contents:/var/task
     ports:
