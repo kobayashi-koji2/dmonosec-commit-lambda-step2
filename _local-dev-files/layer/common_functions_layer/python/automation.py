@@ -7,10 +7,10 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import textwrap
-from operator import itemgetter
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
+from botocore.exceptions import ClientError
 from aws_lambda_powertools import Logger
 
 import db
@@ -22,6 +22,8 @@ logger = Logger()
 
 AWS_DEFAULT_REGION = os.environ["AWS_DEFAULT_REGION"]
 LAMBDA_TIMEOUT_CHECK = os.environ["LAMBDA_TIMEOUT_CHECK"]
+HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
+REMOTE_CONTROLS_TTL = int(os.environ["REMOTE_CONTROLS_TTL"])
 
 aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 iot = boto3.client("iot-data", region_name=AWS_DEFAULT_REGION)
@@ -55,7 +57,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     try:
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
-        contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
@@ -65,6 +66,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
         automations_table = dynamodb.Table(ssm.table_names["AUTOMATIONS_TABLE"])
+        control_status_table = dynamodb.Table(ssm.table_names["CONTROL_STATUS_TABLE"])
     except KeyError as e:
         return {"result": False, "message": e}
 
@@ -130,6 +132,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 account_table,
                 user_table,
                 notification_hist_table,
+                "link_di_state",
             )
 
             # 履歴一覧登録
@@ -141,6 +144,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 automation,
                 control_do,
                 notification_hist_id,
+                "not_executed",
                 hist_list_table,
             )
 
@@ -149,9 +153,101 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 "message": "制御対象デバイスの接点入力状態がすでに変更済みです。",
             }
 
-    # TODO 制御中判定
-    # TODO メール通知
-    # TODO 履歴情報登録
+    # 制御中判定
+    # 制御状況を追加（同時処理の排他制御）
+    if control_do.get("do_di_return"):
+        # 紐づけありの場合は、30秒後に制御状況を自動削除
+        delete_second = 30
+    else:
+        # 紐づけなしの場合は、10秒後に制御状況を自動削除
+        delete_second = 10
+    if not _check_control_status(
+        control_device.get("device_id"),
+        control_do.get("do_no"),
+        delete_second,
+        control_status_table,
+    ):
+        # メール通知
+        notification_hist_id = _send_not_exec_mail(
+            event_datetime,
+            trigger_device,
+            control_device,
+            group_list,
+            automation,
+            terminal_no,
+            control_do,
+            account_table,
+            user_table,
+            notification_hist_table,
+            "control_status",
+        )
+
+        # 履歴一覧登録
+        _put_hist_list(
+            event_datetime,
+            trigger_device,
+            control_device,
+            group_list,
+            automation,
+            control_do,
+            notification_hist_id,
+            "not_executed_done",
+            hist_list_table,
+        )
+
+        return {
+            "result": False,
+            "message": "他のユーザー操作、タイマーまたは連動により制御中です。",
+        }
+
+    # 最新制御情報を確認
+    remote_control_latest = _get_remote_control_latest(
+        control_device.get("device_id"), control_do.get("do_no"), remote_controls_table
+    )
+    if len(remote_control_latest) > 0:
+        remote_control_latest = remote_control_latest[0]
+        link_di_no = remote_control_latest.get("link_di_no")
+        logger.info(f"remote_control_latest: {remote_control_latest}")
+
+        # 制御中判定
+        if not remote_control_latest.get("control_result") or (
+            link_di_no
+            and remote_control_latest.get("control_result") != "9999"
+            and not remote_control_latest.get("link_di_result")
+        ):
+            logger.info("Not processed because it was judged that it was already under control")
+            # メール通知
+            notification_hist_id = _send_not_exec_mail(
+                event_datetime,
+                trigger_device,
+                control_device,
+                group_list,
+                automation,
+                terminal_no,
+                control_do,
+                account_table,
+                user_table,
+                notification_hist_table,
+                "control_status",
+            )
+
+            # 履歴一覧登録
+            _put_hist_list(
+                event_datetime,
+                trigger_device,
+                control_device,
+                group_list,
+                automation,
+                control_do,
+                notification_hist_id,
+                "not_executed_done",
+                hist_list_table,
+            )
+
+            return {
+                "result": False,
+                "message": "他のユーザー操作、タイマーまたは連動により制御中です。",
+            }
 
     # 要求番号生成
     icc_id = control_device["device_data"]["param"]["iccid"]
@@ -160,8 +256,16 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     # 制御実行（MQTT）
     _cmd_exec(icc_id, req_no, control_do)
 
-    # TODO 要求データ登録
+    # 要求データ登録
     device_req_no = icc_id + "-" + req_no
+    _put_remote_controls(
+        trigger_device,
+        control_device,
+        automation,
+        device_req_no,
+        control_do,
+        remote_controls_table,
+    )
 
     # タイムアウト判定Lambda呼び出し
     payload = {"body": json.dumps({"device_req_no": device_req_no})}
@@ -173,6 +277,70 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
 
+def _put_remote_controls(
+    trigger_device,
+    control_device,
+    automation,
+    device_req_no,
+    control_do,
+    remote_controls_table,
+):
+    now_unixtime = int(time.time() * 1000)
+    remote_controls_item = {
+        "device_req_no": device_req_no,
+        "req_datetime": now_unixtime,
+        "expire_datetime": now_unixtime + REMOTE_CONTROLS_TTL,
+        "device_id": control_device.get("device_id"),
+        "contract_id": control_device.get("device_data", {}).get("param", {}).get("contract_id"),
+        "control": control_do.get("do_control"),
+        "control_trigger": "automation_control",
+        "do_no": control_do.get("do_no"),
+        "link_di_no": control_do.get("do_di_return"),
+        "iccid": control_device.get("device_data", {}).get("param", {}).get("icc_id"),
+        "automation_trigger_device_name": trigger_device.get("device_data", {})
+        .get("config", {})
+        .get("device_name"),
+        "automation_trigger_imei": trigger_device.get("imei"),
+        "automation_trigger_event_type": automation.get("trigger_event_type"),
+        "automation_trigger_terminal_no": automation.get("trigger_terminal_no"),
+        "automation_trigger_event_detail_state": automation.get("trigger_event_detail_state"),
+        "automation_trigger_event_detail_flag": automation.get("trigger_event_detail_flag"),
+    }
+    remote_controls_table.put_item(Item=remote_controls_item)
+
+
+def _check_control_status(device_id, do_no, delete_second, table):
+    try:
+        put_item = {
+            "device_id": device_id,
+            "do_no": do_no,
+            "del_datetime": int(time.time() + delete_second),
+        }
+        put_item_fmt = json.loads(json.dumps(put_item), parse_float=decimal.Decimal)
+        table.put_item(
+            Item=put_item_fmt,
+            ConditionExpression="attribute_not_exists(device_id)",
+        )
+        return True
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            logger.info(e)
+            return False
+        else:
+            raise
+
+
+def _get_remote_control_latest(device_id, do_no, table):
+    response = table.query(
+        IndexName="device_id_req_datetime_index",
+        KeyConditionExpression=Key("device_id").eq(device_id),
+        FilterExpression=Attr("do_no").eq(do_no),
+        ScanIndexForward=False,  # 降順
+        Limit=1,
+    ).get("Items", [])
+    return response
+
+
 def _put_hist_list(
     event_datetime,
     trigger_device,
@@ -181,6 +349,7 @@ def _put_hist_list(
     automation,
     control_do,
     notification_hist_id,
+    control_result,
     hist_list_table,
 ):
     event_datetime_ms = int(time.mktime(event_datetime.timetuple()) * 1000) + int(
@@ -208,6 +377,7 @@ def _put_hist_list(
         "device_id": trigger_device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": event_datetime_ms,
+        "expire_datetime": int(event_datetime_ms) + HIST_LIST_TTL,
         "hist_data": {
             "device_name": control_device.get("device_data").get("config").get("device_name"),
             "imei": control_device.get("imei"),
@@ -227,6 +397,7 @@ def _put_hist_list(
             "automation_trigger_event_detail_state": automation.get("trigger_event_detail_state"),
             "automation_trigger_event_detail_flag": automation.get("trigger_event_detail_flag"),
             "notification_hist_id": notification_hist_id,
+            "control_result": control_result,
         },
     }
     hist_list_table.put_item(Item=hist_list_item)
@@ -243,6 +414,7 @@ def _send_not_exec_mail(
     account_table,
     user_table,
     notification_hist_table,
+    mail_type,
 ):
     # 制御対象デバイスの通知設定を取得
     notification_setting = [
@@ -289,21 +461,24 @@ def _send_not_exec_mail(
             )
 
             di_no = control_do.get("link_di_no")
-            di = [
-                di
-                for di in control_device.get("device_data", {})
-                .get("config", {})
-                .get("terminal_settings", {})
-                .get("di_list", [])
-                if di.get("di_no") == di_no
-            ]
-            di_name = di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
+            if di_no:
+                di = [
+                    di
+                    for di in control_device.get("device_data", {})
+                    .get("config", {})
+                    .get("terminal_settings", {})
+                    .get("di_list", [])
+                    if di.get("di_no") == di_no
+                ]
+                di_name = (
+                    di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
+                )
 
-            di_state_name = ""
-            if automation["control_di_state"] == 0:
-                di_state_name = di[0].get("di_off_name", "クローズ")
-            elif automation["control_di_state"] == 1:
-                di_state_name = di[0].get("di_on_name", "オープン")
+                di_state_name = ""
+                if automation["control_di_state"] == 0:
+                    di_state_name = di[0].get("di_off_name", "クローズ")
+                elif automation["control_di_state"] == 1:
+                    di_state_name = di[0].get("di_on_name", "オープン")
 
             event_type_name = ""
             event_detail_name = ""
@@ -357,19 +532,36 @@ def _send_not_exec_mail(
                     event_detail_name = "異常"
 
             # メール本文
-            mail_body = textwrap.dedent(
-                f"""\
-                ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
+            mail_body = ""
+            if mail_type == "link_di_state":
+                mail_body = textwrap.dedent(
+                    f"""\
+                    ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
 
-                ■グループ：{group_name}
-                　デバイス：{control_device_name}
+                    ■グループ：{group_name}
+                    　デバイス：{control_device_name}
 
-                ■イベント内容
-                　【連動設定による制御（不実施）】
-                　{di_name}がすでに{di_state_name}のため、{do_name}の制御を行いませんでした。
-                　※連動設定「{trigger_device_name}、{event_type_name}、{event_detail_name}」による制御信号を送信しませんでした。
-            """
-            ).strip()
+                    ■イベント内容
+                    　【連動設定による制御（不実施）】
+                    　{di_name}がすでに{di_state_name}のため、{do_name}の制御を行いませんでした。
+                    　※連動設定「{trigger_device_name}、{event_type_name}、{event_detail_name}」による制御信号を送信しませんでした。
+                """
+                ).strip()
+            elif mail_type == "control_status":
+                mail_body = textwrap.dedent(
+                    f"""\
+                    ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
+
+                    ■グループ：{group_name}
+                    　デバイス：{control_device_name}
+
+                    ■イベント内容
+                    　【連動設定による制御（不実施）】
+                    　他のユーザー操作、タイマーまたは連動により、{do_name}を制御中でした。
+                    　そのため、制御を行いませんでした。
+                    　※連動設定「{trigger_device_name}、{event_type_name}、{event_detail_name}」による制御信号を送信しませんでした。
+                """
+                ).strip()
 
             # メール送信
             mail.send_email(
@@ -438,21 +630,6 @@ def _cmd_exec(icc_id, req_no, control_do):
     logger.info(f"iot_result: {iot_result}")
 
 
-def _get_device_group_list(device_id, device_relation_table, group_table):
-    group_id_list = db.get_device_relation_group_id_list(device_id, device_relation_table)
-    group_list = []
-    for group_id in group_id_list:
-        group_info = db.get_group_info(group_id, group_table)
-        if group_info:
-            group_list.append(
-                {
-                    "group_id": group_info["group_id"],
-                    "group_name": group_info["group_data"]["config"]["group_name"],
-                }
-            )
-    return group_list
-
-
 def _get_req_no(req_no_counter_table, sim_id):
     req_no_count_info = req_no_counter_table.get_item(Key={"simid": sim_id}).get("Item", {})
     if req_no_count_info:
@@ -469,7 +646,6 @@ def _get_req_no(req_no_counter_table, sim_id):
 
     else:
         count = 0
-        # TODO なぜトランザクションを使っているのか？要確認
         write_items = [
             {
                 "Put": {
