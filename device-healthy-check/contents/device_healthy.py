@@ -3,6 +3,8 @@ import boto3
 import uuid
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
+from datetime import datetime
+from dateutil import relativedelta
 
 patch_all()
 
@@ -49,11 +51,12 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         return device_current_state, hist_list_items
 
     # 履歴一覧データ作成
+    expire_datetime = int((datetime.fromtimestamp(healthy_datetime / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
     hist_list_item = {
         "device_id": device_info.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": healthy_datetime,
-        "expire_datetime": healthy_datetime + HIST_LIST_TTL,
+        "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
             "imei": device_info.get("imei"),

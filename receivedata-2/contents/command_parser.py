@@ -5,6 +5,8 @@ import json
 import boto3
 import logging
 import uuid
+from datetime import datetime 
+from dateutil import relativedelta
 from event_judge import eventJudge
 from mail_notice import mailNotice
 from automation_trigger import automationTrigger
@@ -15,8 +17,7 @@ sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 logger = Logger()
 
 DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
-CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
-
+CNT_HIST_TTL= int(os.environ["CNT_HIST_TTL"])
 
 def getByteArray(Payload, index, len):
     start = index[0]
@@ -53,6 +54,10 @@ def commandParser(
     logger.debug(
         f"commandParser開始 szSimid={szSimid}, szRecvDatetime={szRecvDatetime}, Payload={Payload}"
     )
+
+    # TTL有効期限
+    szExpireDatetime = int((datetime.fromtimestamp(szRecvDatetime / 1000) + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
+
     ### コマンド共通部 ###
     index = [0]
     # メッセージ長
@@ -121,7 +126,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
-            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
+            "expire_datetime": szExpireDatetime,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
@@ -153,7 +158,7 @@ def commandParser(
             "simid": szSimid,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
-            "expire_datetime": szRecvDatetime + CNT_HIST_TTL,
+            "expire_datetime": szExpireDatetime,
             "dev_type": nDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),

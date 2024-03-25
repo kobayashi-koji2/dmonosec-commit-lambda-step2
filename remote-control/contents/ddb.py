@@ -7,6 +7,7 @@ import uuid
 from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Attr, Key
 from botocore.exceptions import ClientError
+from dateutil import relativedelta
 
 # layer
 import convert
@@ -82,12 +83,12 @@ def put_notification_hist(
     unix_time = int(time.mktime(notification_datetime.timetuple()) * 1000)
     unix_microsecond = int(notification_datetime.microsecond / 1000)
     setting_datetime = unix_time + unix_microsecond
-    ttl_datetime = setting_datetime + NOTIFICATION_HIST_TTL
+    expire_datetime = int((notification_datetime + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,
         "notification_datetime": setting_datetime,
-        "expire_datetime": ttl_datetime,
+        "expire_datetime": expire_datetime,
         "notification_user_list": notification_user_list,
     }
     item = json.loads(json.dumps(notice_hist_item), parse_float=decimal.Decimal)

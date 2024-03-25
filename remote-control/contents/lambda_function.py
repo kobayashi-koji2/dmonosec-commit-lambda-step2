@@ -7,6 +7,7 @@ import traceback
 import uuid
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from dateutil import relativedelta
 
 import boto3
 from aws_lambda_powertools import Logger
@@ -280,6 +281,7 @@ def lambda_handler(event, context, user_info):
         device_req_no = icc_id + "-" + req_no
         do_di_return = convert.decimal_default_proc(do_info["do_di_return"])
         now_unixtime = int(time.time() * 1000)
+        expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
         put_items = [
             {
                 "Put": {
@@ -287,7 +289,7 @@ def lambda_handler(event, context, user_info):
                     "Item": {
                         "device_req_no": {"S": device_req_no},
                         "req_datetime": {"N": str(now_unixtime)},
-                        "expire_datetime": {"N": str(now_unixtime + REMOTE_CONTROLS_TTL)},
+                        "expire_datetime": {"N": str(expire_datetime)},
                         "device_id": {"S": device_id},
                         "contract_id": {"S": contract_id},
                         "control": {"S": do_info["do_control"]},
@@ -407,11 +409,12 @@ def __register_hist_info(
 
     # 履歴情報登録
     now_unixtime = int(time.time() * 1000)
+    expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
         "event_datetime": now_unixtime,
-        "expire_datetime": now_unixtime + CNT_HIST_TTL,
+        "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info["device_data"]["config"]["device_name"],
             "group_list": group_list,

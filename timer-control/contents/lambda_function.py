@@ -7,6 +7,8 @@ import uuid
 import re
 import textwrap
 from zoneinfo import ZoneInfo
+from datetime import datetime
+from dateutil import relativedelta
 
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
@@ -242,15 +244,16 @@ def lambda_handler(event, context):
                     logger.info(respons)
                     return respons
 
-                now_datetime = int(time.time() * 1000)
+                now_unixtime = int(time.time() * 1000)
+                expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
                 put_items = [
                     {
                         "Put": {
                             "TableName": remote_controls_table.name,
                             "Item": {
                                 "device_req_no": {"S": device_req_no},
-                                "req_datetime": {"N": str(now_datetime)},
-                                "expire_datetime": {"N": str(now_datetime + REMOTE_CONTROLS_TTL)},
+                                "req_datetime": {"N": str(now_unixtime)},
+                                "expire_datetime": {"N": str(expire_datetime)},
                                 "device_id": {"S": device_id},
                                 "contract_id": {"S": contract_id},
                                 "control": {"S": do_info["do_control"]},
@@ -514,12 +517,13 @@ def __register_hist_info(
         elif do_onoff_control == 1:
             hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
 
-    now_datetime = int(time.time() * 1000)
+    now_unixtime = int(time.time() * 1000)
+    expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": now_datetime,
-        "expire_datetime": now_datetime + CNT_HIST_TTL,
+        "event_datetime": now_unixtime,
+        "expire_datetime": expire_datetime,
         "hist_data": hist_data,
     }
     item = convert.dict_dynamo_format(item)
