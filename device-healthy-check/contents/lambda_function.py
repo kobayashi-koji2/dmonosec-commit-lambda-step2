@@ -5,6 +5,7 @@ import ddb
 import ssm
 import time
 import traceback
+import json
 from validate import validate
 from device_healthy import device_healthy
 from di_healthy import di_healthy
@@ -43,7 +44,7 @@ def lambda_handler(event, context):
             return -1
 
         for record in event['Records']:
-            payload = record["body"]
+            payload = json.loads(record["body"])
 
             # 現在日時を取得
             now = datetime.now()

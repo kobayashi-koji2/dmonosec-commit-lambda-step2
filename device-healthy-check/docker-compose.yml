@@ -14,8 +14,8 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
-       - NOTIFICATION_HIST_TTL=3
-       - HIST_LIST_TTL=3
+      - NOTIFICATION_HIST_TTL=3
+      - HIST_LIST_TTL=3
     volumes:
       - ./contents:/var/task
     ports:
