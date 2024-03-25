@@ -139,4 +139,4 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
-        return -1
+        raise Exception('lambda_handler異常終了')
