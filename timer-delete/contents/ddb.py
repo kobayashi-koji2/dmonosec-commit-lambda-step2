@@ -37,7 +37,7 @@ def delete_timer_settings(device_id, do_no, do_timer_id, device_table):
         "#map": "device_data",
         "#sub1": "config",
         "#sub2": "terminal_settings",
-        "#sub3": do_list,
+        "#sub3": "do_list",
     }
     device_table.update_item(
         Key={"device_id": device_id, "imei": device.get("imei")},
