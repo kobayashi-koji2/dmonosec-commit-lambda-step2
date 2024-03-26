@@ -59,7 +59,7 @@ def update_device_settings(device_id, imei, timer_settings, table):
         "#map2": "config",
         "#map3": "terminal_settings",
         "#list1": "do_list",
-        "#do_no": do_no,
+        "#do_no": str(do_no),
         "#do_timer_list": "do_timer_list"
     }
     table.update_item(
