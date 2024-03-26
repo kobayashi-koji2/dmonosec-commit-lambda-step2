@@ -54,7 +54,6 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
         # タイマー設定削除
-        body = validate_result["body"]
         device_id = validate_result["device_id"]
         do_no = validate_result["do_no"]
         do_timer_id = validate_result["do_timer_id"]
