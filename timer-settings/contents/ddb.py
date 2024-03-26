@@ -52,14 +52,13 @@ def update_device_settings(device_id, imei, timer_settings, table):
                 break
 
     do_key = "do_list"
-    update_expression = "SET #map1.#map2.#map3.#list1[#do_no].#do_timer_list = :do_list_val"
+    update_expression = "SET #map1.#map2.#map3.#list1.#do_timer_list = :do_list_val"
     expression_attribute_values = {":do_list_val": do_timer_list}
     expression_attribute_name = {
         "#map1": "device_data",
         "#map2": "config",
         "#map3": "terminal_settings",
-        "#list1": "do_list",
-        "#do_no": str(do_no),
+        "#list1": f"do_list[{do_no}]",
         "#do_timer_list": "do_timer_list"
     }
     table.update_item(
