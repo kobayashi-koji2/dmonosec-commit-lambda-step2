@@ -200,7 +200,7 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             "ai2_state": recv_data.get("analogv2"),
         }
     else:
-        current_state_info = device_current_state
+        current_state_info = device_current_state.copy()
         recv_datetime = recv_data.get("recv_datetime")
         current_state_info["signal_last_update_datetime"] = recv_datetime
         current_state_info["battery_near_last_update_datetime"] = recv_datetime
