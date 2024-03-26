@@ -45,7 +45,7 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        # パラメータチェックおよびimei取得
+        # パラメータチェック
         validate_result = validate.validate(event, user_info, tables)
         if validate_result.get("message"):
             return {
@@ -56,13 +56,12 @@ def lambda_handler(event, context, user_info):
         # タイマー設定削除
         body = validate_result["body"]
         device_id = validate_result["device_id"]
-        imei = validate_result["imei"]
-        convert_param = convert.float_to_decimal(body)
+        do_no = validate_result["do_no"]
+        do_timer_id = validate_result["do_timer_id"]
         logger.info(f"デバイスID:{device_id}")
-        logger.info(f"IMEI:{imei}")
 
         try:
-            ddb.delete_timer_settings(device_id, imei, convert_param, tables["device_table"])
+            ddb.delete_timer_settings(device_id, do_no, do_timer_id, tables["device_table"])
         except ClientError as e:
             logger.info(f"タイマー設定の削除エラー e={e}")
             res_body = {"message": "タイマー設定の削除に失敗しました。"}

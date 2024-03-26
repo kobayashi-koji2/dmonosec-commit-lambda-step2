@@ -10,16 +10,21 @@ logger = Logger()
 
 # パラメータチェック
 def validate(event, user_info, tables):
-    headers = event.get("headers", {})
     pathParam = event.get("pathParameters", {})
     body = event.get("body", {})
-    if not headers or not pathParam or not body:
+    body = json.loads(body)
+    if not pathParam or not body:
         return {"message": "リクエストパラメータが不正です。"}
-    if "Authorization" not in headers or "device_id" not in pathParam:
+    if "device_id" not in pathParam:
+        return {"message": "リクエストパラメータが不正です。"}
+    if "do_no" not in body:
+        return {"message": "リクエストパラメータが不正です。"}
+    if "do_timer_id" not in body:
         return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
-    body = json.loads(body)
+    do_no = body["do_no"]
+    do_timer_id = body["do_timer_id"]
     logger.info(f"device_id: {device_id}")
     logger.info(f"body: {body}")
 
@@ -46,7 +51,7 @@ def validate(event, user_info, tables):
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
 
-    return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
+    return {"device_id": device_id, "do_no": do_no, "do_timer_id": do_timer_id}
 
 
 # 操作権限チェック
