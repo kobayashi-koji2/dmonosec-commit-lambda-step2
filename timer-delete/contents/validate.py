@@ -38,12 +38,8 @@ def validate(event, user_info, tables):
     device_info = db.get_device_info_other_than_unavailable(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
-    if len(device_info) == 0:
+    if not device_info:
         return {"message": "デバイス情報が存在しません。"}
-    elif len(device_info) >= 2:
-        return {
-            "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
-        }
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     logger.info(f"operation_auth{operation_auth}")
