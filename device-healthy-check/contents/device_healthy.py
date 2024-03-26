@@ -21,7 +21,7 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
     # デバイスヘルシーチェック情報チェック
     device_healthy_period = device_info.get("device_data", {}).get("config", {}).get("device_healthy_period", 0)
     logger.debug(f"device_healthy_period={device_healthy_period}")
-    if device_healthy_period == 0:
+    if device_healthy_period == 0 or device_healthy_period is None:
         logger.debug(f"デバイスヘルシー未設定")
         return device_current_state, hist_list_items
 

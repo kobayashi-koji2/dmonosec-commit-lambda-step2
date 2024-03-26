@@ -28,7 +28,7 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
         di_healthy_period = di_info.get("di_healthy_period", 0)
         di_healthy_type = di_info.get("di_healthy_type")
         logger.debug(f"di_healthy_period={di_healthy_period}, di_healthy_type={di_healthy_type}")
-        if di_healthy_period == 0:
+        if di_healthy_period == 0 or di_healthy_period is None:
             logger.debug(f"DIヘルシー未設定")
             continue
 
