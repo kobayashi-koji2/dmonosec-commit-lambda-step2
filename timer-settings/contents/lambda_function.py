@@ -81,7 +81,7 @@ def lambda_handler(event, context, user_info):
             )
 
             # デバイス詳細情報生成
-            res_body = generate_detail.get_device_detail(device_info[0])
+            res_body = generate_detail.get_device_detail(device_info)
 
         except ClientError as e:
             logger.info(e)
