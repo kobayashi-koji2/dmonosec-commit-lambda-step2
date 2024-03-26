@@ -45,9 +45,9 @@ def validate(event, user_info, tables):
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
-    # 端子設定チェック
-    terminal = terminal_check(body, device_id, device_info[0]["device_type"], tables)
-    if not terminal:
+    # デバイス種別チェック
+    device_terminal = device_terminal_check(device_info[0]["device_type"], body)
+    if not device_terminal:
         return {"message": "デバイス種別と端子設定が一致しません。"}
 
     input = input_check(body)
@@ -79,24 +79,11 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     return True
 
 
-# 端子設定チェック
-def terminal_check(body, device_id, device_type, tables):
-    do = len(body.get("do_list", {}))
-    do_no_list = []
-    # デバイス種別と端子数
-    if (
-        (device_type == "PJ1" and do == 0)
-        or (device_type == "PJ2" and do == 2)
-        or (device_type == "PJ3" and do == 2)
-    ):
-        # 端子番号
-        for item in body.get("do_list", {}):
-            do_no_list.append(item.get("do_no"))
-        # 端子番号の範囲
-        if all(1 <= int(num) <= do for num in do_no_list):
-            # 端子番号の重複
-            if len(set(do_no_list)) == len(do_no_list):
-                return True
+# デバイス種別,端子番号チェック
+def device_terminal_check(device_type, body):
+    if device_type == "PJ2":
+        if body.get("do_no") in [1,2]:
+            return True
     return False
 
 
