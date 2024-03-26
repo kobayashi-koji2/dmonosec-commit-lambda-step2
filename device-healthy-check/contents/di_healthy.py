@@ -59,13 +59,17 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
             logger.debug(f"接点入力{di_no}_最終変化検知日時 device_id={device_info.get("device_id")}")
             continue
 
-        # 現状態比較
+        # 現状態初期化
         current_di_healthy_state = f"di{di_no}_healthy_state"
-        if device_current_state.get(current_di_healthy_state, 0) != di_healthy_state:
+        if current_di_healthy_state not in device_current_state:
+            device_current_state[current_di_healthy_state] = 0
+
+        # 現状態比較
+        if device_current_state[current_di_healthy_state] != di_healthy_state:
             device_current_state[current_di_healthy_state] = di_healthy_state
-            logger.debug(f"ヘルシー状態変化 di_healthy_state={di_healthy_state}")
+            logger.debug(f"DIヘルシー状態変化 di_healthy_state={di_healthy_state}")
         else:
-            logger.debug(f"ヘルシー状態未変化 device_id={device_info.get("device_id")}")
+            logger.debug(f"DIヘルシー状態未変化 device_id={device_info.get("device_id")}")
             continue
 
         # 履歴一覧データ作成

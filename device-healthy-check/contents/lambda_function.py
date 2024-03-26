@@ -104,7 +104,7 @@ def lambda_handler(event, context):
                     device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger)
 
                 if hist_list_items:
-                # 現状態更新
+                    # 現状態更新
                     ddb.update_current_state(device_id, device_current_state, state_table)
                     logger.debug("現状態更新")
 

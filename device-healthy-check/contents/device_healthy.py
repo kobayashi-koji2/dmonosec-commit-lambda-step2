@@ -42,12 +42,16 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         logger.debug(f"機器異常_最終更新日時が未設定 device_id={device_info.get("device_id")}")
         return device_current_state, hist_list_items
 
+    # 現状態初期化
+    if "device_healthy_state" not in device_current_state:
+        device_current_state["device_healthy_state"] = 0
+
     # 現状態比較
-    if device_current_state.get("device_healthy_state") != device_healthy_state:
+    if device_current_state["device_healthy_state"] != device_healthy_state:
         device_current_state["device_healthy_state"] = device_healthy_state
-        logger.debug("ヘルシー状態変化 device_healthy_state")
+        logger.debug(f"デバイスヘルシー状態変化 {device_healthy_state}")
     else:
-        logger.debug(f"ヘルシー状態未変化 device_id={device_info.get("device_id")}")
+        logger.debug(f"デバイスヘルシー状態未変化 device_id={device_info.get("device_id")}")
         return device_current_state, hist_list_items
 
     # 履歴一覧データ作成
