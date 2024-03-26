@@ -22,7 +22,7 @@ def get_device_info(pk, table):
 
 # デバイス設定更新
 def update_device_settings(device_id, imei, timer_settings, table):
-    timer_value = []
+    timer_value = {}
 
     do_no = timer_settings.get("do_no") - 1
 
