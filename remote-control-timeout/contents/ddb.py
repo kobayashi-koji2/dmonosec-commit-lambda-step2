@@ -99,7 +99,7 @@ def put_hist_list(
                 }
             )
 
-    expire_datetime = int((datetime.datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
+    expire_datetime = int((datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
     
     hist_list_item = {
         "device_id": device.get("device_id"),
