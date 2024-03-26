@@ -1,5 +1,4 @@
 import json
-import ddb
 from aws_lambda_powertools import Logger
 
 # layer
@@ -36,7 +35,7 @@ def validate(event, user_info, tables):
     ##################
     # 2 デバイス操作権限チェック
     ##################
-    device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+    device_info = db.get_device_info_other_than_unavailable(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
     if len(device_info) == 0:
