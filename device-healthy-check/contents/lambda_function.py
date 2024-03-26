@@ -97,7 +97,7 @@ def lambda_handler(event, context):
 
                 # 現状態判定
                 if device_current_state is None:
-                    logger.error(f"現状態未登録 device_id={device_id}")
+                    logger.debug(f"現状態未登録 device_id={device_id}")
                     continue
 
                 # デバイスヘルシーチェック
