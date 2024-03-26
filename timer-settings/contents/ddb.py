@@ -36,7 +36,7 @@ def update_device_settings(device_id, imei, timer_settings, table):
     # 接点出力タイマー一覧を取得
     device_info = get_device_info(device_id, table).get("Items", {})
     device_info = device_info[0]
-    do_timer_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"][do_no]
+    do_timer_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"][do_no]["do_timer_list"]
     logger.info(f"do_timer_list={do_timer_list}")
 
     # 接点出力_タイマーIDがなければ、新規作成
@@ -52,14 +52,15 @@ def update_device_settings(device_id, imei, timer_settings, table):
                 break
 
     do_key = "do_list"
-    update_expression = "SET #map1.#map2.#map3.#list1[#do_no] = :do_list_val"
+    update_expression = "SET #map1.#map2.#map3.#list1[#do_no].#do_timer_list = :do_list_val"
     expression_attribute_values = {":do_list_val": do_timer_list}
     expression_attribute_name = {
         "#map1": "device_data",
         "#map2": "config",
         "#map3": "terminal_settings",
         "#list1": "do_list",
-        "#do_no": do_no
+        "#do_no": do_no,
+        "#do_timer_list": "do_timer_list"
     }
     table.update_item(
         Key={"device_id": device_id, "imei": imei},
