@@ -6,25 +6,17 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 
+import db
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 
 
-# デバイス情報取得(契約状態:使用不可以外)
-def get_device_info(pk, table):
-    response = table.query(
-        KeyConditionExpression=Key("device_id").eq(pk),
-        FilterExpression=Attr("contract_state").ne(2),
-    )
-    return response
-
-
 # デバイス設定更新
-def update_device_settings(device_id, imei, timer_settings, table):
+def update_device_settings(device_id, timer_settings, table):
     timer_value = {}
 
-    do_no = timer_settings.get("do_no") - 1
+    do_no = timer_settings.get("do_no")
 
     timer_value["do_timer_id"] = timer_settings.get("do_timer_id", "")
     timer_value["do_timer_name"] = timer_settings.get("do_timer_name", "")
@@ -34,35 +26,38 @@ def update_device_settings(device_id, imei, timer_settings, table):
     logger.info(f"timer_value={timer_value}")
 
     # 接点出力タイマー一覧を取得
-    device_info = get_device_info(device_id, table).get("Items", {})
-    device_info = device_info[0]
-    do_timer_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"][do_no]["do_timer_list"]
+    device_info = db.get_device_info_other_than_unavailable(device_id, table)
+    do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+    do_timer_list = []
+    for do in do_list:
+        if do["do_no"] == do_no:
+            do_timer_list = do.get("do_timer_list", [])
+            break
     logger.info(f"do_timer_list={do_timer_list}")
 
     # 接点出力_タイマーIDがなければ、新規作成
-    if timer_value["do_timer_id"] == "":
+    if not timer_value["do_timer_id"]:
         timer_value["do_timer_id"] = str(uuid.uuid4())
         do_timer_list.append(timer_value)
-        logger.info(f"add timer_id={timer_value["do_timer_id"]}")
+        logger.info(f"add timer_id={timer_value['do_timer_id']}")
     else:
         for index, item in enumerate(do_timer_list):
-            if item["do_timer_id"] == timer_value["do_timer_id"] :
+            if item["do_timer_id"] == timer_value["do_timer_id"]:
                 do_timer_list[index] = timer_value
-                logger.info(f"update timer_id={timer_value["do_timer_id"]}")
+                logger.info(f"update timer_id={timer_value['do_timer_id']}")
                 break
+    logger.debug(f"do_list: {do_list}")
 
-    do_key = "do_list"
-    update_expression = "SET #map1.#map2.#map3.#list1.#do_timer_list = :do_list_val"
-    expression_attribute_values = {":do_list_val": do_timer_list}
+    update_expression = "SET #map.#sub1.#sub2.#sub3 = :do_list"
+    expression_attribute_values = {":do_list": do_list}
     expression_attribute_name = {
-        "#map1": "device_data",
-        "#map2": "config",
-        "#map3": "terminal_settings",
-        "#list1": f"do_list[{do_no}]",
-        "#do_timer_list": "do_timer_list"
+        "#map": "device_data",
+        "#sub1": "config",
+        "#sub2": "terminal_settings",
+        "#sub3": "do_list",
     }
     table.update_item(
-        Key={"device_id": device_id, "imei": imei},
+        Key={"device_id": device_id, "imei": device_info.get("imei")},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,
