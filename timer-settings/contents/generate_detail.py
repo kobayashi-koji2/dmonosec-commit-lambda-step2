@@ -3,18 +3,8 @@ from aws_lambda_powertools import Logger
 logger = Logger()
 
 
-def get_device_detail(device_info, device_state, group_info_list):
-    group_list = []
-    for item in group_info_list:
-        group_list.append(
-            {
-                "group_id": item["group_id"],
-                "group_name": item["group_data"]["config"]["group_name"],
-            }
-        )
-    terminal_info = terminal_info_fmt(
-        device_info["device_data"]["config"]["terminal_settings"], device_state
-    )
+def get_device_detail(device_info):
+    terminal_info = terminal_info_fmt(device_info["device_data"]["config"]["terminal_settings"])
 
     # レスポンス生成
     device_detail = {
@@ -25,7 +15,7 @@ def get_device_detail(device_info, device_state, group_info_list):
     return device_detail
 
 
-def terminal_info_fmt(terminal_settings, device_state):
+def terminal_info_fmt(terminal_settings):
     do_list = []
 
     for item in terminal_settings.get("do_list", {}):

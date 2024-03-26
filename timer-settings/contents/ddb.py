@@ -21,50 +21,45 @@ def get_device_info(pk, table):
 
 
 # デバイス設定更新
-def update_device_settings(device_id, imei, device_settings, table):
-    map_attribute_name = "device_data"
-    sub_attribute_name1 = "config"
-    sub_attribute_name2 = "terminal_settings"
-    do_new_val = device_settings.get("do_list", {})
-    result = ""
+def update_device_settings(device_id, imei, timer_settings, table):
+    timer_value = []
 
-    for do in do_new_val:
-        do_no = do.get("do_no")
-        if do is not None:
-            do["do_no"] = Decimal(do_no)
+    do_no = timer_settings.get("do_no") - 1
 
-        do_timer_list = do.get("do_timer_list", [])
-        for do_timer in do_timer_list:
-            req_do_timer_id = do_timer.get("do_timer_id", "")
-            # 接点出力_タイマーIDがなければ、新規作成
-            if req_do_timer_id == "":
-                do_timer["do_timer_id"] = str(uuid.uuid4())
-                result = True
-                return result
-            # 値がある場合、更新
-            else:
-                # 接点出力タイマー一覧を取得
-                device_info = get_device_info(device_id, table).get("Items", {})
-                device_info = device_info[0]
-                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-                for do in do_list:
-                    do_timer_list = do.get("do_timer_list", [])
-                    for do_timer in do_timer_list:
-                        logger.info(f"req_do_timer_id: {req_do_timer_id}")
-                        do_timer["do_timer_id"] = req_do_timer_id
+    timer_value["do_timer_id"] = timer_settings.get("do_timer_id", "")
+    timer_value["do_timer_name"] = timer_settings.get("do_timer_name", "")
+    timer_value["do_onoff_control"] = Decimal(timer_settings.get("do_onoff_control"))
+    timer_value["do_time"] = timer_settings.get("do_time", "")
+    timer_value["do_weekday"] = timer_settings.get("do_weekday", "")
+    logger.info(f"timer_value={timer_value}")
 
-            do_onoff_control = do_timer.get("do_onoff_control")
-            if do_onoff_control is not None:
-                do_timer["do_onoff_control"] = Decimal(do_onoff_control)
+    # 接点出力タイマー一覧を取得
+    device_info = get_device_info(device_id, table).get("Items", {})
+    device_info = device_info[0]
+    do_timer_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"][do_no]
+    logger.info(f"do_timer_list={do_timer_list}")
+
+    # 接点出力_タイマーIDがなければ、新規作成
+    if timer_value["do_timer_id"] == "":
+        timer_value["do_timer_id"] = str(uuid.uuid4())
+        do_timer_list.append(timer_value)
+        logger.info(f"add timer_id={timer_value["do_timer_id"]}")
+    else:
+        for index, item in enumerate(do_timer_list):
+            if item["do_timer_id"] == timer_value["do_timer_id"] :
+                do_timer_list[index] = timer_value
+                logger.info(f"update timer_id={timer_value["do_timer_id"]}")
+                break
 
     do_key = "do_list"
-    update_expression = "SET #map.#sub1.#sub2.#do_key = :do_new_val"
-    expression_attribute_values = {":do_new_val": do_new_val}
+    update_expression = "SET #map1.#map2.#map3.#list1[#do_no] = :do_list_val"
+    expression_attribute_values = {":do_list_val": do_timer_list}
     expression_attribute_name = {
-        "#map": map_attribute_name,
-        "#sub1": sub_attribute_name1,
-        "#sub2": sub_attribute_name2,
-        "#do_key": do_key,
+        "#map1": "device_data",
+        "#map2": "config",
+        "#map3": "terminal_settings",
+        "#list1": "do_list",
+        "#do_no": do_no
     }
     table.update_item(
         Key={"device_id": device_id, "imei": imei},
