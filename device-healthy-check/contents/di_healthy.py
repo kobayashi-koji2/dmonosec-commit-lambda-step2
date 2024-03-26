@@ -52,7 +52,7 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
             if elapsed_time >= di_healthy_period_time:
                 di_healthy_state = 1
                 # 発生日時 = 最終受信日時 + アラート期間
-                healthy_datetime = last_recv_datetime + di_healthy_period_time
+                healthy_datetime = int(last_recv_datetime + di_healthy_period_time)
             else:
                 di_healthy_state = 0
         else:

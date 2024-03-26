@@ -35,7 +35,7 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         if elapsed_time >= device_healthy_period_time:
             device_healthy_state = 1
             # 発生日時 = 最終受信日時 + アラート期間
-            healthy_datetime = last_recv_datetime + device_healthy_period_time
+            healthy_datetime = int(last_recv_datetime + device_healthy_period_time)
         else:
             device_healthy_state = 0
     else:
