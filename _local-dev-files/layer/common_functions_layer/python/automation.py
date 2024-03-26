@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import textwrap
+from dateutil import relativedelta
 
 import boto3
 from boto3.dynamodb.conditions import Attr, Key
@@ -36,10 +37,14 @@ client = boto3.client(
 
 
 def automation_control(device_id, event_type, terminal_no, di_state, occurrence_flag):
+    logger.info(
+        f"exec automation control: {device_id} {event_type} {terminal_no} {di_state} {occurrence_flag}"
+    )
+
     # パラメータチェック
     if not event_type:
         return {"result": False, "message": "イベント項目が指定されていません。"}
-    if event_type == "di_change":
+    if event_type == "di_change_state":
         if not terminal_no:
             return {"result": False, "message": "接点端子が指定されていません。"}
         if not di_state:
@@ -65,17 +70,18 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         hist_list_table = dynamodb.Table(ssm.table_names["HIST_LIST_TABLE"])
         group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
         notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
-        automations_table = dynamodb.Table(ssm.table_names["AUTOMATIONS_TABLE"])
+        automation_table = dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"])
         control_status_table = dynamodb.Table(ssm.table_names["CONTROL_STATUS_TABLE"])
     except KeyError as e:
         return {"result": False, "message": e}
 
     # 連動制御設定取得
     automation = _get_automation(
-        automations_table, device_id, event_type, terminal_no, di_state, occurrence_flag
+        automation_table, device_id, event_type, terminal_no, di_state, occurrence_flag
     )
     if not automation:
-        return {"result": False, "message": "連想制御設定が存在しません。"}
+        return {"result": False, "message": "連動制御設定が存在しません。"}
+    logger.info(f"automation setting: {automation}")
 
     # トリガーデバイス情報取得
     trigger_device = db.get_device_info_other_than_unavailable(device_id, device_table)
@@ -276,6 +282,8 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     )
     logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
+    return {"result": True, "message": "連動制御を実行しました。"}
+
 
 def _put_remote_controls(
     trigger_device,
@@ -286,10 +294,16 @@ def _put_remote_controls(
     remote_controls_table,
 ):
     now_unixtime = int(time.time() * 1000)
+    expire_datetime = int(
+        (
+            datetime.fromtimestamp(now_unixtime / 1000)
+            + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
+        ).timestamp()
+    )
     remote_controls_item = {
         "device_req_no": device_req_no,
         "req_datetime": now_unixtime,
-        "expire_datetime": now_unixtime + REMOTE_CONTROLS_TTL,
+        "expire_datetime": expire_datetime,
         "device_id": control_device.get("device_id"),
         "contract_id": control_device.get("device_data", {}).get("param", {}).get("contract_id"),
         "control": control_do.get("do_control"),
@@ -355,6 +369,9 @@ def _put_hist_list(
     event_datetime_ms = int(time.mktime(event_datetime.timetuple()) * 1000) + int(
         event_datetime.microsecond / 1000
     )
+    expire_datetime = int(
+        (event_datetime + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()
+    )
 
     di_no = control_do.get("link_di_no")
     di = [
@@ -377,7 +394,7 @@ def _put_hist_list(
         "device_id": trigger_device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": event_datetime_ms,
-        "expire_datetime": int(event_datetime_ms) + HIST_LIST_TTL,
+        "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": control_device.get("device_data").get("config").get("device_name"),
             "imei": control_device.get("imei"),
@@ -660,9 +677,9 @@ def _get_req_no(req_no_counter_table, sim_id):
 
 
 def _get_automation(
-    automations_table, device_id, event_type, terminal_no, di_state, occurrence_flag
+    automation_table, device_id, event_type, terminal_no, di_state, occurrence_flag
 ):
-    automation_list = automations_table.query(
+    automation_list = automation_table.query(
         IndexName="trigger_device_id_index",
         KeyConditionExpression=Key("trigger_device_id").eq(device_id),
     )["Items"]
