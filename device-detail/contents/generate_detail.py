@@ -80,6 +80,7 @@ def terminal_info_fmt(terminal_settings, device_state):
             do_timer_list.append(
                 {
                     "do_timer_id": timer_item.get("do_timer_id", ""),
+                    "do_timer_name": timer_item.get("do_timer_name", ""),
                     "do_onoff_control": timer_item.get("do_onoff_control", ""),
                     "do_time": timer_item.get("do_time", ""),
                     "do_weekday": timer_item.get("do_weekday", ""),
