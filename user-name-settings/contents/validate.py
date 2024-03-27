@@ -12,9 +12,9 @@ REQUEST_BODY_SCHEMA = {
     "properties": {
         "user_name": {
             "type": "string",
-            "pattern": "^[A-Z0-9]*$"
+            "minLength": 1,
         }
-    }
+    },
 }
 
 
