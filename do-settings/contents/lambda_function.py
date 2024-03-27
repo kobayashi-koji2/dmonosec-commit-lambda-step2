@@ -58,12 +58,10 @@ def lambda_handler(event, context, user_info):
         # デバイス設定更新
         body = validate_result["body"]
         device_id = validate_result["device_id"]
-        imei = validate_result["imei"]
         convert_param = convert.float_to_decimal(body)
         logger.info(f"デバイスID:{device_id}")
-        logger.info(f"IMEI:{imei}")
         try:
-            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
+            ddb.update_device_settings(device_id, convert_param, tables["device_table"])
         except ClientError as e:
             logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"message": "デバイス設定の更新に失敗しました。"}
@@ -78,7 +76,9 @@ def lambda_handler(event, context, user_info):
         # デバイス情報取得
         try:
             # デバイス設定取得
-            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+            device_info = db.get_device_info_other_than_unavailable(
+                device_id, tables["device_table"]
+            ).get("Items", {})
             # デバイス現状態取得
             device_state = db.get_device_state(device_id, tables["device_state_table"])
             # グループ情報取得
@@ -92,7 +92,7 @@ def lambda_handler(event, context, user_info):
                     group_info_list.append(group_info)
             # デバイス詳細情報生成
             res_body = generate_detail.get_device_detail(
-                device_info[0], device_state, group_info_list
+                device_info, device_state, group_info_list
             )
 
         except ClientError as e:
