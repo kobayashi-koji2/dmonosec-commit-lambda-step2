@@ -31,7 +31,10 @@ def update_device_settings(device_id, timer_settings, table):
     do_timer_list = []
     for do in do_list:
         if do["do_no"] == do_no:
-            do_timer_list = do.get("do_timer_list", [])
+            if "do_timer_list" in do:
+                do_timer_list = do.get("do_timer_list", [])
+            else:
+                do["do_timer_list"] = do_timer_list
             break
     logger.info(f"do_timer_list={do_timer_list}")
 
