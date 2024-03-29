@@ -21,6 +21,12 @@ def update_device_settings(device_id, params, table):
     for do in do_list:
         for param_do in param_do_list:
             if do["do_no"] == param_do.get("do_no"):
+                if (
+                    do["do_control"] != param_do.get("do_control") or
+                    do["do_specified_time"] != param_do.get("do_specified_time") or
+                    do["do_di_return"] != param_do.get("do_di_return")
+                ):
+                    do["do_timer_list"] = []
                 do["do_control"] = param_do.get("do_control")
                 do["do_di_return"] = param_do.get("do_di_return")
                 do["do_name"] = param_do.get("do_name")
