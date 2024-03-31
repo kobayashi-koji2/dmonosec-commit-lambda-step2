@@ -1,7 +1,6 @@
 import json
 import boto3
 import validate
-import generate_detail
 import os
 import ddb
 from botocore.exceptions import ClientError
@@ -11,7 +10,6 @@ from aws_xray_sdk.core import patch_all
 
 # layer
 import auth
-import db
 import convert
 import ssm
 
@@ -47,7 +45,7 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        # パラメータチェックおよびimei取得
+        # パラメータチェック
         validate_result = validate.validate(event, user_info, tables)
         if validate_result.get("message"):
             return {
@@ -55,16 +53,17 @@ def lambda_handler(event, context, user_info):
                 "headers": res_headers,
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
-        # デバイス設定更新
-        body = validate_result["body"]
+        # タイマー設定削除
         device_id = validate_result["device_id"]
-        convert_param = convert.float_to_decimal(body)
+        do_no = validate_result["do_no"]
+        do_timer_id = validate_result["do_timer_id"]
         logger.info(f"デバイスID:{device_id}")
+
         try:
-            ddb.update_device_settings(device_id, convert_param, tables["device_table"])
+            ddb.delete_timer_settings(device_id, do_no, do_timer_id, tables["device_table"])
         except ClientError as e:
-            logger.info(f"デバイス設定更新エラー e={e}")
-            res_body = {"message": "デバイス設定の更新に失敗しました。"}
+            logger.info(f"タイマー設定の削除エラー e={e}")
+            res_body = {"message": "タイマー設定の削除に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,
@@ -72,38 +71,9 @@ def lambda_handler(event, context, user_info):
                     res_body, ensure_ascii=False, default=convert.decimal_default_proc
                 ),
             }
-
-        # デバイス情報取得
-        try:
-            # デバイス設定取得
-            device_info = db.get_device_info_other_than_unavailable(
-                device_id, tables["device_table"]
-            )
-            # デバイス現状態取得
-            device_state = db.get_device_state(device_id, tables["device_state_table"])
-            # グループ情報取得
-            group_id_list = db.get_device_relation_group_id_list(
-                device_id, tables["device_relation_table"]
-            )
-            group_info_list = []
-            for group_id in group_id_list:
-                group_info = db.get_group_info(group_id, tables["group_table"])
-                if group_info:
-                    group_info_list.append(group_info)
-            # デバイス詳細情報生成
-            res_body = generate_detail.get_device_detail(
-                device_info, device_state, group_info_list
-            )
-
-        except ClientError as e:
-            logger.info(e)
-            body = {"message": "デバイス詳細の取得に失敗しました。"}
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps(body, ensure_ascii=False),
-            }
-        logger.info(f"レスポンス:{res_body}")
+        res_body = {
+            "message": "",
+        }
         return {
             "statusCode": 200,
             "headers": res_headers,

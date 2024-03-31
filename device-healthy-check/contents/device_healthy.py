@@ -21,7 +21,7 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
     # デバイスヘルシーチェック情報チェック
     device_healthy_period = device_info.get("device_data", {}).get("config", {}).get("device_healthy_period", 0)
     logger.debug(f"device_healthy_period={device_healthy_period}")
-    if device_healthy_period == 0:
+    if device_healthy_period == 0 or device_healthy_period is None:
         logger.debug(f"デバイスヘルシー未設定")
         return device_current_state, hist_list_items
 
@@ -35,19 +35,23 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         if elapsed_time >= device_healthy_period_time:
             device_healthy_state = 1
             # 発生日時 = 最終受信日時 + アラート期間
-            healthy_datetime = last_recv_datetime + device_healthy_period_time
+            healthy_datetime = int(last_recv_datetime + device_healthy_period_time)
         else:
             device_healthy_state = 0
     else:
         logger.debug(f"機器異常_最終更新日時が未設定 device_id={device_info.get("device_id")}")
         return device_current_state, hist_list_items
 
+    # 現状態初期化
+    if "device_healthy_state" not in device_current_state:
+        device_current_state["device_healthy_state"] = 0
+
     # 現状態比較
-    if device_current_state.get("device_healthy_state") != device_healthy_state:
+    if device_current_state["device_healthy_state"] != device_healthy_state:
         device_current_state["device_healthy_state"] = device_healthy_state
-        logger.debug("ヘルシー状態変化 device_healthy_state")
+        logger.debug(f"デバイスヘルシー状態変化 {device_healthy_state}")
     else:
-        logger.debug(f"ヘルシー状態未変化 device_id={device_info.get("device_id")}")
+        logger.debug(f"デバイスヘルシー状態未変化 device_id={device_info.get("device_id")}")
         return device_current_state, hist_list_items
 
     # 履歴一覧データ作成

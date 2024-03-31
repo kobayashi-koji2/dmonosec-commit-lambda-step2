@@ -1,55 +1,43 @@
-from decimal import Decimal
-
 from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 
+import db
 
 logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 
 
-# デバイス情報取得(契約状態:使用不可以外)
-def get_device_info(pk, table):
-    response = table.query(
-        KeyConditionExpression=Key("device_id").eq(pk),
-        FilterExpression=Attr("contract_state").ne(2),
-    )
-    return response
-
-
 # デバイス設定更新
-def update_device_settings(device_id, imei, device_settings, table):
+def update_device_settings(device_id, params, table):
     map_attribute_name = "device_data"
     sub_attribute_name1 = "config"
     sub_attribute_name2 = "terminal_settings"
-    do_new_val = device_settings.get("do_list", {})
+    param_do_list = params.get("do_list", {})
 
-    for do in do_new_val:
-        do_no = do.get("do_no")
-        if do is not None:
-            do["do_no"] = Decimal(do_no)
-
-        do_specified_time = do.get("do_specified_time")
-        if do_specified_time is not None:
-            do["do_specified_time"] = Decimal(do_specified_time)
-
-        do_di_return = do.get("do_di_return")
-        if do_di_return is not None:
-            do["do_di_return"] = Decimal(do_di_return)
-
-        do_timer_list = do.get("do_timer_list", [])
-        for do_timer in do_timer_list:
-            do_onoff_control = do_timer.get("do_onoff_control")
-            if do_onoff_control is not None:
-                do_timer["do_onoff_control"] = Decimal(do_onoff_control)
+    device_info = db.get_device_info_other_than_unavailable(device_id, table)
+    do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+    for do in do_list:
+        for param_do in param_do_list:
+            if do["do_no"] == param_do.get("do_no"):
+                if (
+                    do["do_control"] != param_do.get("do_control") or
+                    do["do_specified_time"] != param_do.get("do_specified_time") or
+                    do["do_di_return"] != param_do.get("do_di_return")
+                ):
+                    do["do_timer_list"] = []
+                do["do_control"] = param_do.get("do_control")
+                do["do_di_return"] = param_do.get("do_di_return")
+                do["do_name"] = param_do.get("do_name")
+                do["do_specified_time"] = param_do.get("do_specified_time")
+                break
 
     do_key = "do_list"
     update_expression = "SET #map.#sub1.#sub2.#do_key = :do_new_val"
 
     expression_attribute_values = {
-        ":do_new_val": do_new_val,
+        ":do_new_val": do_list,
     }
     expression_attribute_name = {
         "#map": map_attribute_name,
@@ -58,7 +46,7 @@ def update_device_settings(device_id, imei, device_settings, table):
         "#do_key": do_key,
     }
     table.update_item(
-        Key={"device_id": device_id, "imei": imei},
+        Key={"device_id": device_id, "imei": device_info.get("imei")},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,

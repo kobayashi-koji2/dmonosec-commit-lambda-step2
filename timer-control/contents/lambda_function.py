@@ -311,7 +311,10 @@ def __check_timer_settings(do_info, dt_now):
         # タイマー時刻と一致する接点出力タイマーを抽出
         for do_timer in do_info["do_timer_list"]:
             do_time = datetime.strptime(do_timer["do_time"], s_format)
-            if (do_time.hour == dt_now.hour) and (do_time.minute == dt_now.minute):
+            do_weekday = do_timer.get("do_weekday", "").split(",")
+            # 日曜日を0、土曜日を6とした整数
+            now_weekday = (dt_now.weekday() + 1) % 7
+            if (do_time.hour == dt_now.hour) and (do_time.minute == dt_now.minute) and str(now_weekday) in do_weekday:
                 do_info["do_timer"] = do_timer
                 result = do_info
                 # 同一接点出力端子で重複した設定は不可となるので１つだけ抽出とする

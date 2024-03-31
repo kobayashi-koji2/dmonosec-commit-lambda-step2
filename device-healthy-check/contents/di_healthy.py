@@ -28,7 +28,7 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
         di_healthy_period = di_info.get("di_healthy_period", 0)
         di_healthy_type = di_info.get("di_healthy_type")
         logger.debug(f"di_healthy_period={di_healthy_period}, di_healthy_type={di_healthy_type}")
-        if di_healthy_period == 0:
+        if di_healthy_period == 0 or di_healthy_period is None:
             logger.debug(f"DIヘルシー未設定")
             continue
 
@@ -52,20 +52,24 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
             if elapsed_time >= di_healthy_period_time:
                 di_healthy_state = 1
                 # 発生日時 = 最終受信日時 + アラート期間
-                healthy_datetime = last_recv_datetime + di_healthy_period_time
+                healthy_datetime = int(last_recv_datetime + di_healthy_period_time)
             else:
                 di_healthy_state = 0
         else:
             logger.debug(f"接点入力{di_no}_最終変化検知日時 device_id={device_info.get("device_id")}")
             continue
 
-        # 現状態比較
+        # 現状態初期化
         current_di_healthy_state = f"di{di_no}_healthy_state"
-        if device_current_state.get(current_di_healthy_state, 0) != di_healthy_state:
+        if current_di_healthy_state not in device_current_state:
+            device_current_state[current_di_healthy_state] = 0
+
+        # 現状態比較
+        if device_current_state[current_di_healthy_state] != di_healthy_state:
             device_current_state[current_di_healthy_state] = di_healthy_state
-            logger.debug(f"ヘルシー状態変化 di_healthy_state={di_healthy_state}")
+            logger.debug(f"DIヘルシー状態変化 di_healthy_state={di_healthy_state}")
         else:
-            logger.debug(f"ヘルシー状態未変化 device_id={device_info.get("device_id")}")
+            logger.debug(f"DIヘルシー状態未変化 device_id={device_info.get("device_id")}")
             continue
 
         # 履歴一覧データ作成

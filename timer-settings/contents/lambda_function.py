@@ -79,21 +79,9 @@ def lambda_handler(event, context, user_info):
             device_info = db.get_device_info_other_than_unavailable(
                 device_id, tables["device_table"]
             )
-            # デバイス現状態取得
-            device_state = db.get_device_state(device_id, tables["device_state_table"])
-            # グループ情報取得
-            group_id_list = db.get_device_relation_group_id_list(
-                device_id, tables["device_relation_table"]
-            )
-            group_info_list = []
-            for group_id in group_id_list:
-                group_info = db.get_group_info(group_id, tables["group_table"])
-                if group_info:
-                    group_info_list.append(group_info)
+
             # デバイス詳細情報生成
-            res_body = generate_detail.get_device_detail(
-                device_info, device_state, group_info_list
-            )
+            res_body = generate_detail.get_device_detail(device_info)
 
         except ClientError as e:
             logger.info(e)

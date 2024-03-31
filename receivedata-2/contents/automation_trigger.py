@@ -8,10 +8,10 @@ def diNameToEventDetail(terminal_state_name, device_info):
     di_list = device_info.get("device_data", {}).get("config", {}).get("terminal_settings", {}).get("di_list", [])
     for di in di_list:
         if di.get("di_on_name") == terminal_state_name:
-            event_detail = "open"
+            event_detail = 1
             break
         elif di.get("di_off_name") == terminal_state_name:
-            event_detail = "close"
+            event_detail = 0
             break
     return event_detail
 

@@ -95,6 +95,11 @@ def lambda_handler(event, context):
                 device_current_state = ddb.get_device_state(device_id, state_table)
                 logger.debug(f"device_current_state={device_current_state}")
 
+                # 現状態判定
+                if device_current_state is None:
+                    logger.debug(f"現状態未登録 device_id={device_id}")
+                    continue
+
                 # デバイスヘルシーチェック
                 if (event_trigger == "lambda-receivedata-2" and event_type == "device_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
                     device_current_state, hist_list_items = device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime)
@@ -104,7 +109,7 @@ def lambda_handler(event, context):
                     device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger)
 
                 if hist_list_items:
-                # 現状態更新
+                    # 現状態更新
                     ddb.update_current_state(device_id, device_current_state, state_table)
                     logger.debug("現状態更新")
 

@@ -1,4 +1,5 @@
 import json
+import re
 from aws_lambda_powertools import Logger
 
 # layer
@@ -39,9 +40,9 @@ def validate(event, user_info, tables):
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
-    # 端子設定チェック
-    terminal = terminal_check(body, device_id, device_info["device_type"], tables)
-    if not terminal:
+    # デバイス種別チェック
+    device_terminal = device_terminal_check(device_info["device_type"], body)
+    if not device_terminal:
         return {"message": "デバイス種別と端子設定が一致しません。"}
 
     input = input_check(body)
@@ -73,24 +74,11 @@ def operation_auth_check(user_info, contract_info, device_id, tables):
     return True
 
 
-# 端子設定チェック
-def terminal_check(body, device_id, device_type, tables):
-    do = len(body.get("do_list", {}))
-    do_no_list = []
-    # デバイス種別と端子数
-    if (
-        (device_type == "PJ1" and do == 0)
-        or (device_type == "PJ2" and do == 2)
-        or (device_type == "PJ3" and do == 2)
-    ):
-        # 端子番号
-        for item in body.get("do_list", {}):
-            do_no_list.append(item.get("do_no"))
-        # 端子番号の範囲
-        if all(1 <= int(num) <= do for num in do_no_list):
-            # 端子番号の重複
-            if len(set(do_no_list)) == len(do_no_list):
-                return True
+# デバイス種別,端子番号チェック
+def device_terminal_check(device_type, body):
+    if device_type == "PJ2":
+        if body.get("do_no") in [1, 2]:
+            return True
     return False
 
 
@@ -100,14 +88,16 @@ def input_check(param):
     out_range_list, invalid_format_list, invalid_data_type_list = [], [], []
 
     # 文字数の制限
-    # 接点名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
-    str_value_limits = {"do_name": {0, 30}}
+    str_value_limits = {"do_timer_name": {0, 30}, "do_time": {0, 5}}
 
     # 桁数の制限
-    int_float_value_limits = {"do_specified_time": {0.4, 6553.5}}
+    int_float_value_limits = {"do_onoff_control": {0, 1}}
 
-    # 特定の文字列に一致
-    str_format = {"do_control": ["", "open", "close", "toggle"]}
+    # 正規表現
+    regex = {
+        "do_time": re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$"),  # hh:mm形式 00:00から23:59
+        "do_weekday": re.compile(r"^$|^([0-6],)*[0-6]$"),  # 空文字もしくは 1,3,5 のような形式
+    }
 
     # dict型の全要素を探索して入力値をチェック
     def check_dict_value(param):
@@ -138,8 +128,8 @@ def input_check(param):
                                 f"Key:{key}  value:{value} - reason:文字数の制限を超えています。"
                             )
                             out_range_list.append(key)
-                    # 文字列フォーマット
-                    if key in str_format and value not in str_format[key]:
+                    # 正規表現
+                    if key in regex and not regex[key].match(value):
                         logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
                         invalid_format_list.append(key)
                 # 数値
