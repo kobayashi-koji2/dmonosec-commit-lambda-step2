@@ -49,6 +49,11 @@ def validate(event, user_info, tables):
     if not input:
         return {"message": "入力パラメータが不正です。"}
 
+    # 重複チェック
+    duplicate = duplicate_check(body, device_info)
+    if not duplicate:
+        return {"message": "同じ設定が重複しています。"}
+
     return {"device_id": device_id, "body": body}
 
 
@@ -161,3 +166,22 @@ def input_check(param):
     ):
         return True
     return False
+
+
+# 重複チェック
+def duplicate_check(param, device_info):
+    do_list = device_info.get("device_data").get("config").get("terminal_settings").get("do_list",[])
+    for do in do_list:
+        if do.get("do_no") != param.get("do_no"):
+            continue
+        do_timer_list = do.get("do_timer_list", [])
+
+        for do_timer in do_timer_list:
+            do_weekday = set(do_timer.get("do_weekday").split(","))
+            param_do_weekday = set(param.get("do_weekday").split(","))
+            if (
+                do_timer.get("do_time") == param.get("do_time")
+                and len(list(do_weekday & param_do_weekday)) > 0
+            ):
+                return False
+    return True
