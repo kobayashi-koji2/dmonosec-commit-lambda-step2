@@ -47,7 +47,7 @@ def validate(event, user, account_table, contract_table, user_table):
         return {"message": "パラメータが不正です"}
 
     if "mfa_flag" in body_params:
-        if body_params["mfa_flag"] not in ["0", "1"]:
+        if body_params["mfa_flag"] not in [0, 1]:
             return {"message": "パラメータが不正です"}
 
     # 更新対象ユーザのチェック
