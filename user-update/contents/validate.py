@@ -46,6 +46,10 @@ def validate(event, user, account_table, contract_table, user_table):
     if "user_type" not in body_params:
         return {"message": "パラメータが不正です"}
 
+    if "mfa_flag" in body_params:
+        if body_params["mfa_flag"] not in ["0", "1"]:
+            return {"message": "パラメータが不正です"}
+
     # 更新対象ユーザのチェック
     if http_method == "PUT":
         if "user_id" not in path_params:
@@ -72,6 +76,7 @@ def validate(event, user, account_table, contract_table, user_table):
         "update_user_id": path_params.get("user_id"),
         "user_name": body_params.get("user_name", ""),
         "user_type": body_params.get("user_type"),
+        "mfa_flag": body_params.get("mfa_flag", "0"),
         "management_group_list": body_params.get("management_group_list"),
         "management_device_list": body_params.get("management_device_list"),
     }

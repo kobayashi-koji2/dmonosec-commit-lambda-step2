@@ -41,6 +41,7 @@ def create_user_info(
                     "user_name": request_params["user_name"],
                     "auth_status": "unauthenticated",
                     "password_update_datetime": 0,
+                    "mfa_flag": request_params["mfa_flag"],
                 }
             },
         }
@@ -56,16 +57,18 @@ def create_user_info(
         # すでにアカウントがあれば更新
         account_id = account["account_id"]
         if request_params["user_name"] != account["user_data"]["config"]["user_name"]:
-            account_update_expression = f"SET #email_address_attr = :email_address, #map.#config_attr.#user_name_attr = :user_name"
+            account_update_expression = "SET #email_address_attr = :email_address, #map.#config_attr.#user_name_attr = :user_name, #map.#config_attr.#mfa_flag_attr = :mfa_flag"
             account_expression_attribute_values = {
                 ":email_address": request_params["email_address"],
                 ":user_name": request_params["user_name"],
+                ":mfa_flag": request_params["mfa_flag"],
             }
             account_expression_attribute_name = {
                 "#email_address_attr": "email_address",
                 "#map": "user_data",
                 "#config_attr": "config",
                 "#user_name_attr": "user_name",
+                "#mfa_flag_attr": "mfa_flag",
             }
             account_expression_attribute_values_fmt = convert.dict_dynamo_format(
                 account_expression_attribute_values
@@ -191,15 +194,19 @@ def update_user_info(
     account = db.get_account_info_by_account_id(user["account_id"], account_table)
     if request_params["user_name"] != account.get("user_data", {}).get("config", {}).get(
         "user_name"
+    ) or request_params["mfa_flag"] != account.get("user_data", {}).get("config", {}).get(
+        "mfa_flag"
     ):
-        account_update_expression = f"SET #map.#config_attr.#user_name_attr = :user_name"
+        account_update_expression = f"SET #map.#config_attr.#user_name_attr = :user_name, #map.#config_attr.#mfa_flag_attr = :mfa_flag"
         account_expression_attribute_values = {
             ":user_name": request_params["user_name"],
+            ":mfa_flag": request_params["mfa_flag"],
         }
         account_expression_attribute_name = {
             "#map": "user_data",
             "#config_attr": "config",
             "#user_name_attr": "user_name",
+            "#mfa_flag_attr": "mfa_flag",
         }
         account_expression_attribute_values_fmt = convert.dict_dynamo_format(
             account_expression_attribute_values
