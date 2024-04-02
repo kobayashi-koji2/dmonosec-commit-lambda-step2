@@ -181,3 +181,6 @@ awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-cnt-hist-2 --item 
 
 # t-monosec-pre-register-devices
 awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-pre-register-devices --item '{"imei": {"S": "imei0"},"iccid": {"S": "01234567890123456789"},"imsi": {"S": "imsi0"},"device_code": {"S": "MS-C0110"},"contract_id": {"S": "a322ae61-9763-c168-b2b2-1794ca906724"},"dev_reg_datetime": {"N": "1703138511555"},"contract_state": {"N": "1"},"coverage_url": {"S": "https://api.soracom.io/v1"}}'
+
+# t-monosec-automations
+awslocal dynamodb put-item --table-name lmonosc-ddb-t-monosec-automations --item '{"automation_id": {"S": "899815cf-7195-2cbb-83c9-04a3cee6f2c9"},"automation_name": {"S": "接点入力2が変わったら接点出力2を変更する"},"trigger_device_id": {"S": "88158fde-e4a8-45a4-b453-3b8642292dd2"},"trigger_event_type": {"S": "di_change_state"},"trigger_terminal_no": {"N": "2"},"trigger_event_detail_state": {"N": "1"},"trigger_event_detail_flag": {"N": "0"},"control_device_id": {"S": "88158fde-e4a8-45a4-b453-3b8642292dd2"},"control_do_no": {"N": "2"},"control_di_state": {"N": "9"}}'

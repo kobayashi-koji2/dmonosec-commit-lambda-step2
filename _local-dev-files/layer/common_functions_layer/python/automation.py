@@ -28,12 +28,12 @@ REMOTE_CONTROLS_TTL = int(os.environ["REMOTE_CONTROLS_TTL"])
 
 aws_lambda = boto3.client("lambda", region_name=AWS_DEFAULT_REGION)
 iot = boto3.client("iot-data", region_name=AWS_DEFAULT_REGION)
-dynamodb = boto3.resource("dynamodb")
-client = boto3.client(
-    "dynamodb",
-    region_name="ap-northeast-1",
-    endpoint_url=os.environ.get("endpoint_url"),
-)
+dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
+
+
+def decimal_to_num(obj):
+    if isinstance(obj, decimal.Decimal):
+        return int(obj) if float(obj).is_integer() else float(obj)
 
 
 def automation_control(device_id, event_type, terminal_no, di_state, occurrence_flag):
@@ -79,9 +79,10 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     automation = _get_automation(
         automation_table, device_id, event_type, terminal_no, di_state, occurrence_flag
     )
-    if not automation:
-        return {"result": False, "message": "連動制御設定が存在しません。"}
     logger.info(f"automation setting: {automation}")
+    if not automation:
+        logger.info("automation setting not found")
+        return {"result": False, "message": "連動制御設定が存在しません。"}
 
     # トリガーデバイス情報取得
     trigger_device = db.get_device_info_other_than_unavailable(device_id, device_table)
@@ -102,6 +103,22 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         do for do in control_device_do_list if do["do_no"] == automation["control_do_no"]
     ][0]
 
+    event_datetime = datetime.now()
+
+    group_id_list = db.get_device_relation_group_id_list(
+        control_device["device_id"], device_relation_table
+    )
+    group_list = []
+    for group_id in group_id_list:
+        group_info = db.get_group_info(group_id, group_table)
+        if group_info:
+            group_list.append(
+                {
+                    "group_id": group_info["group_id"],
+                    "group_name": group_info["group_data"]["config"]["group_name"],
+                }
+            )
+
     # 制御対象デバイスの紐づけ接点入力が指定されている場合、接点入力状態をチェック
     if control_do.get("do_di_return") and automation["control_di_state"] in [0, 1]:
         device_state = db.get_device_state(automation["control_device_id"], device_state_table)
@@ -111,21 +128,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         col_name = "di" + str(control_do.get("do_di_return")) + "_state"
         if device_state[col_name] == automation["control_di_state"]:
             # 紐づき接点入力状態がすでに変更済みのため、制御不要
-            event_datetime = datetime.now()
-            group_id_list = db.get_device_relation_group_id_list(
-                control_device["device_id"], device_relation_table
-            )
-            group_list = []
-            for group_id in group_id_list:
-                group_info = db.get_group_info(group_id, group_table)
-                if group_info:
-                    group_list.append(
-                        {
-                            "group_id": group_info["group_id"],
-                            "group_name": group_info["group_data"]["config"]["group_name"],
-                        }
-                    )
-
             # メール通知
             notification_hist_id = _send_not_exec_mail(
                 event_datetime,
@@ -330,7 +332,9 @@ def _check_control_status(device_id, do_no, delete_second, table):
             "do_no": do_no,
             "del_datetime": int(time.time() + delete_second),
         }
-        put_item_fmt = json.loads(json.dumps(put_item), parse_float=decimal.Decimal)
+        put_item_fmt = json.loads(
+            json.dumps(put_item, default=decimal_to_num), parse_float=decimal.Decimal
+        )
         table.put_item(
             Item=put_item_fmt,
             ConditionExpression="attribute_not_exists(device_id)",
@@ -647,7 +651,7 @@ def _cmd_exec(icc_id, req_no, control_do):
     logger.info(f"iot_result: {iot_result}")
 
 
-def _get_req_no(req_no_counter_table, sim_id):
+def _get_req_no(sim_id, req_no_counter_table):
     req_no_count_info = req_no_counter_table.get_item(Key={"simid": sim_id}).get("Item", {})
     if req_no_count_info:
         # 要求番号生成（アトミックカウンタをインクリメントし、要求番号を取得）
@@ -682,7 +686,7 @@ def _get_automation(
     automation_list = automation_table.query(
         IndexName="trigger_device_id_index",
         KeyConditionExpression=Key("trigger_device_id").eq(device_id),
-    )["Items"]
+    ).get("Items")
     automation_list = [
         item
         for item in automation_list
