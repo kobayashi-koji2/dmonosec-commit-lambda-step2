@@ -33,8 +33,8 @@ def lambda_handler(event, context):
         # クレームにパスワード有効期限を追加
         event["response"]["claimsOverrideDetails"] = {
             "claimsToAddOrOverride": {"password_exp": password_exp},
-            "mfa_flag": account["user_data"]["config"].get("mfa_flag", "0"),
-            "cognito_mfa_flag": "1" if cognito_user["UserMFASettingList"] else "0",
+            "mfa_flag": account["user_data"]["config"].get("mfa_flag", 0),
+            "cognito_mfa_flag": 1 if cognito_user["UserMFASettingList"] else 0,
         }
     except Exception:
         logger.exception(Exception)

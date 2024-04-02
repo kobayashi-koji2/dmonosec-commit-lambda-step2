@@ -152,6 +152,7 @@ def lambda_handler(event, context, user):
             "user_name": registed_account_cofig.get("user_name"),
             "user_type": registed_user.get("user_type"),
             "auth_status": registed_account_cofig.get("auth_status"),
+            "mfa_flag": registed_account_cofig.get("mfa_flag"),
             "management_group_list": group_list,
             "management_device_list": device_list,
         }
