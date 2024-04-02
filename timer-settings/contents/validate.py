@@ -50,9 +50,11 @@ def validate(event, user_info, tables):
         return {"message": "入力パラメータが不正です。"}
 
     # 重複チェック
-    duplicate = duplicate_check(body, device_info)
-    if not duplicate:
-        return {"message": "同じ設定が重複しています。"}
+    http_method = event.get("httpMethod")
+    if http_method == "POST":
+        duplicate = duplicate_check(body, device_info)
+        if not duplicate:
+            return {"message": "同じ設定が重複しています。"}
 
     return {"device_id": device_id, "body": body}
 
