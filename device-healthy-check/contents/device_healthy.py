@@ -65,6 +65,7 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
             "imei": device_info.get("imei"),
             "event_type": "device_unhealthy",
+            "device_healthy_period": device_healthy_period,
             "occurrence_flag": device_healthy_state,
         }
     }
