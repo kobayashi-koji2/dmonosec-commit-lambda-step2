@@ -24,7 +24,7 @@ def lambda_handler(event, context):
         account = db.get_account_info(auth_id, account_table)
 
         # cognitoユーザー情報取得
-        cognito_user = get_cognito_user(auth_id)
+        cognito_user = get_cognito_user(account["email_address"])
 
         # パスワード有効期限を計算
         password_update_datetime = account["user_data"]["config"]["password_update_datetime"]
@@ -42,12 +42,12 @@ def lambda_handler(event, context):
     return event
 
 
-def get_cognito_user(auth_id):
+def get_cognito_user(email_address):
     client = boto3.client(
         "cognito-idp",
         region_name=os.environ.get("AWS_REGION"),
         endpoint_url=os.environ.get("endpoint_url"),
     )
 
-    response = client.admin_get_user(UserPoolId=COGNITO_USER_POOL_ID, Username=auth_id)
+    response = client.admin_get_user(UserPoolId=COGNITO_USER_POOL_ID, Username=email_address)
     return response
