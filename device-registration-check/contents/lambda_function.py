@@ -7,6 +7,7 @@ import zoneinfo
 import boto3
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
+from dateutil import relativedelta
 
 import convert
 import db
@@ -185,6 +186,37 @@ def _register_device(pre_device, contract):
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
                 "Key": {"imei": {"S": pre_device["imei"]}},
+            }
+        }
+    )
+
+    # デバイス関連お知らせ情報削除
+    transact_items.append(
+        {
+            "Delete": {
+                "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
+                "Key": {"imei": {"S": pre_device["imei"]}, "device_announcement_type": {"S": "regist_balance_days"}},
+            }
+        }
+    )
+
+    # デバイス関連お知らせ情報追加
+    announcement_create_datetime = int(time.time() * 1000)
+    expire_datetime = int((datetime.datetime.fromtimestamp(announcement_create_datetime / 1000) + relativedelta.relativedelta(months=1)).timestamp())
+    device_announcement_item = {
+        "device_announcement_id": str(uuid.uuid4()),
+        "contract_id": pre_device["contract_id"],
+        "announcement_create_datetime": announcement_create_datetime,
+        "imei": pre_device["imei"],
+        "device_announcement_type": "auto_regist_complete",
+        "expire_datetime": expire_datetime,
+    }
+    logger.info({"device_announcement_item": device_announcement_item})
+    transact_items.append(
+        {
+            "Put": {
+                "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
+                "Item": convert.dict_dynamo_format(device_announcement_item),
             }
         }
     )

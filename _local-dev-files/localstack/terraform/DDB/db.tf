@@ -729,3 +729,104 @@ resource "aws_dynamodb_table" "operator" {
 
   tags = var.tags
 }
+
+#お知らせ管理テーブル
+resource "aws_dynamodb_table" "announcements" {
+  name           = "${var.global_name}-ddb-t-monosec-announcements"
+  hash_key       = "announcement_id"
+  stream_enabled = "false"
+  table_class    = "STANDARD"
+
+  attribute {
+    name = "announcement_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "announcement_type"
+    type = "S"
+  }
+
+  attribute {
+    name = "display_start_datetime"
+    type = "N"
+  }
+
+  billing_mode = "PAY_PER_REQUEST"
+
+  global_secondary_index {
+    hash_key        = "announcement_type"
+    range_key       = "display_start_datetime"
+    name            = "announcement_type_index"
+    projection_type = "ALL"
+  }
+
+  point_in_time_recovery {
+    enabled = "true"
+  }
+
+  server_side_encryption {
+    enabled = true 
+  }
+
+  tags = var.tags
+}
+
+#デバイスお知らせ管理テーブル
+resource "aws_dynamodb_table" "device_announcements" {
+  name           = "${var.global_name}-ddb-t-monosec-device-announcements"
+  hash_key       = "device_announcement_id"
+  stream_enabled = "false"
+  table_class    = "STANDARD"
+
+  attribute {
+    name = "device_announcement_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "contract_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "announcement_create_datetime"
+    type = "N"
+  }
+
+  attribute {
+    name = "imei"
+    type = "S"
+  }
+
+  attribute {
+    name = "device_announcement_type"
+    type = "S"
+  }
+
+  billing_mode = "PAY_PER_REQUEST"
+
+  global_secondary_index {
+    hash_key        = "contract_id"
+    range_key       = "announcement_create_datetime"
+    name            = "contract_id_create_datetime_index"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    hash_key        = "imei"
+    range_key       = "device_announcement_type"
+    name            = "imei_announcement_type_index"
+    projection_type = "ALL"
+  }
+
+  point_in_time_recovery {
+    enabled = "true"
+  }
+
+  server_side_encryption {
+    enabled = true 
+  }
+
+  tags = var.tags
+}

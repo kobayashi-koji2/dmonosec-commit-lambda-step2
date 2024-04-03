@@ -19,7 +19,8 @@ resource "aws_ssm_parameter" "dynamodb_table_name"{
         DEVICE_RELATION_TABLE = "${var.device_relation_name}"
         REQ_NO_COUNTER_TABLE = "${var.req_no_counter_table}"
         AUTOMATION_TABLE = "${var.automation_table}"
-
+        ANNOUNCEMENT_TABLE = "${var.announcements_table_name}"
+        DEVICE_ANNOUNCEMENT_TABLE = "${var.device_announcements_table_name}"
   }) 
   description = "DynamoDB Table Name"
   data_type = "text"

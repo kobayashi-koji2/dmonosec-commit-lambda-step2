@@ -1,0 +1,40 @@
+version: '3'
+services:
+  app:
+    container_name: announcement
+    build:
+      context: ../
+      dockerfile: ./announcement/Dockerfile
+    environment:
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_SESSION_TOKEN=dummy
+      - endpoint_url=http://localstack:4566
+      - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
+      - POWERTOOLS_LOG_LEVEL=DEBUG
+    volumes:
+      - ./contents:/var/task
+    ports:
+      - 9000:8080
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - 4510-4559:4510-4559
+      - 4566:4566
+    environment:
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ../_local-dev-files/docker/docker.sock:/var/run/docker.sock
+      - ../_local-dev-files/localstack/ready.d:/etc/localstack/init/ready.d
+      - ../_local-dev-files/localstack/terraform:/usr/local/terraform
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - 8081:8001
+    environment:
+      - DYNAMO_ENDPOINT=localstack:4566
+      - AWS_REGION=ap-northeast-1
+    depends_on:
+      - localstack

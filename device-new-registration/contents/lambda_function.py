@@ -177,6 +177,19 @@ def lambda_handler(event, context, user_info, request_body):
         transact_items.append(delete_pre_register)
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
+        ### 6. デバイス関連お知らせ情報削除
+        delete_device_announcements = {
+            "Delete": {
+                "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
+                "Key": {
+                    "imei": {"S": device_imei},
+                    "device_announcement_type": {"S": "regist_balance_days"},
+                }
+            }
+        }
+        transact_items.append(delete_device_announcements)
+        logger.debug(f"delete_device_announcements: {delete_device_announcements}")
+
         # 各データを登録・更新・削除
         if not db.execute_transact_write_item(transact_items):
             res_body = {"message": "DynamoDBへの更新処理に失敗しました。"}
