@@ -17,9 +17,9 @@ def get_device_info(pk, table):
 
 
 # 連動制御情報取得
-def get_automation_info_list(control_device_id, table):
+def get_automation_info_list(trigger_device_id, table):
     response = table.query(
-        IndexName="control_device_id_index",  # TODO 連動制御管理テーブル追加時に変更の可能性あり
-        KeyConditionExpression=Key("control_device_id").eq(control_device_id)
+        IndexName="trigger_device_id_index",
+        KeyConditionExpression=Key("trigger_device_id").eq(trigger_device_id),
     )
     return response

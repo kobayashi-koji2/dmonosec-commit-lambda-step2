@@ -41,7 +41,7 @@ def lambda_handler(event, context, user_info):
                 "account_table": dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
-                "automation_table": dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"])  # TODO 連動制御管理テーブル追加時に変更の可能性あり
+                "automation_table": dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"]),
             }
         except KeyError as e:
             body = {"message": e}
@@ -98,9 +98,25 @@ def lambda_handler(event, context, user_info):
                 if group_info:
                     group_info_list.append(group_info)
             # 4.4 連動制御情報取得
-            automation_info_list = ddb.get_automation_info_list(device_id, tables["automation_table"]).get("Items", [])
-            # 4.5 デバイス詳細情報生成
-            res_body = generate_detail.get_device_detail(device_info[0], device_state, group_info_list, automation_info_list)
+            automation_info_list = ddb.get_automation_info_list(
+                device_id, tables["automation_table"]
+            ).get("Items", [])
+            # 4.5 ユーザー権限による絞り込み
+            if user_info["user_type"] == "worker" or user_info["user_type"] == "referrer":
+                # ユーザに紐づくデバイスID取得
+                device_id_list = db.get_user_relation_device_id_list(
+                    user_info["user_id"], tables["device_relation_table"]
+                )
+                automation_info_list = [
+                    automation_info
+                    for automation_info in automation_info_list
+                    if automation_info["control_device_id"] in set(device_id_list)
+                ]
+
+            # 4.6 デバイス詳細情報生成
+            res_body = generate_detail.get_device_detail(
+                device_info[0], device_state, group_info_list, automation_info_list
+            )
 
         except ClientError as e:
             logger.info(e)
