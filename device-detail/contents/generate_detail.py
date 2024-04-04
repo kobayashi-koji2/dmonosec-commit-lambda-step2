@@ -1,11 +1,13 @@
 import re
+from itertools import groupby
+from operator import itemgetter
 
 from aws_lambda_powertools import Logger
 
 logger = Logger()
 
 
-def get_device_detail(device_info, device_state, group_info_list):
+def get_device_detail(device_info, device_state, group_info_list, automation_info_list):
     last_receiving_time = ""
     group_list = []
     # 最終受信日時取得
@@ -21,8 +23,9 @@ def get_device_detail(device_info, device_state, group_info_list):
                 "group_name": item["group_data"]["config"]["group_name"],
             }
         )
+    formatted_automation_info = automation_info_fmt(automation_info_list)
     terminal_info = terminal_info_fmt(
-        device_info["device_data"]["config"]["terminal_settings"], device_state
+        device_info["device_data"]["config"]["terminal_settings"], device_state, formatted_automation_info
     )
 
     # レスポンス生成
@@ -49,7 +52,16 @@ def get_device_detail(device_info, device_state, group_info_list):
     return device_detail
 
 
-def terminal_info_fmt(terminal_settings, device_state):
+def automation_info_fmt(automation_info_list):
+    control_do_no_getter = itemgetter("control_do_no")
+    res = groupby(sorted(automation_info_list, key=control_do_no_getter), key=control_do_no_getter)
+    # イテレータから dict, list に変換
+    return {
+        control_do_no: list(automation_info) for control_do_no, automation_info in res
+    }
+
+
+def terminal_info_fmt(terminal_settings, device_state, automation_info):
     di_list, do_list, terminal_info = [], [], []
     for item in terminal_settings.get("di_list", {}):
         di_no = item["di_no"]
@@ -86,6 +98,20 @@ def terminal_info_fmt(terminal_settings, device_state):
                     "do_weekday": timer_item.get("do_weekday", ""),
                 }
             )
+        do_automation_list = []
+        for automation_item in automation_info.get(do_no, []):
+            do_automation_list.append(
+                {
+                    "automation_id": automation_item["automation_id"],
+                    "trigger_device_id": automation_item["trigger_device_id"],
+                    "trigger_event_type": automation_item["trigger_event_type"],
+                    "trigger_terminal_no": automation_item["trigger_terminal_no"],
+                    "trigger_event_detail_state": automation_item["trigger_event_detail_state"],
+                    "trigger_event_detail_flag": automation_item["trigger_event_detail_flag"],
+                    "control_do_no": automation_item["control_do_no"],
+                    "control_di_state": automation_item["control_di_state"],
+                }
+            )
         do_list.append(
             {
                 "do_no": do_no,
@@ -99,6 +125,7 @@ def terminal_info_fmt(terminal_settings, device_state):
                 "do_specified_time": item.get("do_specified_time"),
                 "do_di_return": item.get("do_di_return"),
                 "do_timer_list": do_timer_list,
+                "do_automation_list": do_automation_list
             }
         )
 
