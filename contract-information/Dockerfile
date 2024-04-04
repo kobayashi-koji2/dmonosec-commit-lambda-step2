@@ -4,6 +4,6 @@ COPY ./_local-dev-files/layer/common_functions_layer/python /opt/python
 COPY ./contract-information/requirements.txt  .
 RUN  pip3 install -r requirements.txt --target /opt/python
 
-COPY ./contract-list/contents ${LAMBDA_TASK_ROOT}
+COPY ./contract-information/contents ${LAMBDA_TASK_ROOT}
 
 CMD ["lambda_function.lambda_handler"]
