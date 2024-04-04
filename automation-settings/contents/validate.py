@@ -18,7 +18,6 @@ REQUEST_BODY_SCHEMA = {
     "properties": {
         "automation_id": {"type": "string"},
         "automation_name": {"type": "string"},
-        "trigger_device_id": {"type": "string"},
         "trigger_event_type": {
             "type": "string",
             "enum": [
@@ -35,6 +34,7 @@ REQUEST_BODY_SCHEMA = {
         "trigger_terminal_no": {"type": "integer"},
         "trigger_event_detail_state": {"type": "integer", "enum": [0, 1]},
         "trigger_event_detail_flag": {"type": "integer", "enum": [0, 1]},
+        "control_device_id": {"type": "string"},
         "control_do_no": {"type": "integer"},
         "control_di_state": {"type": "integer", "enum": [0, 1, 9]},
     },

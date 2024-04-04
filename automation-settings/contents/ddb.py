@@ -5,9 +5,9 @@ logger = Logger()
 
 
 # 連動制御設定取得(デバイスに紐づく)
-def get_automation_info_device(device_id, table):
+def get_automation_info_device(trigger_device_id, table):
     response = table.query(
-        IndexName="control_device_id_index",
-        KeyConditionExpression=Key("control_device_id").eq(device_id),
+        IndexName="trigger_device_id_index",
+        KeyConditionExpression=Key("trigger_device_id").eq(trigger_device_id),
     ).get("Items", [])
     return response
