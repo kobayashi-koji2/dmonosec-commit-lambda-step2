@@ -135,8 +135,6 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 "trigger_device_id": item["trigger_device_id"],
                 "trigger_event_type": item["trigger_event_type"],
                 "trigger_terminal_no": item.get("trigger_terminal_no"),
-                "trigger_event_detail_state": item.get("trigger_event_detail_state"),
-                "trigger_event_detail_flag": item.get("trigger_event_detail_flag"),
                 "control_do_no": item["control_do_no"],
                 "control_di_state": item["control_di_state"],
             }
