@@ -8,5 +8,5 @@ logger = Logger()
 def get_automation_info(automation_id, table):
     response = table.get_item(
         Key={"automation_id": automation_id},
-    ).get("Items")
+    ).get("Item")
     return response
