@@ -35,13 +35,15 @@ dynamodb = boto3.resource(
 @auth.verify_login_user()
 @validate.validate_parameter
 @validate.validate_request_body
-def lambda_handler(event, context, user_info, device_id, request_body):
+def lambda_handler(event, context, user_info, trigger_device_id, request_body):
     try:
         # DynamoDB操作オブジェクト生成
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         automation_table = dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"])
+
+        control_device_id = request_body["control_device_id"]
 
         ### 1. 入力情報チェック
         # ユーザー権限確認
@@ -54,7 +56,7 @@ def lambda_handler(event, context, user_info, device_id, request_body):
             }
 
         ### 2. デバイス種別チェック(共通)
-        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+        device_info = db.get_device_info_other_than_unavailable(control_device_id, device_table)
         if not device_info:
             res_body = {"message": "デバイス情報が存在しません。"}
             return {
@@ -75,7 +77,7 @@ def lambda_handler(event, context, user_info, device_id, request_body):
         contract_info = db.get_contract_info(user_info["contract_id"], contract_table)
         logger.debug(f"contract_info: {contract_info}")
         device_id_list = contract_info.get("contract_data", {}).get("device_list", [])
-        if device_id not in device_id_list:
+        if trigger_device_id not in device_id_list or control_device_id not in device_id_list:
             res_body = {"message": "デバイス操作権限がありません。"}
             return {
                 "statusCode": 400,
@@ -88,7 +90,7 @@ def lambda_handler(event, context, user_info, device_id, request_body):
             user_devices = db.get_user_relation_device_id_list(
                 user_info["user_id"], device_relation_table
             )
-            if device_id not in user_devices:
+            if trigger_device_id not in user_devices or control_device_id not in user_devices:
                 res_body = {"message": "デバイス操作権限がありません。"}
                 return {
                     "statusCode": 400,
@@ -100,7 +102,9 @@ def lambda_handler(event, context, user_info, device_id, request_body):
         ### 5. 連動制御設定
         # 連動制御設定新規登録
         if event["httpMethod"] == "POST":
-            flag, result = create_automation_setting(device_id, request_body, automation_table)
+            flag, result = create_automation_setting(
+                trigger_device_id, request_body, automation_table
+            )
             if not flag:
                 return {
                     "statusCode": 400,
@@ -109,7 +113,9 @@ def lambda_handler(event, context, user_info, device_id, request_body):
                 }
         # 連動制御設定更新
         elif event["httpMethod"] == "PUT":
-            flag, result = update_automation_setting(device_id, request_body, automation_table)
+            flag, result = update_automation_setting(
+                trigger_device_id, request_body, automation_table
+            )
             if not flag:
                 return {
                     "statusCode": 400,
@@ -118,7 +124,7 @@ def lambda_handler(event, context, user_info, device_id, request_body):
                 }
 
         ### 6. 連動制御設定情報取得
-        automation_info = ddb.get_automation_info_device(device_id, automation_table)
+        automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
 
         ### 5. メッセージ応答
         do_automation_list = list()
@@ -155,10 +161,10 @@ def lambda_handler(event, context, user_info, device_id, request_body):
         }
 
 
-def create_automation_setting(device_id, request_body, automation_table):
+def create_automation_setting(trigger_device_id, request_body, automation_table):
 
     # 連動制御設定数の確認（上限100）
-    automation_info = ddb.get_automation_info_device(device_id, automation_table)
+    automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
     if len(automation_info) >= 100:
         res_body = {"message": "連動制御設定数が上限に達しています。"}
         return False, res_body
@@ -168,10 +174,10 @@ def create_automation_setting(device_id, request_body, automation_table):
     put_item = {
         "automation_id": str(uuid.uuid4()),
         "automation_name": request_body["automation_name"],
-        "trigger_device_id": request_body["trigger_device_id"],
+        "trigger_device_id": trigger_device_id,
         "trigger_event_type": request_body["trigger_event_type"],
         "trigger_terminal_no": request_body["trigger_terminal_no"],
-        "control_device_id": device_id,
+        "control_device_id": request_body["control_device_id"],
         "control_do_no": request_body["control_do_no"],
         "control_di_state": request_body["control_di_state"],
     }
@@ -198,7 +204,7 @@ def create_automation_setting(device_id, request_body, automation_table):
     return True, request_body
 
 
-def update_automation_setting(device_id, request_body, automation_table):
+def update_automation_setting(trigger_device_id, request_body, automation_table):
 
     # 連動制御設定の更新
     update_expression = (
@@ -214,9 +220,9 @@ def update_automation_setting(device_id, request_body, automation_table):
     }
     expression_attribute_values = {
         ":an": request_body["automation_name"],
-        ":tdi": request_body["trigger_device_id"],
+        ":tdi": trigger_device_id,
         ":ttn": request_body["trigger_terminal_no"],
-        ":ctd": device_id,
+        ":ctd": request_body["control_device_id"],
         ":cdo": request_body["control_do_no"],
         ":cds": request_body["control_di_state"],
     }
