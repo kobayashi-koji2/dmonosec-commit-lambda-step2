@@ -25,7 +25,9 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         )
     formatted_automation_info = automation_info_fmt(automation_info_list)
     terminal_info = terminal_info_fmt(
-        device_info["device_data"]["config"]["terminal_settings"], device_state, formatted_automation_info
+        device_info["device_data"]["config"]["terminal_settings"],
+        device_state,
+        formatted_automation_info,
     )
 
     # レスポンス生成
@@ -56,9 +58,7 @@ def automation_info_fmt(automation_info_list):
     control_do_no_getter = itemgetter("control_do_no")
     res = groupby(sorted(automation_info_list, key=control_do_no_getter), key=control_do_no_getter)
     # イテレータから dict, list に変換
-    return {
-        control_do_no: list(automation_info) for control_do_no, automation_info in res
-    }
+    return {control_do_no: list(automation_info) for control_do_no, automation_info in res}
 
 
 def terminal_info_fmt(terminal_settings, device_state, automation_info):
@@ -105,9 +105,11 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
                     "automation_id": automation_item["automation_id"],
                     "trigger_device_id": automation_item["trigger_device_id"],
                     "trigger_event_type": automation_item["trigger_event_type"],
-                    "trigger_terminal_no": automation_item["trigger_terminal_no"],
-                    "trigger_event_detail_state": automation_item["trigger_event_detail_state"],
-                    "trigger_event_detail_flag": automation_item["trigger_event_detail_flag"],
+                    "trigger_terminal_no": automation_item.get("trigger_terminal_no"),
+                    "trigger_event_detail_state": automation_item.get(
+                        "trigger_event_detail_state"
+                    ),
+                    "trigger_event_detail_flag": automation_item.get("trigger_event_detail_flag"),
                     "control_do_no": automation_item["control_do_no"],
                     "control_di_state": automation_item["control_di_state"],
                 }
@@ -125,7 +127,7 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
                 "do_specified_time": item.get("do_specified_time"),
                 "do_di_return": item.get("do_di_return"),
                 "do_timer_list": do_timer_list,
-                "do_automation_list": do_automation_list
+                "do_automation_list": do_automation_list,
             }
         )
 
