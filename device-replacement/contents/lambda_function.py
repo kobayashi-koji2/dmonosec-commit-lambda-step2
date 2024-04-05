@@ -171,7 +171,7 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 5. デバイス関連お知らせ情報削除
-        device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_imei)
+        device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_info["imei"])
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {

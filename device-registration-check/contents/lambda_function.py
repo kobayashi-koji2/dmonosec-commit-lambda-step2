@@ -191,7 +191,7 @@ def _register_device(pre_device, contract):
     )
 
     # デバイス関連お知らせ情報削除
-    device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_imei)
+    device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], pre_device["imei"])
     if device_announcements:
         transact_items.append(
             {
