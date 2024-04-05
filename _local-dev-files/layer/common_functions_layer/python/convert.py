@@ -5,9 +5,9 @@ from jose import jwt
 # idトークンデコード
 def decode_idtoken(event):
     headers = event.get("headers", {})
-    if not headers or "Authorization" not in headers:
+    if not headers or "authorization" not in headers:
         return False
-    idtoken = event["headers"]["Authorization"]
+    idtoken = event["headers"]["authorization"]
     decoded_idtoken = jwt.get_unverified_claims(idtoken)
     return decoded_idtoken
 

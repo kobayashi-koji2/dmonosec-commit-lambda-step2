@@ -47,7 +47,7 @@ def lambda_handler(event, context, user_info, request_body):
             }
 
         ### 2. 履歴保存期間設定更新
-        contract_id = event["headers"]["Mono-Contract-Id"]
+        contract_id = user_info["contract_id"]
         contract_info = db.get_contract_info(contract_id, contract_table)
         contract_info["history_storage_period"] = request_body["history_storage_period"]
         put_history_storage_period = [

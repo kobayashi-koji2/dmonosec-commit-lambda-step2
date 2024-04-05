@@ -15,7 +15,7 @@ def validate(event, user_info, tables):
     body = event.get("body", {})
     if not headers or not pathParam or not body:
         return {"message": "リクエストパラメータが不正です。"}
-    if "Authorization" not in headers or "device_id" not in pathParam:
+    if "authorization" not in headers or "device_id" not in pathParam:
         return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
