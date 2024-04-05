@@ -68,7 +68,9 @@ def verify_login_user_list(verify_password_exp=True):
 
 def _get_login_user(event, verify_password_exp=True):
     try:
-        id_token = event["headers"]["Authorization"]
+        event["headers"] = __convert_to_lower_case(event["headers"])
+
+        id_token = event["headers"]["authorization"]
         claims = jwt.get_unverified_claims(id_token)
 
         auth_id = claims["custom:auth_id"]
@@ -118,7 +120,9 @@ def _get_login_user(event, verify_password_exp=True):
 
 def _get_login_user_list(event, verify_password_exp=True):
     try:
-        id_token = event["headers"]["Authorization"]
+        event["headers"] = __convert_to_lower_case(event["headers"])
+
+        id_token = event["headers"]["authorization"]
         claims = jwt.get_unverified_claims(id_token)
 
         auth_id = claims["custom:auth_id"]
@@ -156,3 +160,7 @@ def _get_login_user_list(event, verify_password_exp=True):
         raise AuthError(401, "パスワードの有効期限が切れています。")
 
     return user_list
+
+ # 項目名を小文字に変換
+def __convert_to_lower_case(header):
+    return dict(map(lambda kv: (kv[0].lower(), kv[1]), header.items()))
