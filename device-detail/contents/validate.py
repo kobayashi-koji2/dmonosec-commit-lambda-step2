@@ -18,7 +18,7 @@ def validate(event, user_info, tables):
     pathParam = event.get("pathParameters", {})
     if not headers or not pathParam:
         return {"message": "パラメータが不正です。"}
-    if "Authorization" not in headers or "device_id" not in pathParam:
+    if "authorization" not in headers or "device_id" not in pathParam:
         return {"message": "パラメータが不正です。"}
     device_id = pathParam["device_id"]
     contract_id = user_info["contract_id"]  # フェーズ2以降削除

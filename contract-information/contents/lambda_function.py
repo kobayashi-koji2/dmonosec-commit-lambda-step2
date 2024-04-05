@@ -52,7 +52,7 @@ def lambda_handler(event, context, user_info):
         ##################
         # 3 契約情報取得
         ##################
-        contract_id = event["headers"]["Mono-Contract-Id"]
+        contract_id = user_info["contract_id"]
         contract_info = db.get_contract_info(contract_id, contract_table)
         if not contract_info:
             res_body = {"message": "契約情報が存在しません。"}
