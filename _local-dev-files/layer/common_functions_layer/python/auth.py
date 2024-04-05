@@ -73,6 +73,11 @@ def _get_login_user(event, verify_password_exp=True):
 
         auth_id = claims["custom:auth_id"]
 
+        # 契約コード
+        contract_id = event["headers"]["Mono-Contract-Id"]
+        if not isinstance(contract_id, str):
+            contract_id = str(contract_id)
+
         # 認証日時
         auth_time = claims["auth_time"]
         if not isinstance(auth_time, int):
@@ -92,11 +97,9 @@ def _get_login_user(event, verify_password_exp=True):
         raise AuthError(401, "認証情報が不正です。")
 
     user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
-    # TODO 1アカウント複数契約対応前の暫定処理
-    # TODO 本来はヘッダーから契約コードを取得してユーザー情報を取得する
     res = user_table.query(
         IndexName="account_id_index",
-        KeyConditionExpression=Key("account_id").eq(account["account_id"]),
+        KeyConditionExpression=Key("account_id").eq(account["account_id"]) & Key("contract_id").eq(contract_id),
     ).get("Items", [])
     user_list = [
         item

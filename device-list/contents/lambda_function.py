@@ -196,8 +196,29 @@ def lambda_handler(event, context, user_info):
                 device_state.get("device_abnormality")
                 or device_state.get("parameter_abnormality")
                 or device_state.get("fw_update_abnormality")
+                or device_state.get("device_healthy_state")
             ):
                 device_abnormality = 1
+
+            # 接点入力リスト
+            di_list = []
+            if device_info["Items"][0]["device_type"] == "PJ1":
+                di_range = 1
+            else:
+                di_range = 8
+            for i in range(di_range):
+                di_no = i + 1
+                di_state_label = f"di{di_no}_state"
+                di_state = device_state.get(di_state_label)
+                di_healthy_state_label = f"di{di_no}_healthy_state"
+                di_healthy_state = device_state.get(di_healthy_state_label, 0)
+                di_list.append(
+                    {
+                        "di_no": di_no,
+                        "di_state": di_state,
+                        "di_healthy_state": di_healthy_state,
+                    }
+                )
 
             # デバイス一覧生成
             device_list.append(
@@ -209,9 +230,9 @@ def lambda_handler(event, context, user_info):
                     "device_imei": device_info["Items"][0]["imei"],
                     "group_name_list": group_name_list,
                     "device_order": order,
+                    "di_list": di_list,
                     "battery_near_status": device_state.get("battery_near_status", 0),
                     "device_abnormality": device_abnormality,
-                    "di_unhealthy": 0,  # フェーズ2
                 }
             )
             order += 1
