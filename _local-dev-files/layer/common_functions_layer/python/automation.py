@@ -284,6 +284,11 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     )
     logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
 
+    # 制御状況を削除
+    control_status_table.delete_item(
+        Key={"device_id": control_device.get("device_id"), "do_no": control_do.get("do_no")},
+    )
+
     return {"result": True, "message": "連動制御を実行しました。"}
 
 
