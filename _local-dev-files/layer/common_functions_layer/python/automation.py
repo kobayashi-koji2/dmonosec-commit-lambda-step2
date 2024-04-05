@@ -453,7 +453,7 @@ def _send_not_exec_mail(
     ]
     if notification_setting:
         mail_to_list = []
-        for user_id in notification_setting.get("notification_target_list", []):
+        for user_id in control_device.get("device_data", {}).get("config", {}).get("notification_target_list", []):
             mail_user = db.get_user_info_by_user_id(user_id, user_table)
             mail_account = db.get_account_info_by_account_id(
                 mail_user["account_id"], account_table
@@ -599,7 +599,7 @@ def _send_not_exec_mail(
             # 通知履歴登録
             notification_hist_id = _put_notification_hist(
                 trigger_device.get("device_data", {}).get("param", {}).get("contract_id"),
-                notification_setting.get("notification_target_list", []),
+                control_device.get("device_data", {}).get("config", {}).get("notification_target_list", []),
                 event_datetime,
                 notification_hist_table,
             )

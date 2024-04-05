@@ -475,7 +475,7 @@ def __send_mail(
 
     # メール送信先の設定
     mail_to_list = []
-    for user_id in notification_setting.get("notification_target_list", []):
+    for user_id in device_config.get("notification_target_list", []):
         mail_user = db.get_user_info_by_user_id(user_id, user_table)
         mail_account = db.get_account_info_by_account_id(mail_user["account_id"], account_table)
         mail_to_list.append(mail_account.get("email_address"))
@@ -507,7 +507,7 @@ def __send_mail(
     # 通知履歴登録
     notification_hist_id = ddb.put_notification_hist(
         device_info["device_data"]["param"]["contract_id"],
-        notification_setting.get("notification_target_list", []),
+        device_config.get("notification_target_list", []),
         send_datetime,
         notification_hist_table,
     )

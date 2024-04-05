@@ -70,7 +70,7 @@ def send_mail(
 
     # メール送信
     mail_to_list = []
-    for user_id in notification_setting.get("notification_target_list", []):
+    for user_id in device.get("device_data", {}).get("config", {}).get("notification_target_list", []):
         logger.debug(user_id)
         mail_user = db.get_user_info_by_user_id(user_id, user_table)
         mail_account = db.get_account_info_by_account_id(mail_user["account_id"], account_table)
@@ -144,7 +144,7 @@ def send_mail(
     # 通知履歴登録
     notification_hist_id = ddb.put_notification_hist(
         remote_control.get("contract_id"),
-        notification_setting.get("notification_target_list", []),
+        device.get("device_data", {}).get("config", {}).get("notification_target_list", []),
         send_datetime,
         notification_hist_table,
     )
