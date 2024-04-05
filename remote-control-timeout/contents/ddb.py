@@ -18,6 +18,7 @@ logger = Logger()
 NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 
+
 # 接点出力制御応答取得
 def get_remote_control_info(device_req_no, remote_controls_table):
     remote_control_res = remote_controls_table.query(
@@ -35,8 +36,14 @@ def put_notification_hist(
     contract_id, notification_user_list, notification_datetime, notification_hist_table
 ):
     notification_hist_id = str(uuid.uuid4())
-    now_unixtime = int(time.mktime(notification_datetime.timetuple()) * 1000) + int(notification_datetime.microsecond / 1000)
-    expire_datetime = int((notification_datetime + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
+    now_unixtime = int(time.mktime(notification_datetime.timetuple()) * 1000) + int(
+        notification_datetime.microsecond / 1000
+    )
+    expire_datetime = int(
+        (
+            notification_datetime + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)
+        ).timestamp()
+    )
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,
@@ -99,8 +106,10 @@ def put_hist_list(
                 }
             )
 
-    expire_datetime = int((datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
-    
+    expire_datetime = int(
+        (datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()
+    )
+
     hist_list_item = {
         "device_id": device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
@@ -124,6 +133,16 @@ def put_hist_list(
             "notification_hist_id": notification_hist_id,
             "device_req_no": remote_control.get("device_req_no"),
             "timer_time": remote_control.get("timer_time"),
+            "automation_trigger_device_name": remote_control.get("automation_trigger_device_name"),
+            "automation_trigger_imei": remote_control.get("automation_trigger_imei"),
+            "automation_trigger_event_type": remote_control.get("automation_trigger_event_type"),
+            "automation_trigger_terminal_no": remote_control.get("automation_trigger_terminal_no"),
+            "automation_trigger_event_detail_state": remote_control.get(
+                "automation_trigger_event_detail_state"
+            ),
+            "automation_trigger_event_detail_flag": remote_control.get(
+                "automation_trigger_event_detail_flag"
+            ),
         },
     }
     hist_list_table.put_item(Item=hist_list_item)

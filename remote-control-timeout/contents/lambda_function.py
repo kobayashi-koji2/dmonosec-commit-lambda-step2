@@ -96,6 +96,78 @@ def send_mail(
                 　制御信号（{do_name}）がデバイスに届きませんでした。
                 　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
+        elif remote_control.get("control_trigger") == "automation_control":
+            trigger_event_type = remote_control.get("automation_trigger_event_type")
+            trigger_event_type_name = ""
+            trigger_event_detail_name = ""
+            if trigger_event_type == "di_change_state":
+                trigger_event_type_name = (
+                    f"接点入力{remote_control.get('automation_trigger_terminal_no')}（接点状態）"
+                )
+                trigger_event_detail_name = (
+                    "オープン"
+                    if remote_control.get("automation_trigger_event_detail_state") == "1"
+                    else "クローズ"
+                )
+            elif trigger_event_type == "di_unhealthy":
+                trigger_event_type_name = f"接点入力{remote_control.get('automation_trigger_terminal_no')}（変化検出状態）"
+                trigger_event_detail_name = (
+                    "接点入力検出復旧"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "接点入力未変化検出"
+                )
+            elif trigger_event_type == "device_unhealthy":
+                trigger_event_type_name = "デバイスヘルシー未受信"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "battery_near":
+                trigger_event_type_name = "バッテリーニアエンド"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "device_abnormality":
+                trigger_event_type_name = "機器異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "parameter_abnormality":
+                trigger_event_type_name = "パラメータ異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "fw_update_abnormality":
+                trigger_event_type_name = "FW更新異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "power_on":
+                trigger_event_type_name = "電源ON"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            trigger_device_name = (
+                remote_control.get("automation_trigger_device_name")
+                if remote_control.get("automation_trigger_device_name")
+                else remote_control.get("automation_trigger_imei")
+            )
+            event_detail = f"""\
+                　【連動制御による制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きませんでした。
+                　※連動設定「{trigger_device_name}、{trigger_event_type_name}、{trigger_event_detail_name}」により制御信号を送信しました。
+            """
     else:
         di_no = remote_control.get("link_di_no")
         di = [
@@ -124,6 +196,78 @@ def send_mail(
                 　【タイマーによる制御（失敗）】
                 　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
                 　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+            """
+        elif remote_control.get("control_trigger") == "automation_control":
+            trigger_event_type = remote_control.get("automation_trigger_event_type")
+            trigger_event_type_name = ""
+            trigger_event_detail_name = ""
+            if trigger_event_type == "di_change_state":
+                trigger_event_type_name = (
+                    f"接点入力{remote_control.get('automation_trigger_terminal_no')}（接点状態）"
+                )
+                trigger_event_detail_name = (
+                    "オープン"
+                    if remote_control.get("automation_trigger_event_detail_state") == "1"
+                    else "クローズ"
+                )
+            elif trigger_event_type == "di_unhealthy":
+                trigger_event_type_name = f"接点入力{remote_control.get('automation_trigger_terminal_no')}（変化検出状態）"
+                trigger_event_detail_name = (
+                    "接点入力検出復旧"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "接点入力未変化検出"
+                )
+            elif trigger_event_type == "device_unhealthy":
+                trigger_event_type_name = "デバイスヘルシー未受信"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "battery_near":
+                trigger_event_type_name = "バッテリーニアエンド"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "device_abnormality":
+                trigger_event_type_name = "機器異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "parameter_abnormality":
+                trigger_event_type_name = "パラメータ異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "fw_update_abnormality":
+                trigger_event_type_name = "FW更新異常"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            elif trigger_event_type == "power_on":
+                trigger_event_type_name = "電源ON"
+                trigger_event_detail_name = (
+                    "正常"
+                    if remote_control.get("automation_trigger_event_detail_flag") == "0"
+                    else "異常"
+                )
+            trigger_device_name = (
+                remote_control.get("automation_trigger_device_name")
+                if remote_control.get("automation_trigger_device_name")
+                else remote_control.get("automation_trigger_imei")
+            )
+            event_detail = f"""\
+                　【連動制御による制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きましたが、{{di_name}}が変化しませんでした。
+                　※連動設定「{trigger_device_name}、{trigger_event_type_name}、{trigger_event_detail_name}」により制御信号を送信しました。
             """
 
     mail_subject = "イベントが発生しました"
