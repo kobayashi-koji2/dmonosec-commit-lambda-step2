@@ -171,15 +171,16 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 5. デバイス関連お知らせ情報削除
-        delete_device_announcements = {
-            "Delete": {
-                "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
-                "Key": {
-                    "imei": {"S": af_device_imei},
-                    "device_announcement_type": {"S": "regist_balance_days"},
+        device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_imei)
+        if device_announcements:
+            delete_device_announcements = {
+                "Delete": {
+                    "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
+                    "Key": {
+                        "device_announcement_id": {"S": device_announcements.get("device_announcement_id")}
+                    }
                 }
             }
-        }
         transact_items.append(delete_device_announcements)
         logger.debug(f"delete_device_announcements: {delete_device_announcements}")
 

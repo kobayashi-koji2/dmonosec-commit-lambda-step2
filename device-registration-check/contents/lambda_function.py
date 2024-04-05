@@ -191,14 +191,18 @@ def _register_device(pre_device, contract):
     )
 
     # デバイス関連お知らせ情報削除
-    transact_items.append(
-        {
-            "Delete": {
-                "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
-                "Key": {"imei": {"S": pre_device["imei"]}, "device_announcement_type": {"S": "regist_balance_days"}},
+    device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_imei)
+    if device_announcements:
+        transact_items.append(
+            {
+                "Delete": {
+                    "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
+                    "Key": {
+                        "device_announcement_id": {"S": device_announcements.get("device_announcement_id")}
+                    }
+                }
             }
-        }
-    )
+        )
 
     # デバイス関連お知らせ情報追加
     announcement_create_datetime = int(time.time() * 1000)
