@@ -79,6 +79,7 @@ def put_hist_list(
     device_table,
     group_table,
     device_relation_table,
+    device_state_table,
 ):
     device = db.get_device_info(remote_control["device_id"], device_table)
     terminal_name = None
@@ -125,6 +126,7 @@ def put_hist_list(
             "terminal_name": terminal_name,
             "link_terminal_no": remote_control.get("link_di_no"),
             "link_terminal_name": link_terminal_name,
+            "link_terminal_state_name": remote_control.get("link_di_state"),
             "control_exec_user_name": remote_control.get("control_exec_user_name"),
             "control_exec_user_email_address": remote_control.get(
                 "control_exec_user_email_address"
@@ -133,18 +135,33 @@ def put_hist_list(
             "notification_hist_id": notification_hist_id,
             "device_req_no": remote_control.get("device_req_no"),
             "timer_time": remote_control.get("timer_time"),
-            "automation_trigger_device_name": remote_control.get("automation_trigger_device_name"),
-            "automation_trigger_imei": remote_control.get("automation_trigger_imei"),
-            "automation_trigger_event_type": remote_control.get("automation_trigger_event_type"),
-            "automation_trigger_terminal_no": remote_control.get("automation_trigger_terminal_no"),
-            "automation_trigger_event_detail_state": remote_control.get(
-                "automation_trigger_event_detail_state"
-            ),
-            "automation_trigger_event_detail_flag": remote_control.get(
-                "automation_trigger_event_detail_flag"
-            ),
         },
     }
+
+    if remote_control.get("control_trigger") == "automation_control":
+        hist_data = hist_list_item["hist_data"]
+        hist_data["automation_trigger_device_name"] = remote_control.get(
+            "automation_trigger_device_name"
+        )
+        hist_data["automation_trigger_imei"] = remote_control.get("automation_trigger_imei")
+        hist_data["automation_trigger_event_type"] = remote_control.get(
+            "automation_trigger_event_type"
+        )
+        hist_data["automation_trigger_terminal_no"] = remote_control.get(
+            "automation_trigger_terminal_no"
+        )
+        hist_data["automation_trigger_event_detail_state"] = remote_control.get(
+            "automation_trigger_event_detail_state"
+        )
+        hist_data["automation_trigger_event_detail_flag"] = remote_control.get(
+            "automation_trigger_event_detail_flag"
+        )
+        if remote_control.get("link_di_no"):
+            device_state = db.get_device_state(remote_control["device_id"], device_state_table)
+            di_no = remote_control.get("link_di_no")
+            di_state_key = f"di{di_no}_state"
+            hist_data["link_terminal_state_name"] = device_state.get(di_state_key, "")
+
     hist_list_table.put_item(Item=hist_list_item)
 
 

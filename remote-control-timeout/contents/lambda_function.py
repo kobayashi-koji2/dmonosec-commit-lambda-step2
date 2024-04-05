@@ -70,7 +70,9 @@ def send_mail(
 
     # メール送信
     mail_to_list = []
-    for user_id in device.get("device_data", {}).get("config", {}).get("notification_target_list", []):
+    for user_id in (
+        device.get("device_data", {}).get("config", {}).get("notification_target_list", [])
+    ):
         logger.debug(user_id)
         mail_user = db.get_user_info_by_user_id(user_id, user_table)
         mail_account = db.get_account_info_by_account_id(mail_user["account_id"], account_table)
@@ -313,6 +315,7 @@ def lambda_handler(event, context):
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
             notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
+            device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
         except KeyError as e:
             body = {"code": "9999", "message": e}
             return {
@@ -381,6 +384,7 @@ def lambda_handler(event, context):
                 device_table,
                 group_table,
                 device_relation_table,
+                device_state_table,
             )
 
             # 接点衆力制御応答テーブルに制御結果（タイムアウト）を登録
@@ -437,6 +441,7 @@ def lambda_handler(event, context):
                     device_table,
                     group_table,
                     device_relation_table,
+                    device_state_table,
                 )
 
                 # 接点衆力制御応答テーブルに接点入力状態変化の結果（タイムアウト）を登録
