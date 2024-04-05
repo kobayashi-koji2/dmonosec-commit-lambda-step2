@@ -108,15 +108,11 @@ def lambda_handler(event, context, login_user, user_id):
             if not device:
                 continue
             logger.debug(device.get("device_id"))
-            notification_settings = (
-                device.get("device_data").get("config").get("notification_settings", [])
-            )
             update = False
-            for notification_setting in notification_settings:
-                notification_target_list = notification_setting.get("notification_target_list", [])
-                if user_id in notification_target_list:
-                    notification_target_list.remove(user_id)
-                    update = True
+            notification_target_list = device.get("device_data").get("config").get("notification_target_list", [])
+            if user_id in notification_target_list:
+                notification_target_list.remove(user_id)
+                update = True
             if update:
                 transact_items.append(
                     {
@@ -128,14 +124,14 @@ def lambda_handler(event, context, login_user, user_id):
                                     "imei": device["imei"],
                                 }
                             ),
-                            "UpdateExpression": "SET #device_data.#config.#notification_settings = :notification_settings",
+                            "UpdateExpression": "SET #device_data.#config.#notification_target_list = :notification_target_list",
                             "ExpressionAttributeNames": {
                                 "#device_data": "device_data",
                                 "#config": "config",
-                                "#notification_settings": "notification_settings",
+                                "#notification_target_list": "notification_target_list",
                             },
                             "ExpressionAttributeValues": convert.dict_dynamo_format(
-                                {":notification_settings": notification_settings}
+                                {":notification_target_list": notification_target_list}
                             ),
                         }
                     }

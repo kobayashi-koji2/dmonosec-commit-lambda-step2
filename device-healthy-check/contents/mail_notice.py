@@ -27,17 +27,16 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
     # 通知設定チェック
     if "notification_settings" not in device_info.get('device_data', {}).get('config', {}) or\
           len(device_info.get('device_data', {}).get('config', {}).get('notification_settings', [])) == 0:
-        # 通知設定が存在しない場合、通知無し応答
-        return None
+        return hist_list_items
+
+    # 通知先チェック
+    notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
+    if not notification_target_list:
+        return hist_list_items
 
     # メール通知設定チェック
     notification_settings_list = device_info.get('device_data', {}).get('config', {}).get('notification_settings', [])
     for notification_settings in notification_settings_list:
-        # 通知先チェック
-        if len(notification_settings.get('notification_target_list', [])) == 0:
-            # 通知先が存在しないため、スキップ
-            continue
-
         for i, hist_list_item in enumerate(hist_list_items):
 
             # 初期化
@@ -93,7 +92,7 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
 
             # メール通知
             if (mail_send_flg):
-                mail_address_list = ddb.get_notice_mailaddress(notification_settings.get('notification_target_list'), user_table, account_table)
+                mail_address_list = ddb.get_notice_mailaddress(notification_target_list, user_table, account_table)
                 JST = timezone(timedelta(hours=+9), 'JST')
                 event_dt = datetime.fromtimestamp(now_datetime / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
 
@@ -120,7 +119,7 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
                     'notification_datetime': now_datetime,
                     'expire_datetime': expire_datetime,
-                    'notification_user_list': notification_settings.get('notification_target_list')
+                    'notification_user_list': notification_target_list
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
                 # 履歴一覧編集

@@ -8,18 +8,15 @@ logger = Logger()
 BODY_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
-    "required": ["notification_list"],
+    "required": ["notification_list", "notification_target_list"],
     "properties": {
         "notification_list": {
             "type": "array",
             "minItems": 0,
             "items": {
                 "type": "object",
-                "required": ["device_id", "event_trigger"],
+                "required": ["event_trigger"],
                 "properties": {
-                    "device_id": {
-                        "type": "string",
-                    },
                     "event_trigger": {
                         "type": "string",
                     },
@@ -32,14 +29,14 @@ BODY_SCHEMA = {
                     "change_detail": {
                         "type": "integer",
                     },
-                    "notification_target_list": {
-                        "type": "array",
-                        "minItems": 0,
-                        "items": {
-                            "type": "string",
-                        },
-                    },
                 },
+            },
+        },
+        "notification_target_list": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+                "type": "string",
             },
         },
     },

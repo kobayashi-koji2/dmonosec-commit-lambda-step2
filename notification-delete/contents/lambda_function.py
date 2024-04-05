@@ -8,6 +8,7 @@ from aws_xray_sdk.core import patch_all
 import auth
 import db
 import ssm
+import ddb
 
 patch_all()
 
@@ -25,10 +26,8 @@ def lambda_handler(event, context, user):
 
     # DynamoDB操作オブジェクト生成
     try:
-        account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
-        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+        device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-        device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
     except KeyError as e:
         body = {"message": e}
         return {
@@ -47,7 +46,6 @@ def lambda_handler(event, context, user):
             }
         device_id = pathParam["device_id"]
 
-        # ユーザー権限チェック
         if user.get("user_type") != "admin" and user.get("user_type") != "sub_admin":
             return {
                 "statusCode": 400,
@@ -55,41 +53,23 @@ def lambda_handler(event, context, user):
                 "body": json.dumps({"message": "権限がありません。"}, ensure_ascii=False),
             }
 
-        # デバイスIDが契約に紐づいているかチェック
-        contract = db.get_contract_info(user.get("contract_id"), contract_table)
-        contract_device_list = contract.get("contract_data", {}).get("device_list", {})
-        if device_id not in contract_device_list:
+        contract = db.get_contract_info(user["contract_id"], contract_table)
+
+        # 権限チェック
+        if device_id not in contract["contract_data"]["device_list"]:
+            res_body = {"message": "不正なデバイスIDが指定されています。"}
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps({"message": "不正なデバイスIDが指定されています。"}, ensure_ascii=False),
+                "body": json.dumps(res_body, ensure_ascii=False),
             }
 
-        # ユーザー一覧生成
-        user_list = []
-        user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
-        for user_id in user_id_list:
-            logger.debug(user_id)
-            user_info = db.get_user_info_by_user_id(user_id, user_table)
-            account_info = db.get_account_info_by_account_id(
-                user_info.get("account_id"), account_table
-            )
-            user_list.append(
-                {
-                    "user_id": user_id,
-                    "user_name": account_info.get("user_data", {}).get("config", {}).get("user_name", ""),
-                    "email_address": account_info.get("email_address", ""),
-                }
-            )
+        # デバイス管理テーブルの通知設定削除
+        ddb.delete_device_notification_settings(device_id, device_table)
 
-        res_body = {
-            "message": "",
-            "user_list": user_list,
-        }
         return {
-            "statusCode": 200,
+            "statusCode": 204,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False),
         }
 
     except Exception:

@@ -81,14 +81,14 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
         # 通知設定が存在しない場合、通知無し応答
         return hist_list
 
+    # 通知先チェック
+    notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
+    if not notification_target_list:
+        return hist_list
+
     # メール通知設定チェック
     notification_settings_list = device_info.get('device_data', {}).get('config', {}).get('notification_settings', [])
     for notification_settings in notification_settings_list:
-        # 通知先チェック
-        if len(notification_settings.get('notification_target_list', [])) == 0:
-            # 通知先が存在しないため、スキップ
-            continue
-
         # グループ名
         group_name_list = []
         for group_info in hist_list[0].get('hist_data', {}).get('group_list', []):
@@ -268,7 +268,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
 
             # メール通知
             if (mail_send_flg):
-                mail_address_list = ddb.get_notice_mailaddress(notification_settings.get('notification_target_list'), user_table, account_table)
+                mail_address_list = ddb.get_notice_mailaddress(notification_target_list, user_table, account_table)
                 now = datetime.now()
                 szNoticeDatetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
                 szExpireDatetime = int((datetime.fromtimestamp(szNoticeDatetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
@@ -299,7 +299,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
                     'notification_datetime': szNoticeDatetime,
                     'expire_datetime': szExpireDatetime,
-                    'notification_user_list': notification_settings.get('notification_target_list'),
+                    'notification_user_list': notification_target_list,
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
 

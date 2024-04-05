@@ -7,11 +7,13 @@ import convert
 logger = Logger()
 
 
-def update_device_notification_settings(device_id, notificaton_settings, notification_target_list, device_table):
+def delete_device_notification_settings(device_id, device_table):
     # トランザクション書き込み用オブジェクト
     transact_items = []
 
     device = db.get_device_info_other_than_unavailable(device_id, device_table)
+    notificaton_settings = []
+    notification_target_list = []
     notificaton_settings_fmt = convert.to_dynamo_format(notificaton_settings)
     notification_target_list_fmt = convert.to_dynamo_format(notification_target_list)
     update_device = {
