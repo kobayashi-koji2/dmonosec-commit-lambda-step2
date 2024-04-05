@@ -74,7 +74,7 @@ def _get_login_user(event, verify_password_exp=True):
         auth_id = claims["custom:auth_id"]
 
         # 契約コード
-        contract_id = event["headers"]["Mono-Contract-Id"]
+        contract_id = event["headers"]["mono-contract-id"]
         if not isinstance(contract_id, str):
             contract_id = str(contract_id)
 
