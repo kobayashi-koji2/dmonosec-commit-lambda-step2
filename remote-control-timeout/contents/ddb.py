@@ -160,7 +160,15 @@ def put_hist_list(
             device_state = db.get_device_state(remote_control["device_id"], device_state_table)
             di_no = remote_control.get("link_di_no")
             di_state_key = f"di{di_no}_state"
-            hist_data["link_terminal_state_name"] = device_state.get(di_state_key, "")
+            link_terminal_state = device_state.get(di_state_key)
+            link_terminal_state_name = ""
+            for di_list in device["device_data"]["config"]["terminal_settings"]["di_list"]:
+                if di_list["di_no"] == remote_control.get("link_di_no"):
+                    if link_terminal_state == 0:
+                        link_terminal_state_name = di_list.get("di_off_name", "クローズ")
+                    elif link_terminal_state == 1:
+                        link_terminal_state_name = di_list.get("di_on_name", "オープン")
+            hist_data["link_terminal_state_name"] = link_terminal_state_name
 
     hist_list_table.put_item(Item=hist_list_item)
 
