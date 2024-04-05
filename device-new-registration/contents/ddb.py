@@ -16,4 +16,4 @@ def get_device_announcement_list(device_announcement_table, imei):
         KeyConditionExpression=Key("imei").eq(imei) & Key("device_announcement_type").eq("regist_balance_days")
     ).get("Items",[])
 
-    return device_announcement_list
+    return device_announcement_list[0] if device_announcement_list else None
