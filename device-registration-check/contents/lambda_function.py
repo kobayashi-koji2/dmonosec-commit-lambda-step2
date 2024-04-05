@@ -24,6 +24,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 def lambda_handler(event, context):
     contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
     pre_register_device_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
+    device_announcement_table = dynamodb.Table(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"])
 
     # 7日前の登録前デバイスを取得
     today = datetime.datetime.now(zoneinfo.ZoneInfo("Asia/Tokyo")).replace(
@@ -53,7 +54,8 @@ def lambda_handler(event, context):
     for pre_device in pre_register_device_list:
         try:
             contract = db.get_contract_info(pre_device["contract_id"], contract_table)
-            _register_device(pre_device, contract)
+            device_announcements = ddb.get_device_announcement_list(device_announcement_table, pre_device["imei"])
+            _register_device(pre_device, contract, device_announcements)
         except Exception:
             logger.error(pre_device, exc_info=True)
             error_pre_device_list.append(pre_device)
@@ -63,7 +65,7 @@ def lambda_handler(event, context):
         raise Exception("登録に失敗したデバイスあり")
 
 
-def _register_device(pre_device, contract):
+def _register_device(pre_device, contract, device_announcements):
     device_id = str(uuid.uuid4())
     logger.info({"device_id": device_id})
 
@@ -191,7 +193,6 @@ def _register_device(pre_device, contract):
     )
 
     # デバイス関連お知らせ情報削除
-    device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], pre_device["imei"])
     if device_announcements:
         transact_items.append(
             {

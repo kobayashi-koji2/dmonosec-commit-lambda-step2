@@ -45,6 +45,7 @@ def lambda_handler(event, context, user_info, request_body):
         ### 0. DynamoDBの操作オブジェクト生成
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+        device_announcement_table = dynamodb.Table(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"])
 
         ### 1. 入力情報チェック
         # ユーザー権限確認
@@ -178,7 +179,7 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 6. デバイス関連お知らせ情報削除
-        device_announcements = ddb.get_device_announcement_list(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"], device_imei)
+        device_announcements = ddb.get_device_announcement_list(device_announcement_table, device_imei)
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {
