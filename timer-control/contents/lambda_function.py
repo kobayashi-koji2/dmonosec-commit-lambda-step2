@@ -237,6 +237,8 @@ def lambda_handler(event, context):
                     control_trigger = "off_timer_control"
                 elif do_onoff_control == 1:
                     control_trigger = "on_timer_control"
+                elif do_onoff_control == 9:
+                    control_trigger = "timer_control"
                 else:
                     res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
                     respons["statusCode"] = 500
@@ -498,10 +500,20 @@ def __register_hist_info(
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
         event_type = "off_timer_control"
-        control_result = "not_excuted_on"
+        if flg == "__check_under_control":
+            control_result = "not_excuted_done"
+        else:
+            control_result = "not_excuted_on"
     elif do_onoff_control == 1:
         event_type = "on_timer_control"
-        control_result = "not_excuted_off"
+        if flg == "__check_under_control":
+            control_result = "not_excuted_done"
+        else:
+            control_result = "not_excuted_off"
+    elif do_onoff_control == 9:
+        # ON/OFF指定されていない場合、不実施になるのは制御中のケースのみ
+        event_type = "timer_control"
+        control_result = "not_excuted_done"
     else:
         res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
         respons["statusCode"] = 500
@@ -611,6 +623,9 @@ def __send_mail(
         di_state = link_terminal["di_on_name"]
         if not di_state:
             di_state = "オープン"
+    elif do_onoff_control == 9:
+        control_name = ""
+        di_state = ""
 
     mail_to_list = []
     for user_id in device_config.get("notification_target_list", []):
