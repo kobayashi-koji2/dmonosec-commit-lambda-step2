@@ -39,8 +39,11 @@ def lambda_handler(event, context, user):
     try:
         account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
         announcement_flag = ddb.get_announcement_flag(
-            announcement_table, device_announcement_table, user.get("user_data", 0).get("announcement_last_display_datetime", 0),
-            user.get("user_type"), user.get("contract_id")
+            announcement_table,
+            device_announcement_table,
+            user.get("user_data", 0).get("announcement_last_display_datetime", 0),
+            user.get("user_type"),
+            user.get("contract_id"),
         )
 
         res_body = {
@@ -48,6 +51,7 @@ def lambda_handler(event, context, user):
             "user_id": user.get("user_id"),
             "email_address": account.get("email_address"),
             "user_type": user.get("user_type"),
+            "user_name": account.get("user_data", {}).get("config", {}).get("user_name"),
             "announcement_flag": announcement_flag,
             "display_information": user.get("user_data", {}).get("display_information"),
         }
