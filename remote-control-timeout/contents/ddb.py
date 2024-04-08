@@ -138,7 +138,11 @@ def put_hist_list(
         },
     }
 
-    if remote_control.get("control_trigger") == "automation_control":
+    if remote_control.get("control_trigger") in [
+        "automation_control",
+        "on_automation_control",
+        "off_automation_control",
+    ]:
         hist_data = hist_list_item["hist_data"]
         hist_data["automation_trigger_device_name"] = remote_control.get(
             "automation_trigger_device_name"

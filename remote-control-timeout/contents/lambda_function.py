@@ -86,6 +86,12 @@ def send_mail(
                 　制御信号（{do_name}）がデバイスに届きませんでした。
                 　※{user_name}が操作を行いました。
             """
+        elif remote_control.get("control_trigger") == "timer_control":
+            event_detail = f"""\
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きませんでした。
+                　※タイマー設定「{remote_control.get("timer_time")}」により制御信号を送信しました。
+            """
         elif remote_control.get("control_trigger") == "on_timer_control":
             event_detail = f"""\
                 　【タイマーによる制御（失敗）】
@@ -98,7 +104,11 @@ def send_mail(
                 　制御信号（{do_name}）がデバイスに届きませんでした。
                 　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
-        elif remote_control.get("control_trigger") == "automation_control":
+        elif remote_control.get("control_trigger") in [
+            "automation_control",
+            "on_automation_control",
+            "off_automation_control",
+        ]:
             trigger_event_type = remote_control.get("automation_trigger_event_type")
             trigger_event_type_name = ""
             trigger_event_detail_name = ""
@@ -187,6 +197,12 @@ def send_mail(
                 　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
                 　※{user_name}が操作を行いました。
             """
+        elif remote_control.get("control_trigger") == "timer_control":
+            event_detail = f"""\
+                　【タイマーによる制御（失敗）】
+                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
+                　※タイマー設定「{remote_control.get("timer_time")}」により制御信号を送信しました。
+            """
         elif remote_control.get("control_trigger") == "on_timer_control":
             event_detail = f"""\
                 　【タイマーによる制御（失敗）】
@@ -199,7 +215,11 @@ def send_mail(
                 　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
                 　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
             """
-        elif remote_control.get("control_trigger") == "automation_control":
+        elif remote_control.get("control_trigger") in [
+            "automation_control",
+            "on_automation_control",
+            "off_automation_control",
+        ]:
             trigger_event_type = remote_control.get("automation_trigger_event_type")
             trigger_event_type_name = ""
             trigger_event_detail_name = ""
