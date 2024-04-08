@@ -245,7 +245,12 @@ def lambda_handler(event, context):
                     return respons
 
                 now_unixtime = int(time.time() * 1000)
-                expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
+                expire_datetime = int(
+                    (
+                        datetime.fromtimestamp(now_unixtime / 1000)
+                        + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
+                    ).timestamp()
+                )
                 put_items = [
                     {
                         "Put": {
@@ -314,7 +319,11 @@ def __check_timer_settings(do_info, dt_now):
             do_weekday = do_timer.get("do_weekday", "").split(",")
             # 日曜日を0、土曜日を6とした整数
             now_weekday = (dt_now.weekday() + 1) % 7
-            if (do_time.hour == dt_now.hour) and (do_time.minute == dt_now.minute) and str(now_weekday) in do_weekday:
+            if (
+                (do_time.hour == dt_now.hour)
+                and (do_time.minute == dt_now.minute)
+                and str(now_weekday) in do_weekday
+            ):
                 do_info["do_timer"] = do_timer
                 result = do_info
                 # 同一接点出力端子で重複した設定は不可となるので１つだけ抽出とする
@@ -324,18 +333,22 @@ def __check_timer_settings(do_info, dt_now):
 
 def __check_return_di_state(do_info, device_id, device_state_table):
     """
-    1. 紐づく接点入力端子番号の指定がある場合
+    1. 紐づく接点入力端子番号の指定があり、ON/OFF制御の指定がある場合
         その出力端子に紐づく接点入力端子の現状態を確認し、タイマーのON_OFF制御と比較検証する。
             1. タイマーのON_OFF制御と紐づく接点入力端子の現状態の値が一致しない場合
                 処理続行する。
             2. タイマーのON_OFF制御と紐づく接点入力端子の現状態の値が一致する場合
                 履歴情報を登録して処理対象外としてスキップする。
-    2. 紐づく接点入力端子番号の指定がない場合
+    2. 紐づく接点入力端子番号の指定がない場合、もしくはON/OFF制御の指定がない場合
         処理対象外としてスキップする。
     """
     result = None
 
-    if ("do_di_return" in do_info) and do_info["do_di_return"]:
+    if (
+        ("do_di_return" in do_info)
+        and do_info["do_di_return"]
+        and do_info["do_timer"]["do_onoff_control"] in [0, 1]
+    ):
         device_state_info = db.get_device_state(device_id, device_state_table)
         if not device_state_info:
             res_body = {"message": "現状態情報が存在しません。"}
@@ -521,7 +534,12 @@ def __register_hist_info(
             hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
 
     now_unixtime = int(time.time() * 1000)
-    expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
+    expire_datetime = int(
+        (
+            datetime.fromtimestamp(now_unixtime / 1000)
+            + relativedelta.relativedelta(years=CNT_HIST_TTL)
+        ).timestamp()
+    )
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
