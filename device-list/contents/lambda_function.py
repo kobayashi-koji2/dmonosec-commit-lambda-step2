@@ -216,7 +216,7 @@ def lambda_handler(event, context, user_info):
                     {
                         "di_no": di_no,
                         "di_state": di_state,
-                        "di_healthy_state": di_healthy_state,
+                        "di_unhealthy": di_healthy_state,
                     }
                 )
 
