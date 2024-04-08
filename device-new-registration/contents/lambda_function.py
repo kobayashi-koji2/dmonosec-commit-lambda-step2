@@ -189,8 +189,8 @@ def lambda_handler(event, context, user_info, request_body):
                     }
                 }
             }
-        transact_items.append(delete_device_announcements)
-        logger.debug(f"delete_device_announcements: {delete_device_announcements}")
+            transact_items.append(delete_device_announcements)
+            logger.debug(f"delete_device_announcements: {delete_device_announcements}")
 
         # 各データを登録・更新・削除
         if not db.execute_transact_write_item(transact_items):

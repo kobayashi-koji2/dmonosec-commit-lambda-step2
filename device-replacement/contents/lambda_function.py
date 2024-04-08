@@ -172,7 +172,7 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 5. デバイス関連お知らせ情報削除
-        device_announcements = ddb.get_device_announcement_list(device_announcement_table, device_info["imei"])
+        device_announcements = ddb.get_device_announcement_list(device_announcement_table, af_device_imei)
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {
@@ -182,8 +182,8 @@ def lambda_handler(event, context, user_info, request_body):
                     }
                 }
             }
-        transact_items.append(delete_device_announcements)
-        logger.debug(f"delete_device_announcements: {delete_device_announcements}")
+            transact_items.append(delete_device_announcements)
+            logger.debug(f"delete_device_announcements: {delete_device_announcements}")
 
         # 各データを登録・更新・削除
         if not db.execute_transact_write_item(transact_items):
