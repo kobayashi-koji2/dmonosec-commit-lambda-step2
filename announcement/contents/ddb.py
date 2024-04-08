@@ -40,10 +40,9 @@ def update_user_announcement_last_display_datetime(user_table, user_id, now_unix
         "Key": {
             "user_id": user_id
         },
-        "UpdateExpression": "set #user_data.#config.#announcement_last_display_datetime = :now_unixtime",
+        "UpdateExpression": "set #user_data.#announcement_last_display_datetime = :now_unixtime",
         "ExpressionAttributeNames": {
             "#user_data": "user_data",
-            "#config": "config",
             "#announcement_last_display_datetime": "announcement_last_display_datetime",
         },
         "ExpressionAttributeValues": {":now_unixtime": now_unixtime},
