@@ -121,25 +121,29 @@ def create_history_message(hist):
                 msg = f"【画面操作による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中だったため、制御を行いませんでした。\n ※{control_exec_uer_name}が操作を行いました。"
 
     # タイマー設定による制御
-    elif hist["event_type"] == "on_timer_control" or hist["event_type"] == "off_timer_control":
-        on_off = "ON" if hist["event_type"] == "on_timer_control" else "OFF"
+    elif hist["event_type"] == "on_timer_control" or hist["event_type"] == "off_timer_control" or hist["event_type"] == "timer_control":
+        on_off = ""
+        if hist["event_type"] == "on_timer_control":
+            on_off = "ON制御　"
+        elif hist["event_type"] == "off_timer_control":
+            on_off = "OFF制御　"
         terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
         link_terminal_name = hist.get(
             "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
         )
         if hist["control_result"] == "success" or hist["control_result"] == "failure":
-            msg = f"【タイマー設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n※タイマー設定「{on_off}制御　{hist.get("timer_time")}」により制御信号を送信しました。"
+            msg = f"【タイマー設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
         elif hist["control_result"] == "timeout_status":
-            msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※タイマー設定「{on_off}制御　{hist.get("timer_time")}」により制御信号を送信しました。"
+            msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
         elif hist["control_result"] == "timeout_response":
-            msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※タイマー設定「{on_off}制御　{hist.get("timer_time")}」により制御信号を送信しました。"
+            msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
         elif hist["control_result"] == "not_excuted_done":
-            msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}制御　{hist.get("timer_time")}」による制御信号を送信しませんでした。"
+            msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
         elif (
             hist["control_result"] == "not_excuted_on"
             or hist["control_result"] == "not_excuted_off"
         ):
-            msg = f"【タイマー設定による制御（不実施）】\n{link_terminal_name}が既に{hist.get("link_terminal_state_name")}のため、{terminal_name}の制御を行いませんでした。\n※タイマー設定「{on_off}制御　{hist.get("timer_time")}」による制御信号を送信しませんでした。"
+            msg = f"【タイマー設定による制御（不実施）】\n{link_terminal_name}が既に{hist.get("link_terminal_state_name")}のため、{terminal_name}の制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
 
     # 連動設定による制御（Ph2）
     elif hist["event_type"] == "automation_control":
