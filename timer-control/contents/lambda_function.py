@@ -342,7 +342,7 @@ def __check_return_di_state(do_info, device_id, device_state_table):
             2. タイマーのON_OFF制御と紐づく接点入力端子の現状態の値が一致する場合
                 履歴情報を登録して処理対象外としてスキップする。
     2. 紐づく接点入力端子番号の指定がない場合、もしくはON/OFF制御の指定がない場合
-        処理対象外としてスキップする。
+        処理対象として処理続行する。
     """
     result = None
 
@@ -367,6 +367,7 @@ def __check_return_di_state(do_info, device_id, device_state_table):
             )
             result = 1
     else:
+        result = do_info
         logger.info("Not processed because do_di_return is not set")
         pass
 
