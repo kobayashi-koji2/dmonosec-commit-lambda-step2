@@ -98,7 +98,7 @@ def input_check(param):
     str_value_limits = {"do_timer_name": {0, 30}, "do_time": {0, 5}}
 
     # 桁数の制限
-    int_float_value_limits = {"do_onoff_control": {0, 1}}
+    int_float_value_limits = {"do_onoff_control": {0, 9}}
 
     # 正規表現
     regex = {
@@ -172,7 +172,9 @@ def input_check(param):
 
 # 重複チェック
 def duplicate_check(param, device_info):
-    do_list = device_info.get("device_data").get("config").get("terminal_settings").get("do_list",[])
+    do_list = (
+        device_info.get("device_data").get("config").get("terminal_settings").get("do_list", [])
+    )
     for do in do_list:
         if do.get("do_no") != param.get("do_no"):
             continue
