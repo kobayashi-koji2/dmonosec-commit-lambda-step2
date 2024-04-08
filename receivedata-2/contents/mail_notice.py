@@ -196,7 +196,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                 mail_send_flg = True
 
             # 遠隔制御応答
-            elif hist_list_data.get('hist_data', {}).get('event_type') in ["manual_control", "on_timer_control", "off_timer_control", "automation_control"] and\
+            elif hist_list_data.get('hist_data', {}).get('event_type') in ["manual_control", "on_timer_control", "off_timer_control", "timer_control", "automation_control"] and\
                 notification_settings.get('event_trigger') == "do_change":
                 if "link_terminal_no" in hist_list_data.get('hist_data', {}):
                     if notification_settings.get('terminal_no') == hist_list_data.get("hist_data", {}).get("terminal_no"):
@@ -210,10 +210,10 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                                 　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
                                 　※{control_exec_user_name}が操作を行いました。
                             """
-                        elif hist_list_data.get('hist_data', {}).get('event_type') in ["on_timer_control", "off_timer_control"]:
+                        elif hist_list_data.get('hist_data', {}).get('event_type') in ["on_timer_control", "off_timer_control", "timer_control"]:
                             if hist_list_data.get('hist_data', {}).get('event_type') == "on_timer_control":
                                 control = "ON制御"
-                            else:
+                            elif hist_list_data.get('hist_data', {}).get('event_type') == "off_timer_control":
                                 control = "OFF制御"
                             terminal_name = hist_list_data.get('hist_data', {}).get('terminal_name')
                             link_terminal_name = hist_list_data.get('hist_data', {}).get('link_terminal_name')
@@ -251,6 +251,15 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                                 　※{control_exec_user_name}が操作を行いました。
                             """
                             mail_send_flg = True
+                    elif hist_list_data.get('hist_data', {}).get('event_type') in ["on_timer_control", "off_timer_control", "timer_control"]:
+                        terminal_name = hist_list_data.get('hist_data', {}).get('terminal_name')
+                        timer_time = hist_list_data.get('hist_data', {}).get('timer_time')
+                        event_detail = f"""
+                            　【タイマー設定による制御（成功）】
+                            　制御信号（{terminal_name}）がデバイスに届きました。
+                            　※タイマー設定「{timer_time}」により制御信号を送信しました。
+                        """
+                        mail_send_flg = True
                     elif hist_list_data.get('hist_data', {}).get('event_type')  == "automation_control":
                         terminal_name = hist_list_data.get('hist_data', {}).get('terminal_name')
                         automation_trigger_imei = hist_list_data.get('hist_data', {}).get('automation_trigger_imei')
