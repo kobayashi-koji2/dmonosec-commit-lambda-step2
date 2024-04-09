@@ -138,6 +138,13 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
         device_info = device_info[0]
+        if device_info["device_type"] != "PJ2":
+            res_body = {"message": "デバイス種別が想定と一致しません。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         logger.info(f"device_info: {device_info}")
 
         ### 5. 制御中判定
@@ -281,7 +288,12 @@ def lambda_handler(event, context, user_info):
         device_req_no = icc_id + "-" + req_no
         do_di_return = convert.decimal_default_proc(do_info["do_di_return"])
         now_unixtime = int(time.time() * 1000)
-        expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
+        expire_datetime = int(
+            (
+                datetime.fromtimestamp(now_unixtime / 1000)
+                + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
+            ).timestamp()
+        )
         put_items = [
             {
                 "Put": {
@@ -409,7 +421,12 @@ def __register_hist_info(
 
     # 履歴情報登録
     now_unixtime = int(time.time() * 1000)
-    expire_datetime = int((datetime.fromtimestamp(now_unixtime / 1000) + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)).timestamp())
+    expire_datetime = int(
+        (
+            datetime.fromtimestamp(now_unixtime / 1000)
+            + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
+        ).timestamp()
+    )
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
