@@ -49,7 +49,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
             return {"result": False, "message": "接点端子が指定されていません。"}
         if not di_state:
             return {"result": False, "message": "接点入力状態が指定されていません。"}
-    elif event_type == "di_healthy":
+    elif event_type == "di_unhealthy":
         if not terminal_no:
             return {"result": False, "message": "接点端子が指定されていません。"}
         if occurrence_flag is None:
@@ -406,6 +406,14 @@ def _put_hist_list(
     elif automation["control_di_state"] == 1:
         di_state_name = di[0].get("di_on_name", "オープン")
 
+    event_type = ""
+    if automation.get("control_di_state") == 0:
+        event_type = "off_automation_control"
+    elif automation.get("control_di_state") == 1:
+        event_type = "on_automation_control"
+    elif automation.get("control_di_state") == 9:
+        event_type = "automation_control"
+
     hist_list_item = {
         "device_id": trigger_device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
@@ -415,7 +423,7 @@ def _put_hist_list(
             "device_name": control_device.get("device_data").get("config").get("device_name"),
             "imei": control_device.get("imei"),
             "group_list": group_list,
-            "event_type": "automation_control",
+            "event_type": event_type,
             "terminal_no": control_do.get("do_no"),
             "terminal_name": control_do.get("do_name"),
             "link_terminal_no": control_do.get("link_di_no"),
@@ -525,7 +533,7 @@ def _send_not_exec_mail(
                     event_detail_name = "クローズ"
                 elif automation["trigger_event_detail_state"] == 1:
                     event_detail_name = "オープン"
-            elif automation["trigger_event_type"] == "di_change_healthy":
+            elif automation["trigger_event_type"] == "di_unhealthy":
                 event_type_name = f"接点入力{di[0].get('di_no')}未変化検出"
                 if automation["trigger_event_detail_flag"] == 0:
                     event_detail_name = "接点入力検出復旧"
@@ -710,18 +718,20 @@ def _get_automation(
         for item in automation_list
         if item.get("trigger_event_type") == event_type
         and (
-            event_type == "di_change"
-            and item.get("trigger_terminal_no") == terminal_no
-            and item.get("trigger_di_state") == di_state
-        )
-        or (
-            event_type == "di_healthy"
-            and item.get("trigger_terminal_no") == terminal_no
-            and item.get("trigger_occurrence_flag") == occurrence_flag
-        )
-        or (
-            event_type not in ["di_change", "di_healthy"]
-            and item.get("trigger_occurrence_flag") == occurrence_flag
+            (
+                event_type == "di_change_state"
+                and item.get("trigger_terminal_no") == terminal_no
+                and item.get("trigger_di_state") == di_state
+            )
+            or (
+                event_type == "di_unhealthy"
+                and item.get("trigger_terminal_no") == terminal_no
+                and item.get("trigger_occurrence_flag") == occurrence_flag
+            )
+            or (
+                event_type not in ["di_change_state", "di_unhealthy"]
+                and item.get("trigger_occurrence_flag") == occurrence_flag
+            )
         )
     ]
     return automation_list[0] if automation_list else None

@@ -37,7 +37,7 @@ dynamodb = boto3.resource(
 
 @auth.verify_login_user()
 @validate.validate_parameter
-def lambda_handler(event, context, user_info, request_body):
+def lambda_handler(event, context, user_info, device_imei):
     try:
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
@@ -53,7 +53,6 @@ def lambda_handler(event, context, user_info, request_body):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        device_imei = request_body["device_imei"]
         pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, pre_register_table)
         device_type = ""
         if pre_device_info.get("device_code") == "MS-C0100":
