@@ -11,6 +11,7 @@ import boto3
 import auth
 import ssm
 import db
+import ddb
 
 patch_all()
 
@@ -42,13 +43,7 @@ def lambda_handler(event, context, user_info):
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
 
-        ### 1. 入力情報チェック
-        # 入力情報のバリデーションチェック
-        # トークンからユーザー情報取得
-        logger.info(f"user_info: {user_info}")
-        # ユーザー権限確認
-        # 1月まではいったん、ログインするユーザーIDとモノセコムユーザーIDは同じ認識で直接ユーザー管理より参照する形で実装
-        # バリデーションチェックの処理の中でモノセコムユーザー管理より参照しているのでその値を使用
+        logger.debug(f"user_info: {user_info}")
 
         ### 2. デバイスID取得（作業者・参照者の場合）
         device_id_list = list()
@@ -63,22 +58,22 @@ def lambda_handler(event, context, user_info):
             logger.info("In case of admin/sub_admin")
             cotract_id = user_info["contract_id"]
             contract_info = db.get_contract_info(cotract_id, contract_table)
-            logger.info(f"contract_info: {contract_info}")
+            logger.debug(f"contract_info: {contract_info}")
             device_id_list = contract_info["contract_data"]["device_list"]
 
-        logger.info(f"device_id_list: {device_id_list}")
+        logger.debug(f"device_id_list: {device_id_list}")
 
         ### 4. 遠隔制御一覧生成
         results = list()
         # デバイス情報取得
         for device_id in device_id_list:
-            device_info = db.get_device_info(device_id, device_table, consistent_read=True)
-            logger.info({"device_info": device_info})
+            device_info = ddb.get_device_info_only_pj2(device_id, device_table)
+            logger.debug({"device_info": device_info})
 
             if device_info is not None:
                 # 現状態情報取得
                 state_info = db.get_device_state(device_id, device_state_table)
-                logger.info(f"state_info: {state_info}")
+                logger.debug(f"state_info: {state_info}")
                 device_imei = device_info["imei"]
                 device_name = (
                     device_info.get("device_data", {}).get("config", {}).get("device_name", "")
