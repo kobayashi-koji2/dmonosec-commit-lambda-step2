@@ -1,11 +1,11 @@
 import json
 
 from aws_lambda_powertools import Logger
-from aws_lambda_powertools.utilities.validation import SchemaValidationError, envelopes, validator
+from aws_lambda_powertools.utilities.validation import SchemaValidationError, validator
 
 logger = Logger()
 
-REQUEST_BODY_SCHEMA = {
+PATH_PARAMETERS_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
     "required": ["device_imei"],
@@ -15,10 +15,10 @@ REQUEST_BODY_SCHEMA = {
 }
 
 
-def validate_request_body(func):
+def validate_parameter(func):
     def wrapper(event, context, *args, **kwargs):
         try:
-            validated_request_body = _validate_request_body(event, context)
+            validated_path_parameters = _validate_path_parameters(event, context)
         except SchemaValidationError as e:
             logger.info("バリデーションエラー", exc_info=True)
             return {
@@ -30,12 +30,12 @@ def validate_request_body(func):
                 "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
-        result = func(event, context, *args, validated_request_body, **kwargs)
+        result = func(event, context, *args, validated_path_parameters["device_imei"], **kwargs)
         return result
 
     return wrapper
 
 
-@validator(inbound_schema=REQUEST_BODY_SCHEMA, envelope="powertools_json(body)")
-def _validate_request_body(event, context):
+@validator(inbound_schema=PATH_PARAMETERS_SCHEMA, envelope="pathParameters")
+def _validate_path_parameters(event, context):
     return event
