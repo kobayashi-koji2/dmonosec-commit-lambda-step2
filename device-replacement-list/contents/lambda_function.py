@@ -36,7 +36,7 @@ dynamodb = boto3.resource(
 
 
 @auth.verify_login_user()
-@validate.validate_parameter
+@validate.validate_request_body
 def lambda_handler(event, context, user_info, request_body):
     try:
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])

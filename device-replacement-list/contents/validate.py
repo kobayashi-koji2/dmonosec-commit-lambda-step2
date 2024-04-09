@@ -15,10 +15,10 @@ REQUEST_BODY_SCHEMA = {
 }
 
 
-def validate_parameter(func):
+def validate_request_body(func):
     def wrapper(event, context, *args, **kwargs):
         try:
-            validated_body = _validate_body(event, context)
+            validated_request_body = _validate_request_body(event, context)
         except SchemaValidationError as e:
             logger.info("バリデーションエラー", exc_info=True)
             return {
@@ -30,12 +30,12 @@ def validate_parameter(func):
                 "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
-        result = func(event, context, *args, validated_body, **kwargs)
+        result = func(event, context, *args, validated_request_body, **kwargs)
         return result
 
     return wrapper
 
 
-@validator(inbound_schema=REQUEST_BODY_SCHEMA, envelope=envelopes.API_GATEWAY_REST)
-def _validate_body(event, context):
+@validator(inbound_schema=REQUEST_BODY_SCHEMA, envelope="powertools_json(body)")
+def _validate_request_body(event, context):
     return event
