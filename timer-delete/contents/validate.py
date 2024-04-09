@@ -46,7 +46,20 @@ def validate(event, user_info, tables):
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
 
+    # デバイス種別チェック
+    device_terminal = device_terminal_check(device_info["device_type"], body)
+    if not device_terminal:
+        return {"message": "デバイス種別が不正です。"}
+
     return {"device_id": device_id, "do_no": do_no, "do_timer_id": do_timer_id}
+
+
+# デバイス種別,端子番号チェック
+def device_terminal_check(device_type, body):
+    if device_type == "PJ2":
+        if body.get("do_no") in [1, 2]:
+            return True
+    return False
 
 
 # 操作権限チェック
