@@ -389,7 +389,7 @@ def _put_hist_list(
         (event_datetime + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()
     )
 
-    di_no = control_do.get("link_di_no")
+    di_no = control_do.get("do_di_return")
     di = [
         di
         for di in control_device.get("device_data", {})
@@ -418,7 +418,7 @@ def _put_hist_list(
             "event_type": "automation_control",
             "terminal_no": control_do.get("do_no"),
             "terminal_name": control_do.get("do_name"),
-            "link_terminal_no": control_do.get("link_di_no"),
+            "link_terminal_no": control_do.get("do_di_return"),
             "link_terminal_name": di_name,
             "link_terminal_state_name": di_state_name,
             "automation_trigger_device_name": trigger_device.get("device_data", {})
@@ -497,7 +497,7 @@ def _send_not_exec_mail(
                 else f"接点出力{control_do.get('do_no')}"
             )
 
-            di_no = control_do.get("link_di_no")
+            di_no = control_do.get("do_di_return")
             if di_no:
                 di = [
                     di
