@@ -169,37 +169,44 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             "parameter_abnormality_last_update_datetime": recv_data.get("recv_datetime"),
             "fw_update_abnormality_last_update_datetime": recv_data.get("recv_datetime"),
             "di1_last_update_datetime": recv_data.get("recv_datetime"),
-            "di2_last_update_datetime": recv_data.get("recv_datetime"),
-            "di3_last_update_datetime": recv_data.get("recv_datetime"),
-            "di4_last_update_datetime": recv_data.get("recv_datetime"),
-            "di5_last_update_datetime": recv_data.get("recv_datetime"),
-            "di6_last_update_datetime": recv_data.get("recv_datetime"),
-            "di7_last_update_datetime": recv_data.get("recv_datetime"),
-            "di8_last_update_datetime": recv_data.get("recv_datetime"),
-            "do1_last_update_datetime": recv_data.get("recv_datetime"),
-            "do2_last_update_datetime": recv_data.get("recv_datetime"),
-            "ai1_last_update_datetime": recv_data.get("recv_datetime"),
-            "ai2_last_update_datetime": recv_data.get("recv_datetime"),
-            "ai1_threshold_last_update_datetime": recv_data.get("recv_datetime"),
-            "ai2_threshold_last_update_datetime": recv_data.get("recv_datetime"),
             "signal_state": 0,
             "battery_near_state": 0,
             "device_abnormality": 0,
             "parameter_abnormality": 0,
             "fw_update_abnormality": 0,
             "di1_state": int(di_list[0]) if di_list else None,
-            "di2_state": int(di_list[1]) if di_list else None,
-            "di3_state": int(di_list[2]) if di_list else None,
-            "di4_state": int(di_list[3]) if di_list else None,
-            "di5_state": int(di_list[4]) if di_list else None,
-            "di6_state": int(di_list[5]) if di_list else None,
-            "di7_state": int(di_list[6]) if di_list else None,
-            "di8_state": int(di_list[7]) if di_list else None,
-            "do1_state": int(do_list[0]) if do_list else None,
-            "do2_state": int(do_list[1]) if do_list else None,
-            "ai1_state": recv_data.get("analogv1"),
-            "ai2_state": recv_data.get("analogv2"),
         }
+
+        if recv_data.get("device_type") in ["PJ2", "PJ3"]:
+            current_state_info["di2_state"] = int(di_list[1]) if di_list else None
+            current_state_info["di3_state"] = int(di_list[2]) if di_list else None
+            current_state_info["di4_state"] = int(di_list[3]) if di_list else None
+            current_state_info["di5_state"] = int(di_list[4]) if di_list else None
+            current_state_info["di6_state"] = int(di_list[5]) if di_list else None
+            current_state_info["di7_state"] = int(di_list[6]) if di_list else None
+            current_state_info["di8_state"] = int(di_list[7]) if di_list else None
+            current_state_info["do1_state"] = int(do_list[0]) if do_list else None
+            current_state_info["do2_state"] = int(do_list[1]) if do_list else None
+            current_state_info["di2_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di3_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di4_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di5_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di6_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di7_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["di8_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["do1_last_update_datetime"] = recv_data.get("recv_datetime")
+            current_state_info["do2_last_update_datetime"] = recv_data.get("recv_datetime")
+
+            """
+            if recv_data.get("device_type") == "PJ3":
+                current_state_info["ai1_state"] = recv_data.get("analogv1")
+                current_state_info["ai2_state"] = recv_data.get("analogv2")
+                current_state_info["ai1_last_update_datetime"] = recv_data.get("recv_datetime")
+                current_state_info["ai2_last_update_datetime"] = recv_data.get("recv_datetime")
+                current_state_info["ai1_threshold_last_update_datetime"] = recv_data.get("recv_datetime")
+                current_state_info["ai2_threshold_last_update_datetime"] = recv_data.get("recv_datetime")
+            """
+
     else:
         current_state_info = device_current_state.copy()
         recv_datetime = recv_data.get("recv_datetime")
@@ -209,15 +216,25 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
         current_state_info["parameter_abnormality_last_update_datetime"] = recv_datetime
         current_state_info["fw_update_abnormality_last_update_datetime"] = recv_datetime
         current_state_info["di1_last_update_datetime"] = recv_datetime
-        current_state_info["di2_last_update_datetime"] = recv_datetime
-        current_state_info["di3_last_update_datetime"] = recv_datetime
-        current_state_info["di4_last_update_datetime"] = recv_datetime
-        current_state_info["di5_last_update_datetime"] = recv_datetime
-        current_state_info["di6_last_update_datetime"] = recv_datetime
-        current_state_info["di7_last_update_datetime"] = recv_datetime
-        current_state_info["di8_last_update_datetime"] = recv_datetime
-        current_state_info["do1_last_update_datetime"] = recv_datetime
-        current_state_info["do2_last_update_datetime"] = recv_datetime
+
+        if recv_data.get("device_type") in ["PJ2", "PJ3"]:
+            current_state_info["di2_last_update_datetime"] = recv_datetime
+            current_state_info["di3_last_update_datetime"] = recv_datetime
+            current_state_info["di4_last_update_datetime"] = recv_datetime
+            current_state_info["di5_last_update_datetime"] = recv_datetime
+            current_state_info["di6_last_update_datetime"] = recv_datetime
+            current_state_info["di7_last_update_datetime"] = recv_datetime
+            current_state_info["di8_last_update_datetime"] = recv_datetime
+            current_state_info["do1_last_update_datetime"] = recv_datetime
+            current_state_info["do2_last_update_datetime"] = recv_datetime
+
+            """
+            if recv_data.get("device_type") == "PJ3":
+                current_state_info["ai1_last_update_datetime"] = recv_datetime
+                current_state_info["ai2_last_update_datetime"] = recv_datetime
+                current_state_info["ai1_threshold_last_update_datetime"] = recv_datetime
+                current_state_info["ai2_threshold_last_update_datetime"] = recv_datetime
+            """
 
     return current_state_info
 
@@ -354,7 +371,8 @@ def eventJudge(
         di_list = list(reversed(list(recv_data.get("di_state", []))))
         if recv_data.get("message_type") == "0001":
             di_trigger = recv_data.get("di_trigger")
-        for i in range(8):
+        di_range = 1 if recv_data.get("device_type") == "PJ1" else 8
+        for i in range(di_range):
             event_info["terminal_no"] = i + 1
             event_info["di_state"] = int(di_list[i]) if di_list else None
             if recv_data.get("message_type") == "0001" and event_info["terminal_no"] == di_trigger:
@@ -371,7 +389,7 @@ def eventJudge(
                 )
 
     # 接点出力変化判定
-    if recv_data.get("message_type") in ["0001"]:
+    if recv_data.get("message_type") in ["0001"] and recv_data.get("device_type") in ["PJ2", "PJ3"]:
         event_info = {}
         event_info["event_type"] = "do_change"
         event_info["event_datetime"] = recv_data.get("event_datetime")
@@ -526,7 +544,7 @@ def eventJudge(
             )
 
     # 遠隔制御（接点出力制御応答）
-    if recv_data.get("message_type") in ["8002"]:
+    if recv_data.get("message_type") in ["8002"] and recv_data.get("device_type") in ["PJ2", "PJ3"]:
         event_info = {}
         remote_control_info = ddb.get_remote_control_info(
             recv_data.get("device_req_no"), remote_control_table
@@ -570,7 +588,7 @@ def eventJudge(
         hist_list.append(hist_list_data)
 
     # 遠隔制御（状態変化通知）
-    if recv_data.get("message_type") in ["0001"]:
+    if recv_data.get("message_type") in ["0001"] and recv_data.get("device_type") in ["PJ2", "PJ3"]:
         event_info = {}
         di_trigger = recv_data.get("di_trigger")
         if di_trigger != 0:

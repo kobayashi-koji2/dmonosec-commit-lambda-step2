@@ -64,6 +64,12 @@ def commandParser(
     nlen = int.from_bytes(getByteArray(Payload, index, 2), "big")
     # デバイス種別
     nDeviceType = int.from_bytes(getByteArray(Payload, index, 2), "big")
+    if nDeviceType == 1:
+        szDeviceType = "PJ1"
+    elif nDeviceType == 2:
+        szDeviceType = "PJ2"
+    elif nDeviceType == 3:
+        szDeviceType = "PJ3"
     # ファームウェアVersion
     nVer = int.from_bytes(getByteArray(Payload, index, 2), "big")
     # メッセージ種別
@@ -107,7 +113,7 @@ def commandParser(
     hist_flg = False
 
     # 状態変化通知
-    if nMsgType == 0x0001:
+    if nMsgType == 0x0001 and szDeviceType in ["PJ1", "PJ2", "PJ3"]:
         nDIState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDItrg = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
@@ -127,7 +133,7 @@ def commandParser(
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
             "expire_datetime": szExpireDatetime,
-            "dev_type": nDeviceType,
+            "device_type": szDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
             "power_voltage": nVolt,
@@ -145,7 +151,7 @@ def commandParser(
         }
 
     # 現状態通知
-    elif nMsgType in [0x0011, 0x0012]:
+    elif nMsgType in [0x0011, 0x0012] and szDeviceType in ["PJ1", "PJ2", "PJ3"]:
         nDIState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nAI1 = signed_hex2int(int.from_bytes(getByteArray(Payload, index, 2), "big"), 16)
@@ -159,7 +165,7 @@ def commandParser(
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
             "expire_datetime": szExpireDatetime,
-            "dev_type": nDeviceType,
+            "device_type": szDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
             "power_voltage": nVolt,
@@ -173,22 +179,16 @@ def commandParser(
         }
 
     # 接点出力制御応答
-    elif nMsgType == 0x8002:
+    elif nMsgType == 0x8002 and szDeviceType in ["PJ2", "PJ3"]:
         nControlResult = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         logger.debug(f"接点出力制御応答 control_result={nControlResult}, nDOState={nDOState}")
-        if nDeviceType == 1:
-            nDeviceType = "PJ1"
-        elif nDeviceType == 2:
-            nDeviceType = "PJ2"
-        elif nDeviceType == 3:
-            nDeviceType = "PJ3"
 
         recv_data = {
             "device_req_no": szSimid + "-" + szReqNo,
             "event_datetime": nEventTime,
             "recv_datetime": szRecvDatetime,
-            "device_type": nDeviceType,
+            "device_type": szDeviceType,
             "fw_version": nVer,
             "message_type": format(nMsgType, "04x"),
             "power_voltage": nVolt,
@@ -199,6 +199,9 @@ def commandParser(
             "do_state": format(nDOState, "08b"),
             "iccid": szSimid,
         }
+    else:
+        logger.error(f"規定外メッセージ受信: szSimid={szSimid}, szRecvDatetime={szRecvDatetime}, Payload={Payload}")
+        raise Exception("規定外メッセージ受信")
 
     if not stray_flag:
         # 現状態取得
@@ -259,7 +262,8 @@ def commandParser(
                 )
 
             # 接点入力未変化判定
-            for i in range(1, 9):
+            di_range = 2 if szDeviceType == "PJ1" else 9
+            for i in range(1, di_range):
                 di_healthy_state_key = f"di{i}_healthy_state"
                 di_healthy_state = current_state_info.get(di_healthy_state_key)
                 di_last_change_datetime = f"di{i}_last_change_datetime"
