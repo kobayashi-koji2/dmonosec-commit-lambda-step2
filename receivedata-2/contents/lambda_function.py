@@ -41,6 +41,7 @@ def lambda_handler(event, context):
             remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
         except KeyError as e:
             logger.error("KeyError")
+            logger.error(traceback.format_exc())
             return bytes([3])
 
         # サーバー受信日時を取得
@@ -94,6 +95,7 @@ def lambda_handler(event, context):
             )
         except Exception as e:
             logger.debug(f"commandParserエラー e={e}")
+            logger.error(traceback.format_exc())
             return bytes([3])
 
         ##################

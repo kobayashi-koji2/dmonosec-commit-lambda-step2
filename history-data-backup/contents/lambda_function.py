@@ -39,7 +39,7 @@ def verify_if_expired(payload):
     try:
         parsed_json = json.loads(payload)
         if str(parsed_json["eventName"]).upper() == "REMOVE":
-            if parsed_json["userIdentity"]["principalId"] == "dynamodb.amazonaws.com":
+            if parsed_json.get("userIdentity").get("principalId") == "dynamodb.amazonaws.com":
                 return True
     except Exception as e:
         print(e,"error")
