@@ -228,6 +228,7 @@ def lambda_handler(event, context, user_info):
                         "device_name"
                     ),
                     "device_imei": device_info["Items"][0]["imei"],
+                    "device_type": device_info["Items"][0]["device_type"],
                     "group_name_list": group_name_list,
                     "device_order": order,
                     "di_list": di_list,
