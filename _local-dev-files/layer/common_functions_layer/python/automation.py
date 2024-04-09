@@ -472,7 +472,7 @@ def _send_not_exec_mail(
             mail_to_list.append(mail_account.get("email_address"))
         if mail_to_list:
             # メールに埋め込む情報を取得
-            event_datetime_jst = datetime.fromtimestamp(event_datetime, tz=ZoneInfo("Asia/Tokyo"))
+            event_datetime_jst = event_datetime.astimezone(ZoneInfo("Asia/Tokyo"))
 
             trigger_device_name = (
                 trigger_device.get("device_data", {})
