@@ -71,6 +71,11 @@ def lambda_handler(event, context, user_info, request_body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
         logger.debug(f"pre_device_info: {pre_device_info}")
+        device_type = ""
+        if pre_device_info.get("device_code") == "MS-C0100":
+            device_type = "PJ1"
+        elif pre_device_info.get("device_code") == "MS-C0110":
+            device_type = "PJ2"
 
         device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         if device_info is None:
@@ -81,6 +86,13 @@ def lambda_handler(event, context, user_info, request_body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
         logger.debug(f"device_info: {device_info}")
+        if device_info.get("device_type") != device_type:
+            res_body = {"message": "デバイス種別が一致しません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         # 新デバイス情報登録
         put_item = {
@@ -172,14 +184,18 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 5. デバイス関連お知らせ情報削除
-        device_announcements = ddb.get_device_announcement_list(device_announcement_table, af_device_imei)
+        device_announcements = ddb.get_device_announcement_list(
+            device_announcement_table, af_device_imei
+        )
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {
                     "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
                     "Key": {
-                        "device_announcement_id": {"S": device_announcements.get("device_announcement_id")}
-                    }
+                        "device_announcement_id": {
+                            "S": device_announcements.get("device_announcement_id")
+                        }
+                    },
                 }
             }
             transact_items.append(delete_device_announcements)

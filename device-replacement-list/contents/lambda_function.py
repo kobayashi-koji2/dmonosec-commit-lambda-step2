@@ -10,6 +10,8 @@ from aws_xray_sdk.core import patch_all
 import auth
 import db
 import ssm
+import validate
+import ddb
 
 patch_all()
 
@@ -34,8 +36,10 @@ dynamodb = boto3.resource(
 
 
 @auth.verify_login_user()
-def lambda_handler(event, context, user_info):
+@validate.validate_request_body
+def lambda_handler(event, context, user_info, request_body):
     try:
+        pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
 
@@ -49,6 +53,13 @@ def lambda_handler(event, context, user_info):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
+        device_imei = request_body["device_imei"]
+        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, pre_register_table)
+        device_type = ""
+        if pre_device_info.get("device_code") == "MS-C0100":
+            device_type = "PJ1"
+        elif pre_device_info.get("device_code") == "MS-C0110":
+            device_type = "PJ2"
 
         ### 2. 保守交換対象デバイス一覧取得
         # デバイス一覧取得
@@ -67,6 +78,9 @@ def lambda_handler(event, context, user_info):
         for device_id in device_id_list:
             device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
             if device_info is None:
+                continue
+
+            if device_info.get("device_type") != device_type:
                 continue
 
             # 保守交換対象デバイス一覧生成

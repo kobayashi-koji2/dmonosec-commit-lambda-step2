@@ -179,14 +179,18 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"delete_pre_register: {delete_pre_register}")
 
         ### 6. デバイス関連お知らせ情報削除
-        device_announcements = ddb.get_device_announcement_list(device_announcement_table, device_imei)
+        device_announcements = ddb.get_device_announcement_list(
+            device_announcement_table, device_imei
+        )
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {
                     "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
                     "Key": {
-                        "device_announcement_id": {"S": device_announcements.get("device_announcement_id")}
-                    }
+                        "device_announcement_id": {
+                            "S": device_announcements.get("device_announcement_id")
+                        }
+                    },
                 }
             }
             transact_items.append(delete_device_announcements)
@@ -231,11 +235,11 @@ def __operation_auth_check(user_info):
 def __generate_device_data_config(device_type):
     di_list, do_list = list(), list()
     # 現状はdevice_typeは PJ2 のみ来る想定
-    di_count, do_count = 8, 2
-    # if device_type == "PJ1":
-    #     di_count, do_count = 1, 0
-    # elif device_type == "PJ2":
-    #     di_count, do_count = 8, 2
+    di_count, do_count = 0, 0
+    if device_type == "PJ1":
+        di_count, do_count = 1, 0
+    elif device_type == "PJ2":
+        di_count, do_count = 8, 2
     # elif device_type == "PJ3":
     #     di_count, do_count = 8, 2
 

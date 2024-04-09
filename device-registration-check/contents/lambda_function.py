@@ -54,7 +54,9 @@ def lambda_handler(event, context):
     for pre_device in pre_register_device_list:
         try:
             contract = db.get_contract_info(pre_device["contract_id"], contract_table)
-            device_announcements = ddb.get_device_announcement_list(device_announcement_table, pre_device["imei"])
+            device_announcements = ddb.get_device_announcement_list(
+                device_announcement_table, pre_device["imei"]
+            )
             _register_device(pre_device, contract, device_announcements)
         except Exception:
             logger.error(pre_device, exc_info=True)
@@ -78,6 +80,15 @@ def _register_device(pre_device, contract, device_announcements):
         device_type = "PJ2"
     elif pre_device["device_code"] == "MS-C0120":
         device_type = "PJ3"
+
+    di_num = 0
+    do_num = 0
+    if device_type == "PJ1":
+        di_num = 1
+        do_num = 0
+    elif device_type == "PJ2":
+        di_num = 8
+        do_num = 2
 
     # デバイス情報登録
     device_item = {
@@ -108,7 +119,7 @@ def _register_device(pre_device, contract, device_announcements):
                             "di_off_name": "Close",
                             "di_off_icon": "state_icon_2",
                         }
-                        for di_no in range(1, 9)
+                        for di_no in range(1, di_num + 1)
                     ],
                     "do_list": [
                         {
@@ -123,7 +134,7 @@ def _register_device(pre_device, contract, device_announcements):
                             "do_di_return": None,
                             "do_timer_list": [],
                         }
-                        for do_no in range(1, 3)
+                        for do_no in range(1, do_num + 1)
                     ],
                 },
             },
@@ -199,15 +210,22 @@ def _register_device(pre_device, contract, device_announcements):
                 "Delete": {
                     "TableName": ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"],
                     "Key": {
-                        "device_announcement_id": {"S": device_announcements.get("device_announcement_id")}
-                    }
+                        "device_announcement_id": {
+                            "S": device_announcements.get("device_announcement_id")
+                        }
+                    },
                 }
             }
         )
 
     # デバイス関連お知らせ情報追加
     announcement_create_datetime = int(time.time() * 1000)
-    expire_datetime = int((datetime.datetime.fromtimestamp(announcement_create_datetime / 1000) + relativedelta.relativedelta(months=1)).timestamp())
+    expire_datetime = int(
+        (
+            datetime.datetime.fromtimestamp(announcement_create_datetime / 1000)
+            + relativedelta.relativedelta(months=1)
+        ).timestamp()
+    )
     device_announcement_item = {
         "device_announcement_id": str(uuid.uuid4()),
         "contract_id": pre_device["contract_id"],
