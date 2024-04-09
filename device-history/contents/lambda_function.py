@@ -221,7 +221,7 @@ def automation_setting(hist):
         event_type_label = (
             "接点入力" + str(hist.get("automation_trigger_terminal_no", "")) + "(接点状態)"
         )
-    elif event_type == "di_change_healthy":
+    elif event_type == "di_unhealthy":
         event_type_label = (
             "接点入力" + str(hist.get("automation_trigger_terminal_no", "")) + "(変化検出状態)"
         )
@@ -243,7 +243,7 @@ def automation_setting(hist):
             event_detail_label = "オープン"
         else:
             event_detail_label = "クローズ"
-    elif event_type == "di_change_healthy":
+    elif event_type == "di_unhealthy":
         if hist["automation_trigger_event_detail_flag"] == 0:
             event_detail_label = "接点入力検出復旧"
         else:
