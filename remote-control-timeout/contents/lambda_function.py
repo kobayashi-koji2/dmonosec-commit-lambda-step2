@@ -288,7 +288,7 @@ def send_mail(
             )
             event_detail = f"""\
                 　【連動制御による制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{{di_name}}が変化しませんでした。
+                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
                 　※連動設定「{trigger_device_name}、{trigger_event_type_name}、{trigger_event_detail_name}」により制御信号を送信しました。
             """
 
