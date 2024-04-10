@@ -81,6 +81,8 @@ def put_hist_list(
     device_relation_table,
     device_state_table,
 ):
+    now_unixtime = int(time.time() * 1000)
+
     device = db.get_device_info(remote_control["device_id"], device_table)
     terminal_name = None
     if remote_control.get("do_no"):
@@ -114,8 +116,8 @@ def put_hist_list(
     hist_list_item = {
         "device_id": device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": remote_control.get("req_datetime"),
-        "recv_datetime": remote_control.get("req_datetime"),  # TODO 仕様確認中
+        "event_datetime": now_unixtime,
+        # "recv_datetime": "",  # TODO 仕様確認中
         "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device.get("device_data").get("config").get("device_name"),
