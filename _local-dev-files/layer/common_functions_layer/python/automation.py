@@ -721,16 +721,16 @@ def _get_automation(
             (
                 event_type == "di_change_state"
                 and item.get("trigger_terminal_no") == terminal_no
-                and item.get("trigger_di_state") == di_state
+                and item.get("trigger_event_detail_state") == di_state
             )
             or (
                 event_type == "di_unhealthy"
                 and item.get("trigger_terminal_no") == terminal_no
-                and item.get("trigger_occurrence_flag") == occurrence_flag
+                and item.get("trigger_event_detail_flag") == occurrence_flag
             )
             or (
                 event_type not in ["di_change_state", "di_unhealthy"]
-                and item.get("trigger_occurrence_flag") == occurrence_flag
+                and item.get("trigger_event_detail_flag") == occurrence_flag
             )
         )
     ]
