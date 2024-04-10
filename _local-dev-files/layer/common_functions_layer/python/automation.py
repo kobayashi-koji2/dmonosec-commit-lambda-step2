@@ -152,7 +152,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 automation,
                 control_do,
                 notification_hist_id,
-                "not_executed",
+                "not_excuted",
                 hist_list_table,
             )
 
@@ -199,7 +199,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
             automation,
             control_do,
             notification_hist_id,
-            "not_executed_done",
+            "not_excuted_done",
             hist_list_table,
         )
 
@@ -248,7 +248,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 automation,
                 control_do,
                 notification_hist_id,
-                "not_executed_done",
+                "not_excuted_done",
                 hist_list_table,
             )
 
