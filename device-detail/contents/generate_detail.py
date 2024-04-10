@@ -23,12 +23,12 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
                 "group_name": item["group_data"]["config"]["group_name"],
             }
         )
-    formatted_automation_info = automation_info_fmt(automation_info_list)
     terminal_info = terminal_info_fmt(
         device_info["device_data"]["config"]["terminal_settings"],
         device_state,
-        formatted_automation_info,
     )
+
+    formatted_automation_list = automation_info_fmt(automation_info_list)
 
     # レスポンス生成
     device_detail = {
@@ -46,6 +46,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
             "device_healthy_period", 0
         ),
         "signal_status": device_state.get("signal_state", 0),
+        "automation_list": formatted_automation_list,
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", ""),
         #'ai_list':terminal_info.get('ai_list','') #フェーズ2
@@ -55,14 +56,26 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
 
 
 def automation_info_fmt(automation_info_list):
-    control_do_no_getter = itemgetter("control_do_no")
-    res = groupby(sorted(automation_info_list, key=control_do_no_getter), key=control_do_no_getter)
-    # イテレータから dict, list に変換
-    return {control_do_no: list(automation_info) for control_do_no, automation_info in res}
+    formated_automation_list = []
+    for automation_item in automation_info_list:
+        formated_automation_list.append(
+            {
+                "automation_id": automation_item["automation_id"],
+                "automation_name": automation_item["automation_name"],
+                "control_device_id": automation_item["control_device_id"],
+                "trigger_event_type": automation_item["trigger_event_type"],
+                "trigger_terminal_no": automation_item.get("trigger_terminal_no"),
+                "trigger_event_detail_state": automation_item.get("trigger_event_detail_state"),
+                "trigger_event_detail_flag": automation_item.get("trigger_event_detail_flag"),
+                "control_do_no": automation_item["control_do_no"],
+                "control_di_state": automation_item["control_di_state"],
+            }
+        )
+    return formated_automation_list
 
 
-def terminal_info_fmt(terminal_settings, device_state, automation_info):
-    di_list, do_list, terminal_info = [], [], []
+def terminal_info_fmt(terminal_settings, device_state):
+    di_list, do_list = [], []
     for item in terminal_settings.get("di_list", {}):
         di_no = item["di_no"]
         di_state_key = f"di{di_no}_state"
@@ -98,23 +111,6 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
                     "do_weekday": timer_item.get("do_weekday", ""),
                 }
             )
-        do_automation_list = []
-        for automation_item in automation_info.get(do_no, []):
-            do_automation_list.append(
-                {
-                    "automation_id": automation_item["automation_id"],
-                    "automation_name": automation_item["automation_name"],
-                    "control_device_id": automation_item["control_device_id"],
-                    "trigger_event_type": automation_item["trigger_event_type"],
-                    "trigger_terminal_no": automation_item.get("trigger_terminal_no"),
-                    "trigger_event_detail_state": automation_item.get(
-                        "trigger_event_detail_state"
-                    ),
-                    "trigger_event_detail_flag": automation_item.get("trigger_event_detail_flag"),
-                    "control_do_no": automation_item["control_do_no"],
-                    "control_di_state": automation_item["control_di_state"],
-                }
-            )
         do_list.append(
             {
                 "do_no": do_no,
@@ -128,7 +124,6 @@ def terminal_info_fmt(terminal_settings, device_state, automation_info):
                 "do_specified_time": item.get("do_specified_time"),
                 "do_di_return": item.get("do_di_return"),
                 "do_timer_list": do_timer_list,
-                "do_automation_list": do_automation_list,
             }
         )
 
