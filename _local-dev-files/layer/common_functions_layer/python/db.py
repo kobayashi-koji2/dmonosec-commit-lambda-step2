@@ -179,7 +179,6 @@ def get_admin_user_id_list(contract_id, table):
         KeyConditionExpression=Key("contract_id").eq(contract_id),
         FilterExpression=Attr("user_type").contains("admin"),
     ).get("Items", [])
-    user_id_list = [user_info["user_id"] for user_info in user_info_list]
     user_id_list = [
         user_info["user_id"]
         for user_info in user_info_list
