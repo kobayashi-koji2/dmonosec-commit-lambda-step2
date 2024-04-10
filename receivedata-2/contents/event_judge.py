@@ -123,7 +123,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
             hist_list_data["hist_data"]["device_req_no"] = event_info.get("device_req_no")
             if event_info.get("event_type") in ["on_timer_control", "off_timer_control", "timer_control"]:
                 hist_list_data["hist_data"]["timer_time"] = event_info.get("timer_time")
-            if event_info.get("event_type") == "automation_control":
+            if event_info.get("event_type") in ["automation_control", "on_automation_control", "off_automation_control"]:
                 hist_list_data["hist_data"]["automation_trigger_device_name"] = event_info.get("automation_trigger_device_name")
                 hist_list_data["hist_data"]["automation_trigger_imei"] = event_info.get("automation_trigger_imei")
                 hist_list_data["hist_data"]["automation_trigger_event_type"] = event_info.get("automation_trigger_event_type")
@@ -574,7 +574,7 @@ def eventJudge(
         # 制御トリガー判定
         if event_info["control_trigger"] in ["on_timer_control", "off_timer_control", "timer_control"]:
             event_info["timer_time"] = remote_control_info.get("timer_time")
-        if event_info["control_trigger"] in ["automation_control", "off_automation_trigger", "on_automation_trigger"]:
+        if event_info["control_trigger"] in ["automation_control", "off_automation_control", "on_automation_control"]:
             event_info["automation_trigger_device_name"] = remote_control_info.get("automation_trigger_device_name")
             event_info["automation_trigger_imei"] = remote_control_info.get("automation_trigger_imei")
             event_info["automation_trigger_event_type"] = remote_control_info.get("automation_trigger_event_type")
@@ -624,7 +624,7 @@ def eventJudge(
                     "timer_control",
                 ]:
                     event_info["timer_time"] = remote_control_info.get("timer_time")
-                if event_info["control_trigger"] in ["automation_control", "off_automation_trigger", "on_automation_trigger"]:
+                if event_info["control_trigger"] in ["automation_control", "off_automation_control", "on_automation_control"]:
                     event_info["automation_trigger_device_name"] = remote_control_info.get("automation_trigger_device_name")
                     event_info["automation_trigger_imei"] = remote_control_info.get("automation_trigger_imei")
                     event_info["automation_trigger_event_type"] = remote_control_info.get("automation_trigger_event_type")
