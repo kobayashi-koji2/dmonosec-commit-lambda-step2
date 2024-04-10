@@ -73,6 +73,9 @@ def lambda_handler(event, context, user_info):
             if device_info is not None:
                 # 現状態情報取得
                 state_info = db.get_device_state(device_id, device_state_table)
+                # 現状態情報がない場合は次のデバイスへ
+                if not state_info:
+                    continue
                 logger.debug(f"state_info: {state_info}")
                 device_imei = device_info["imei"]
                 device_name = (
