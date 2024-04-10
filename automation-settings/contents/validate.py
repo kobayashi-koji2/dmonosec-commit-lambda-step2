@@ -22,7 +22,7 @@ REQUEST_BODY_SCHEMA = {
             "type": "string",
             "enum": [
                 "di_change_state",
-                "di_change_healthy",
+                "di_unhealthy",
                 "device_unhealthy",
                 "battery_near",
                 "device_abnormality",
