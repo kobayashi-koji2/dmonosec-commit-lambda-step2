@@ -15,7 +15,7 @@ HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 logger = Logger()
 
 
-def device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime):
+def device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime, group_list):
     logger.debug(f"device_healthy開始 device_info={device_info}, ")
 
     # デバイスヘルシーチェック情報チェック
@@ -64,11 +64,14 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
             "imei": device_info.get("imei"),
+            "group_list": group_list,
             "event_type": "device_unhealthy",
             "device_healthy_period": device_healthy_period,
             "occurrence_flag": device_healthy_state,
         }
     }
+    if device_healthy_state == 0:
+        hist_list_item["recv_datetime"] = healthy_datetime
     hist_list_items.append(hist_list_item)
 
     logger.debug("device_healthy正常終了")

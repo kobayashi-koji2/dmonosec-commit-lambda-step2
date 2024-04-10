@@ -67,7 +67,12 @@ def lambda_handler(event, context, user):
 
         # ユーザー一覧生成
         user_list = []
-        user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
+        admin_user_id_list = db.get_admin_user_id_list(user.get("contract_id"), user_table)
+        logger.debug(f"admin_user_id_list: {admin_user_id_list}")
+        worker_user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
+        logger.debug(f"worker_user_id_list: {worker_user_id_list}")
+        user_id_list = admin_user_id_list + worker_user_id_list
+        logger.debug(f"user_id_list: {user_id_list}")
         for user_id in user_id_list:
             logger.debug(user_id)
             user_info = db.get_user_info_by_user_id(user_id, user_table)

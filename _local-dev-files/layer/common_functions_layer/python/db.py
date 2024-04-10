@@ -173,6 +173,16 @@ def get_user_info_by_user_id(user_id, table):
     return response
 
 
+def get_admin_user_id_list(contract_id, table):
+    user_info_list = table.query(
+        IndexName="contract_id_index",
+        KeyConditionExpression=Key("contract_id").eq(contract_id),
+        FilterExpression=Attr("user_type").contains("admin"),
+    ).get("Items", [])
+    user_id_list = [user_info["user_id"] for user_info in user_info_list]
+    return user_id_list
+
+
 # アカウント情報取得
 def get_account_info(pk, table):
     account_info = table.query(

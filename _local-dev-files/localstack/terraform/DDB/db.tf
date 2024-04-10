@@ -157,6 +157,12 @@ resource "aws_dynamodb_table" "user" {
     projection_type = "ALL"
   }
 
+  global_secondary_index {
+    hash_key        = "contract_id"
+    name            = "contract_id_index"
+    projection_type = "ALL"
+  }
+
   billing_mode = "PAY_PER_REQUEST"
 
   point_in_time_recovery {

@@ -100,32 +100,32 @@ def lambda_handler(event, context):
                     logger.debug(f"現状態未登録 device_id={device_id}")
                     continue
 
+                # グループ情報取得
+                group_list = []
+                group_list = ddb.get_device_group_list(
+                    device_info.get("device_id"), device_relation_table, group_table
+                )
+                logger.debug(f"group_list={group_list}")
+
+                # グループ名
+                group_name_list = []
+                for group_info in group_list:
+                    group_name_list.append(group_info.get("group_name"))
+                group_name = "、".join(group_name_list)
+                logger.debug(f"group_name={group_name}")
+
                 # デバイスヘルシーチェック
                 if (event_trigger == "lambda-receivedata-2" and event_type == "device_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
-                    device_current_state, hist_list_items = device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime)
+                    device_current_state, hist_list_items = device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime, group_list)
 
                 # DIヘルシーチェック
                 if (event_trigger == "lambda-receivedata-2" and event_type == "di_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
-                    device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger)
+                    device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger, group_list)
 
                 if hist_list_items:
                     # 現状態更新
                     ddb.update_current_state(device_id, device_current_state, state_table)
                     logger.debug("現状態更新")
-
-                    # グループ情報取得
-                    group_list = []
-                    group_list = ddb.get_device_group_list(
-                        device_info.get("device_id"), device_relation_table, group_table
-                    )
-                    logger.debug(f"group_list={group_list}")
-
-                    # グループ名
-                    group_name_list = []
-                    for group_info in group_list:
-                        group_name_list.append(group_info.get("group_name"))
-                    group_name = "、".join(group_name_list)
-                    logger.debug(f"group_name={group_name}")
 
                     # メール通知
                     hist_list_items = mailNotice(

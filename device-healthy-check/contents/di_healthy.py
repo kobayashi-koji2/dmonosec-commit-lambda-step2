@@ -1,6 +1,7 @@
 import os
 import boto3
 import uuid
+import db
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from datetime import datetime
@@ -15,7 +16,7 @@ HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 logger = Logger()
 
 
-def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger):
+def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger, group_list):
     logger.debug(f"di_healthy開始 device_info={device_info}")
 
     # 接点入力端子数分ループ
@@ -82,6 +83,7 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
             "hist_data": {
                 "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
                 "imei": device_info.get("imei"),
+                "group_list": group_list,
                 "event_type": "di_unhealthy",
                 "terminal_no": di_info.get("di_no"),
                 "terminal_name": di_info.get("di_name", f"接点入力{di_info.get("di_no")}"),
@@ -90,6 +92,8 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
                 "occurrence_flag": di_healthy_state,
             },
         }
+        if di_healthy_state == 0:
+            hist_list_item["recv_datetime"] = healthy_datetime
         hist_list_items.append(hist_list_item)
 
     logger.debug("di_healthy正常終了")
