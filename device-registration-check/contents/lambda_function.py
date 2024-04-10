@@ -100,6 +100,7 @@ def _register_device(pre_device, contract, device_announcements):
             "param": {
                 "contract_id": pre_device["contract_id"],
                 "iccid": pre_device["iccid"],
+                "imsi": pre_device["imsi"],
                 "device_code": pre_device["device_code"],
                 "dev_reg_datetime": pre_device["dev_reg_datetime"],
                 "dev_use_reg_datetime": int(time.time() * 1000),

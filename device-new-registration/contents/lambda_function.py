@@ -92,6 +92,7 @@ def lambda_handler(event, context, user_info, request_body):
         device_data = {
             "param": {
                 "iccid": pre_device_info["iccid"],
+                "imsi": pre_device_info["imsi"],
                 "device_code": pre_device_info["device_code"],
                 "contract_id": contract_id,
                 "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
