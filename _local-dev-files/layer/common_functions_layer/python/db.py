@@ -180,6 +180,11 @@ def get_admin_user_id_list(contract_id, table):
         FilterExpression=Attr("user_type").contains("admin"),
     ).get("Items", [])
     user_id_list = [user_info["user_id"] for user_info in user_info_list]
+    user_id_list = [
+        user_info["user_id"]
+        for user_info in user_info_list
+        if user_info.get("user_data", {}).get("config", {}).get("del_datetime") is None
+    ]
     return user_id_list
 
 
