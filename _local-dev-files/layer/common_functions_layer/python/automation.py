@@ -646,13 +646,14 @@ def _put_notification_hist(
 def _cmd_exec(icc_id, req_no, control_do):
     topic = "cmd/" + icc_id
     do_no = int(control_do["do_no"])
-    do_specified_time = float(control_do["do_specified_time"])
 
     if control_do["do_control"] == "open":
+        do_specified_time = float(control_do["do_specified_time"])
         do_control = "01"
         # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
         do_control_time = re.sub("^0x", "", format(int(do_specified_time * 10), "#06x"))
     elif control_do["do_control"] == "close":
+        do_specified_time = float(control_do["do_specified_time"])
         do_control = "00"
         # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
         do_control_time = re.sub("^0x", "", format(int(do_specified_time * 10), "#06x"))
