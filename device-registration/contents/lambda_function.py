@@ -43,45 +43,44 @@ def lambda_handler(event, context, req_body):
         imei = req_body["imei"]
         iccid = req_body["iccid"]
 
-        ### 2. カバレッジ判定
-        soracom_id_token = soracom_api.get_soracom_token(operator_table)
-        result = soracom_api.get_imsi_info(soracom_id_token, iccid)
-        if result.get("message") is not None:
-            return {
-                "statusCode": 400,
-                "headers": res_headers,
-                "body": json.dumps(result, ensure_ascii=False),
-            }
-        imsi = result["imsi"]
-        coverage_url = result["coverage_url"]
+        # ### 2. カバレッジ判定
+        # soracom_id_token = soracom_api.get_soracom_token(operator_table)
+        # result = soracom_api.get_imsi_info(soracom_id_token, iccid)
+        # if result.get("message") is not None:
+        #     return {
+        #         "statusCode": 400,
+        #         "headers": res_headers,
+        #         "body": json.dumps(result, ensure_ascii=False),
+        #     }
+        # imsi = result["imsi"]
+        # coverage_url = result["coverage_url"]
 
-        ### 3. IMEIロック
-        result = soracom_api.imei_lock(soracom_id_token, imei, iccid, coverage_url)
-        if result.get("message") is not None:
-            return {
-                "statusCode": 400,
-                "headers": res_headers,
-                "body": json.dumps(result, ensure_ascii=False),
-            }
+        # ### 3. IMEIロック
+        # result = soracom_api.imei_lock(soracom_id_token, imei, iccid, coverage_url)
+        # if result.get("message") is not None:
+        #     return {
+        #         "statusCode": 400,
+        #         "headers": res_headers,
+        #         "body": json.dumps(result, ensure_ascii=False),
+        #     }
 
-        result = soracom_api.cancel_lock(soracom_id_token, iccid, coverage_url)
-        if result.get("message") is not None:
-            return {
-                "statusCode": 400,
-                "headers": res_headers,
-                "body": json.dumps(result, ensure_ascii=False),
-            }
+        # result = soracom_api.cancel_lock(soracom_id_token, iccid, coverage_url)
+        # if result.get("message") is not None:
+        #     return {
+        #         "statusCode": 400,
+        #         "headers": res_headers,
+        #         "body": json.dumps(result, ensure_ascii=False),
+        #     }
 
-        # ローカル動作確認用
-        result = soracom_api.set_group(
-            soracom_id_token, iccid, registration_group_id, coverage_url
-        )
-        if result.get("message") is not None:
-            return {
-                "statusCode": 400,
-                "headers": res_headers,
-                "body": json.dumps(result, ensure_ascii=False),
-            }
+        # result = soracom_api.set_group(
+        #     soracom_id_token, iccid, registration_group_id, coverage_url
+        # )
+        # if result.get("message") is not None:
+        #     return {
+        #         "statusCode": 400,
+        #         "headers": res_headers,
+        #         "body": json.dumps(result, ensure_ascii=False),
+        #     }
 
         ### 4. デバイス登録
         now = datetime.now()
@@ -111,7 +110,7 @@ def lambda_handler(event, context, req_body):
             return {
                 "statusCode": 400,
                 "headers": res_headers,
-                "body": json.dumps(result, ensure_ascii=False),
+                "body": json.dumps(res_body, ensure_ascii=False),
             }
 
         ### 5. メッセージ応答
