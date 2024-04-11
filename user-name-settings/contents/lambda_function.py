@@ -17,15 +17,15 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 
-@auth.verify_login_user()
+@auth.verify_login_user_list()
 @validate.validate_parameter
-def lambda_handler(event, context, user, body):
+def lambda_handler(event, context, user_list, body):
     try:
         res_headers = {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
         }
-        logger.info({"user": user})
+        logger.info({"user_list": user_list})
 
         # DynamoDB操作オブジェクト生成
         try:
@@ -41,7 +41,7 @@ def lambda_handler(event, context, user, body):
         # ユーザー名更新
         try:
             updated_user_name = ddb.update_account_user_name(
-                account_id=user["account_id"],
+                account_id=user_list[0]["account_id"],
                 user_name=body["user_name"],
                 account_table=account_table
             )

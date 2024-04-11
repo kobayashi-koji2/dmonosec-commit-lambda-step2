@@ -155,7 +155,8 @@ def _get_login_user_list(event, verify_password_exp=True):
         for item in res
         if item.get("user_data", {}).get("config", {}).get("del_datetime") is None
     ]
-
+    if not user_list:
+        raise AuthError(401, "認証情報が不正です。")
     if verify_password_exp and auth_time > password_exp:
         raise AuthError(401, "パスワードの有効期限が切れています。")
 

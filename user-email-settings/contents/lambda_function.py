@@ -19,14 +19,14 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 cognito = boto3.client("cognito-idp")
 
 
-@auth.verify_login_user()
+@auth.verify_login_user_list()
 @validate.validate_parameter
-def lambda_handler(event, context, user, body):
+def lambda_handler(event, context, user_list, body):
     res_headers = {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
     }
-    logger.info({"user": user})
+    logger.info({"user_list": user_list})
 
     # DynamoDB操作オブジェクト生成
     try:
@@ -40,7 +40,7 @@ def lambda_handler(event, context, user, body):
         }
 
     try:
-        account_id = user["account_id"]
+        account_id = user_list[0]["account_id"]
         account = db.get_account_info_by_account_id(account_id, account_table)
         if account is None:
             return {
