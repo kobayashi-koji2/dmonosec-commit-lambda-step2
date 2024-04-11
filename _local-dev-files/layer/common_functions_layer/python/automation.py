@@ -45,12 +45,12 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
     if not event_type:
         return {"result": False, "message": "イベント項目が指定されていません。"}
     if event_type == "di_change_state":
-        if not terminal_no:
+        if terminal_no is None:
             return {"result": False, "message": "接点端子が指定されていません。"}
-        if not di_state:
+        if di_state is None:
             return {"result": False, "message": "接点入力状態が指定されていません。"}
     elif event_type == "di_unhealthy":
-        if not terminal_no:
+        if terminal_no is None:
             return {"result": False, "message": "接点端子が指定されていません。"}
         if occurrence_flag is None:
             return {"result": False, "message": "発生フラグが指定されていません。"}
