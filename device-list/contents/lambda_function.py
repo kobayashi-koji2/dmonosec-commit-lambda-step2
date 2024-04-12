@@ -125,7 +125,10 @@ def lambda_handler(event, context, user_info):
         # グループ名一覧取得
         ##################
         # グループID取得
-        device_group_relation, all_groups = [], []  # デバイスID毎のグループID一覧、重複のないグループID一覧
+        device_group_relation, all_groups = (
+            [],
+            [],
+        )  # デバイスID毎のグループID一覧、重複のないグループID一覧
         for device_id in device_id_list:
             group_id_list = db.get_device_relation_group_id_list(
                 device_id, tables["device_relation_table"]
@@ -202,12 +205,10 @@ def lambda_handler(event, context, user_info):
 
             # 接点入力リスト
             di_list = []
-            if device_info["Items"][0]["device_type"] == "PJ1":
-                di_range = 1
-            else:
-                di_range = 8
-            for i in range(di_range):
-                di_no = i + 1
+            for di in device_info["Items"][0]["device_data"]["config"]["terminal_settings"].get(
+                "di_list", []
+            ):
+                di_no = di["di_no"]
                 di_state_label = f"di{di_no}_state"
                 di_state = device_state.get(di_state_label)
                 di_healthy_state_label = f"di{di_no}_healthy_state"
@@ -217,6 +218,22 @@ def lambda_handler(event, context, user_info):
                         "di_no": di_no,
                         "di_state": di_state,
                         "di_unhealthy": di_healthy_state,
+                        "di_name": di.get("di_name"),
+                        "di_on_name": di.get("di_on_name"),
+                        "di_off_name": di.get("di_off_name"),
+                    }
+                )
+
+            # 接点出力リスト
+            do_list = []
+            for do in device_info["Items"][0]["device_data"]["config"]["terminal_settings"].get(
+                "do_list", []
+            ):
+                do_list.append(
+                    {
+                        "do_no": do.get("do_no"),
+                        "do_name": do.get("do_name"),
+                        "do_di_return": do.get("do_di_return"),
                     }
                 )
 
@@ -232,6 +249,7 @@ def lambda_handler(event, context, user_info):
                     "group_name_list": group_name_list,
                     "device_order": order,
                     "di_list": di_list,
+                    "do_list": do_list,
                     "battery_near_status": device_state.get("battery_near_status", 0),
                     "device_abnormality": device_abnormality,
                 }
