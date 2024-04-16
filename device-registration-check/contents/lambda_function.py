@@ -110,6 +110,7 @@ def _register_device(pre_device, contract, device_announcements):
             },
             "config": {
                 "device_name": None,
+                "device_healthy_period": 3,
                 "terminal_settings": {
                     "di_list": [
                         {
@@ -132,7 +133,7 @@ def _register_device(pre_device, contract, device_announcements):
                             "do_off_icon": "state_icon_2",
                             "do_control": None,
                             "do_specified_time": None,
-                            "do_di_return": None,
+                            "do_di_return": 0,
                             "do_timer_list": [],
                         }
                         for do_no in range(1, do_num + 1)
