@@ -265,11 +265,11 @@ def __generate_device_data_config(device_type):
             "do_off_icon": "state_icon_2",
             "do_control": None,
             "do_specified_time": None,
-            "do_di_return": None,
+            "do_di_return": 0,
             "do_timer_list": [],
         }
         do_list.append(do_item)
 
-    result = {"device_name": None, "terminal_settings": {"do_list": do_list, "di_list": di_list}}
+    result = {"device_name": None, "device_healthy_period": 3,  "terminal_settings": {"do_list": do_list, "di_list": di_list}}
 
     return result
