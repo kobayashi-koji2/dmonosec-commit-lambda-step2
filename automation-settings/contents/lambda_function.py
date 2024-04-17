@@ -178,7 +178,7 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
         "automation_name": request_body["automation_name"],
         "trigger_device_id": trigger_device_id,
         "trigger_event_type": request_body["trigger_event_type"],
-        "trigger_terminal_no": request_body["trigger_terminal_no"],
+        "trigger_terminal_no": request_body.get("trigger_terminal_no", 0),
         "control_device_id": request_body["control_device_id"],
         "control_do_no": request_body["control_do_no"],
         "control_di_state": request_body["control_di_state"],
