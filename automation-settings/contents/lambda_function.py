@@ -127,7 +127,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
 
         ### 5. メッセージ応答
-        do_automation_list = list()
+        automation_list = list()
         for item in automation_info:
             do_automation_item = {
                 "automation_id": item["automation_id"],
@@ -144,9 +144,9 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 ]
             else:
                 do_automation_item["trigger_event_detail_flag"] = item["trigger_event_detail_flag"]
-            do_automation_list.append(do_automation_item)
+            automation_list.append(do_automation_item)
 
-        res_body = {"message": "", "do_automation_list": do_automation_list}
+        res_body = {"message": "", "automation_list": automation_list}
         return {
             "statusCode": 200,
             "headers": res_headers,
