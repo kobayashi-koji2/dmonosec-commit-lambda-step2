@@ -125,6 +125,16 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
 
         ### 6. 連動制御設定情報取得
         automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
+        if user_info["user_type"] == "worker" or user_info["user_type"] == "referrer":
+            # ユーザに紐づくデバイスID取得
+            device_id_list = db.get_user_relation_device_id_list(
+                user_info["user_id"], device_relation_table
+            )
+            automation_info = [
+                automation
+                for automation in automation_info
+                if automation_info["control_device_id"] in set(device_id_list)
+            ]
 
         ### 5. メッセージ応答
         automation_list = list()
