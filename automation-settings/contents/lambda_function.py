@@ -232,7 +232,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
     expression_attribute_values = {
         ":an": request_body["automation_name"],
         ":tdi": trigger_device_id,
-        ":ttn": request_body["trigger_terminal_no"],
+        ":ttn": request_body.get("trigger_terminal_no", 0),
         ":ctd": request_body["control_device_id"],
         ":cdo": request_body["control_do_no"],
         ":cds": request_body["control_di_state"],
