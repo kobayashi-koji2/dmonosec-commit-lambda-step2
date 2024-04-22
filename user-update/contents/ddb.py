@@ -203,6 +203,9 @@ def update_user_info(
     ) or request_params["mfa_flag"] != account.get("user_data", {}).get("config", {}).get(
         "mfa_flag"
     ):
+        if request_params["mfa_flag"] == 0:
+            cognito.clear_cognito_mfa(account["auth_id"])
+
         account_update_expression = f"SET #map.#config_attr.#user_name_attr = :user_name, #map.#config_attr.#mfa_flag_attr = :mfa_flag"
         account_expression_attribute_values = {
             ":user_name": request_params["user_name"],
