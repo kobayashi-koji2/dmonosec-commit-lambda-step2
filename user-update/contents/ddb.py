@@ -1,5 +1,9 @@
 import uuid
+import os
 
+import time
+from datetime import datetime
+from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 
 import cognito
@@ -7,6 +11,8 @@ import convert
 import db
 
 logger = Logger()
+
+TEMPORARY_PASSWORD_PERIOD_DAYS = int(os.environ["TEMPORARY_PASSWORD_PERIOD_DAYS"])
 
 
 def create_user_info(
@@ -30,6 +36,12 @@ def create_user_info(
     if account is None:
         # なければCogitoユーザーを作成し、アカウント管理テーブルに登録
         auth_id = cognito.create_cognito_user(request_params["email_address"])
+        now = datetime.now()
+        auth_period = (
+            int(time.mktime(now.timetuple()) * 1000)
+            + int(now.microsecond / 1000)
+            + (relativedelta.relativedelta(days=TEMPORARY_PASSWORD_PERIOD_DAYS) * 1000)
+        )
 
         account_id = str(uuid.uuid4())
         account_item = {
@@ -41,6 +53,7 @@ def create_user_info(
                     "user_name": request_params["user_name"],
                     "auth_status": "unauthenticated",
                     "password_update_datetime": 0,
+                    "auth_period": auth_period,
                     "mfa_flag": request_params["mfa_flag"],
                 }
             },
