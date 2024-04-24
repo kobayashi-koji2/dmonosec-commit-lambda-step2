@@ -1,7 +1,6 @@
 import uuid
 import os
 
-import time
 from datetime import datetime
 from dateutil import relativedelta
 from aws_lambda_powertools import Logger
