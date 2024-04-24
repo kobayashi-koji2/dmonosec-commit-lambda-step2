@@ -36,11 +36,11 @@ def create_user_info(
     if account is None:
         # なければCogitoユーザーを作成し、アカウント管理テーブルに登録
         auth_id = cognito.create_cognito_user(request_params["email_address"])
-        now = datetime.now()
-        auth_period = (
-            int(time.mktime(now.timetuple()) * 1000)
-            + int(now.microsecond / 1000)
-            + (relativedelta.relativedelta(days=TEMPORARY_PASSWORD_PERIOD_DAYS) * 1000)
+        auth_period = int(
+            (
+                datetime.now() + relativedelta.relativedelta(days=TEMPORARY_PASSWORD_PERIOD_DAYS)
+            ).timestamp()
+            * 1000
         )
 
         account_id = str(uuid.uuid4())
