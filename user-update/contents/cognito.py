@@ -96,3 +96,13 @@ def clear_cognito_mfa(auth_id):
         SMSMfaSettings={"Enabled": False, "PreferredMfa": False},
         SoftwareTokenMfaSettings={"Enabled": False, "PreferredMfa": False},
     )
+    client.admin_update_user_attributes(
+        UserPoolId=COGNITO_USER_POOL_ID,
+        Username=auth_id,
+        UserAttributes=[
+            {
+                "Name": "phone_number",
+                "Value": "",
+            }
+        ],
+    )
