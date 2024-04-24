@@ -1,7 +1,8 @@
 import json
 import os
-import boto3
+import time
 
+import boto3
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from botocore.exceptions import ClientError
@@ -61,13 +62,19 @@ def lambda_handler(event, context, login_user):
 
                 account = db.get_account_info_by_account_id(user.get("account_id"), account_table)
                 account_config = account.get("user_data", {}).get("config", {})
+
+                auth_status = account_config.get("auth_status")
+                if auth_status == "unauthenticated":
+                    if account_config.get("auth_period", 0) / 1000 < int(time.time()):
+                        auth_status = "expired"
+
                 user_list.append(
                     {
                         "user_id": user.get("user_id"),
                         "email_address": account.get("email_address"),
                         "user_name": account_config.get("user_name"),
                         "user_type": user.get("user_type"),
-                        "auth_status": account_config.get("auth_status"),
+                        "auth_status": auth_status,
                     }
                 )
                 logger.info(user_list)
