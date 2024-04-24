@@ -417,16 +417,15 @@ def eventJudge(
         event_info = {}
         event_info["event_type"] = "battery_near"
         event_info["event_datetime"] = recv_data.get("event_datetime")
-        hist_battery_near = recv_data.get("device_state") & check_digit
+        if (recv_data.get("device_state") & check_digit) == check_digit:
+            battery_near_state = 1
+        else:
+            battery_near_state = 0
         if not init_state_flg:
             current_battery_near = device_current_state.get("battery_near_state")
 
-        if (init_state_flg) or (not init_state_flg and hist_battery_near != current_battery_near):
-            if hist_battery_near == check_digit:
-                event_info["occurrence_flag"] = 1
-            else:
-                event_info["occurrence_flag"] = 0
-
+        if (init_state_flg) or (not init_state_flg and battery_near_state != current_battery_near):
+            event_info["occurrence_flag"] = battery_near_state
             if not (init_state_flg == 1 and event_info["occurrence_flag"] == 0):
                 hist_list_data = createHistListData(
                     recv_data, device_info, event_info, device_relation_table, group_table
@@ -442,18 +441,17 @@ def eventJudge(
         event_info = {}
         event_info["event_type"] = "device_abnormality"
         event_info["event_datetime"] = recv_data.get("event_datetime")
-        hist_device_abnormality = recv_data.get("device_state") & check_digit
+        if (recv_data.get("device_state") & check_digit) == check_digit:
+            device_abnormality_state = 1
+        else:
+            device_abnormality_state = 0
         if not init_state_flg:
             current_device_abnormality = device_current_state.get("device_abnormality")
 
         if (init_state_flg) or (
-            not init_state_flg and hist_device_abnormality != current_device_abnormality
+            not init_state_flg and device_abnormality_state != current_device_abnormality
         ):
-            if hist_device_abnormality == check_digit:
-                event_info["occurrence_flag"] = 1
-            else:
-                event_info["occurrence_flag"] = 0
-
+            event_info["occurrence_flag"] = device_abnormality_state
             if not (init_state_flg == 1 and event_info["occurrence_flag"] == 0):
                 hist_list_data = createHistListData(
                     recv_data, device_info, event_info, device_relation_table, group_table
@@ -469,18 +467,17 @@ def eventJudge(
         event_info = {}
         event_info["event_type"] = "parameter_abnormality"
         event_info["event_datetime"] = recv_data.get("event_datetime")
-        hist_parameter_abnormality = recv_data.get("device_state") & check_digit
+        if (recv_data.get("device_state") & check_digit) == check_digit:
+            parameter_abnormality_state = 1
+        else:
+            parameter_abnormality_state = 0
         if not init_state_flg:
             current_parameter_abnormality = device_current_state.get("parameter_abnormality")
 
         if (init_state_flg) or (
-            not init_state_flg and hist_parameter_abnormality != current_parameter_abnormality
+            not init_state_flg and parameter_abnormality_state != current_parameter_abnormality
         ):
-            if hist_parameter_abnormality == check_digit:
-                event_info["occurrence_flag"] = 1
-            else:
-                event_info["occurrence_flag"] = 0
-
+            event_info["occurrence_flag"] = parameter_abnormality_state
             if not (init_state_flg == 1 and event_info["occurrence_flag"] == 0):
                 hist_list_data = createHistListData(
                     recv_data, device_info, event_info, device_relation_table, group_table
@@ -496,18 +493,17 @@ def eventJudge(
         event_info = {}
         event_info["event_type"] = "fw_update_abnormality"
         event_info["event_datetime"] = recv_data.get("event_datetime")
-        hist_fw_update_abnormality = recv_data.get("device_state") & check_digit
+        if (recv_data.get("device_state") & check_digit) == check_digit:
+            fw_update_abnormality_state = 1
+        else:
+            fw_update_abnormality_state = 0
         if not init_state_flg:
             current_fw_update_abnormality = device_current_state.get("fw_update_abnormality")
 
         if (init_state_flg) or (
-            not init_state_flg and hist_fw_update_abnormality != current_fw_update_abnormality
+            not init_state_flg and fw_update_abnormality_state != current_fw_update_abnormality
         ):
-            if hist_fw_update_abnormality == check_digit:
-                event_info["occurrence_flag"] = 1
-            else:
-                event_info["occurrence_flag"] = 0
-
+            event_info["occurrence_flag"] = fw_update_abnormality_state
             if not (init_state_flg == True and event_info["occurrence_flag"] == 0):
                 hist_list_data = createHistListData(
                     recv_data, device_info, event_info, device_relation_table, group_table
@@ -519,7 +515,6 @@ def eventJudge(
 
     # 電源ON
     if recv_data.get("message_type") in ["0011"]:
-        check_digit = 0b10000000
         event_info = {}
         event_info["event_type"] = "power_on"
         event_info["event_datetime"] = recv_data.get("event_datetime")
