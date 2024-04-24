@@ -1,5 +1,7 @@
 import json
 import os
+import time
+
 import traceback
 import boto3
 
@@ -60,6 +62,11 @@ def lambda_handler(event, context, user):
         account = db.get_account_info_by_account_id(user_info["account_id"], account_table)
         account_config = account.get("user_data", {}).get("config", {})
 
+        auth_status = account_config.get("auth_status")
+        if auth_status == "unauthenticated":
+            if account_config.get("auth_period", 0) / 1000 < int(time.time()):
+                auth_status = "expired"
+
         group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)
         group_list = []
         for group_id in group_id_list:
@@ -96,7 +103,7 @@ def lambda_handler(event, context, user):
             "email_address": account.get("email_address"),
             "user_name": account_config.get("user_name"),
             "user_type": user_info.get("user_type"),
-            "auth_status": account_config.get("auth_status"),
+            "auth_status": auth_status,
             "mfa_flag": account_config.get("mfa_flag"),
             "management_group_list": group_list,
             "management_device_list": device_list,
