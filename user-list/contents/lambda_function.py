@@ -67,6 +67,7 @@ def lambda_handler(event, context, login_user):
                         "email_address": account.get("email_address"),
                         "user_name": account_config.get("user_name"),
                         "user_type": user.get("user_type"),
+                        "auth_status": account_config.get("auth_status"),
                     }
                 )
                 logger.info(user_list)
