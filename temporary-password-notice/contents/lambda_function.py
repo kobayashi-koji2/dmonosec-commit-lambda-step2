@@ -89,15 +89,25 @@ def lambda_handler(event, context, login_user, user_id):
         user = db.get_user_info_by_user_id(user_id, user_table)
         account = db.get_account_info_by_account_id(user["account_id"], account_table)
         logger.info({"user": user})
-
-        if not user or not account:
+        if not account:
             return {
                 "statusCode": 404,
                 "headers": res_headers,
                 "body": json.dumps({"message": "ユーザーが存在しません。"}, ensure_ascii=False),
             }
 
-        # 初期パスワード通知
+        # ユーザーの認証状態をチェック
+        account_config = account.get("user_data", {}).get("config", {})
+        if account_config.get("auth_status") != "unauthenticated":
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(
+                    {"message": "ユーザーは未認証状態ではありません。"}, ensure_ascii=False
+                ),
+            }
+
+        # 初期パスワード更新・通知
         try:
             client = boto3.client(
                 "cognito-idp",
