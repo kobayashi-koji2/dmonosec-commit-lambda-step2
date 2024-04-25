@@ -127,8 +127,6 @@ def _register_device(pre_device, contract, device_announcements):
                         {
                             "do_no": do_no,
                             "do_name": f"接点出力{do_no}",
-                            "do_on_name": "Open",
-                            "do_off_name": "Close",
                             "do_control": None,
                             "do_specified_time": None,
                             "do_di_return": 0,
