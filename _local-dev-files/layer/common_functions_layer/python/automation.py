@@ -399,6 +399,8 @@ def _put_hist_list(
         if di.get("di_no") == di_no
     ]
     di_name = di[0].get("di_name") if di and di[0].get("di_name") else None
+    if not di_name:
+        di_name = f"接点入力{di_no}"
 
     di_state_name = ""
     if automation["control_di_state"] == 0:
