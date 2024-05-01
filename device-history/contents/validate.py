@@ -20,7 +20,10 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         "history_start_datetime": query_params.get("history_start_datetime"),
         "history_end_datetime": query_params.get("history_end_datetime"),
         "event_type_list": multi_query_params.get("event_type_list[]", []),
-        "device_list": multi_query_params.get("device_list[]", []),
+        "device_list": [
+            json.loads(device_param)
+            for device_param in multi_query_params.get("device_list[]", [])
+        ],
         "sort": query_params.get("sort", 1),
         "limit": query_params.get("limit", 50),
     }
