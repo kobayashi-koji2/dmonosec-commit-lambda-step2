@@ -24,8 +24,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
             json.loads(device_param)
             for device_param in multi_query_params.get("device_list[]", [])
         ],
-        "sort": query_params.get("sort", 1),
-        "limit": query_params.get("limit", 50),
+        "sort": int(query_params.get("sort", "1")),
+        "limit": int(query_params.get("limit", "50")),
     }
     logger.info(params)
 
