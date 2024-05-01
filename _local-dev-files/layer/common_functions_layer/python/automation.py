@@ -389,24 +389,26 @@ def _put_hist_list(
         (event_datetime + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()
     )
 
+    di_name = None
+    di_state_name = None
     di_no = control_do.get("do_di_return")
-    di = [
-        di
-        for di in control_device.get("device_data", {})
-        .get("config", {})
-        .get("terminal_settings", {})
-        .get("di_list", [])
-        if di.get("di_no") == di_no
-    ]
-    di_name = di[0].get("di_name") if di and di[0].get("di_name") else None
-    if not di_name:
-        di_name = f"接点入力{di_no}"
+    if di_no:
+        di = [
+            di
+            for di in control_device.get("device_data", {})
+            .get("config", {})
+            .get("terminal_settings", {})
+            .get("di_list", [])
+            if di.get("di_no") == di_no
+        ]
+        di_name = di[0].get("di_name") if di and di[0].get("di_name") else None
+        if not di_name:
+            di_name = f"接点入力{di_no}"
 
-    di_state_name = ""
-    if automation["control_di_state"] == 0:
-        di_state_name = di[0].get("di_off_name", "クローズ")
-    elif automation["control_di_state"] == 1:
-        di_state_name = di[0].get("di_on_name", "オープン")
+        if automation["control_di_state"] == 0:
+            di_state_name = di[0].get("di_off_name", "クローズ")
+        elif automation["control_di_state"] == 1:
+            di_state_name = di[0].get("di_on_name", "オープン")
 
     event_type = ""
     if automation.get("control_di_state") == 0:
