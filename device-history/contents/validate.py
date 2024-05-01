@@ -21,6 +21,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         "history_end_datetime": query_params.get("history_end_datetime"),
         "event_type_list": multi_query_params.get("event_type_list[]", []),
         "device_list": multi_query_params.get("device_list[]", []),
+        "sort": query_params.get("sort", 1),
+        "limit": query_params.get("limit", 50),
     }
     logger.info(params)
 
@@ -56,8 +58,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         return {"message": "アカウント情報が存在しません。"}
 
     # 権限チェック（共通）
-    for device_id in params["device_list"]:
-        if device_id not in contract["contract_data"]["device_list"]:
+    for device in params["device_list"]:
+        if device["device_id"] not in contract["contract_data"]["device_list"]:
             return {"message": "不正なデバイスIDが指定されています。"}
 
     # 権限チェック（作業者）
@@ -66,8 +68,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
             user["user_id"], device_relation_table
         )
         logger.debug(user_device_list)
-        for device_id in params["device_list"]:
-            if device_id not in user_device_list:
+        for device in params["device_list"]:
+            if device["device_id"] not in user_device_list:
                 return {"message": "不正なデバイスIDが指定されています。"}
 
     return {

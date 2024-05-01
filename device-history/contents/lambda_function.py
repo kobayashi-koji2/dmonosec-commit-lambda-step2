@@ -186,6 +186,7 @@ def create_history_message(hist):
 
 def create_response(request_params, hist_list):
     res_hist_list = []
+    device_last_hist_id_pair = {}
     for hist in hist_list:
         res_hist_list.append(
             {
@@ -204,6 +205,10 @@ def create_response(request_params, hist_list):
                 ),
             }
         )
+        device_last_hist_id_pair[hist["device_id"]] = hist["hist_id"]
+
+    device_list = [{"device_id": device_id, "last_hist_id": last_hist_id} for device_id, last_hist_id in device_last_hist_id_pair.items()]
+    logger.debug(device_list)
 
     return {
         "history": {
@@ -211,6 +216,7 @@ def create_response(request_params, hist_list):
             "history_end_datetime": int(request_params["history_end_datetime"]),
             "event_type_list": request_params["event_type_list"],
             "history_list": res_hist_list,
+            "device_list": device_list,
         },
     }
 
