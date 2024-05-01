@@ -74,13 +74,33 @@ def get_hist_list(hist_list_table_table, params):
         sortkeyExpression = Key("event_datetime").lte(
             Decimal(int(params["history_end_datetime"]) * 1000 + 999)
         )
+    reverse = params["sort"] != 0
     hist_list = []
-    for device_id in params["device_list"]:
-        res = hist_list_table_table.query(
-            IndexName="event_datetime_index",
-            KeyConditionExpression=Key("device_id").eq(device_id) & sortkeyExpression,
-            FilterExpression=Attr("hist_data.event_type").is_in(params["event_type_list"]),
-        )
-        hist_list.extend(res["Items"])
+    for device in params["device_list"]:
+        last_evaluated_key = None
+        if device.get("last_hist_id"):
+            last_evaluated_key = {
+                "device_id": {"S": device["device_id"]},
+                "hist_id": {"S": device["last_hist_id"]},
+            }
+        device_hist_list = []
+        while len(device_hist_list) < params["limit"]:
+            query_options = {
+                "IndexName": "event_datetime_index",
+                "KeyConditionExpression": Key("device_id").eq(device["device_id"])
+                & sortkeyExpression,
+                "FilterExpression": Attr("hist_data.event_type").is_in(params["event_type_list"]),
+                "ScanIndexForward": not reverse,
+                "Limit": 100,
+            }
+            if last_evaluated_key:
+                query_options["ExclusiveStartKey"] = last_evaluated_key
+            res = hist_list_table_table.query(**query_options)
+            logger.debug(res)
+            device_hist_list.extend(res["Items"])
+            last_evaluated_key = res.get("LastEvaluatedKey")
+            if not last_evaluated_key:
+                break
+        hist_list.extend(device_hist_list)
     logger.info(hist_list)
-    return sorted(hist_list, key=lambda x: x["event_datetime"])
+    return sorted(hist_list, reverse=reverse, key=lambda x: x["event_datetime"])[: params["limit"]]
