@@ -77,12 +77,11 @@ def get_hist_list(hist_list_table_table, params):
     reverse = params["sort"] != 0
     hist_list = []
     for device in params["device_list"]:
-        last_hist = hist_list_table_table.get_item(
-            Key={"device_id": device["device_id"], "hist_id": device["last_hist_id"]}
-        ).get("Item")
-
         last_evaluated_key = None
         if device.get("last_hist_id"):
+            last_hist = hist_list_table_table.get_item(
+                Key={"device_id": device["device_id"], "hist_id": device["last_hist_id"]}
+            ).get("Item")
             last_evaluated_key = {
                 "device_id": device["device_id"],
                 "event_datetime": last_hist.get("event_datetime"),
