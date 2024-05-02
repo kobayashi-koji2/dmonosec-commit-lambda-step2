@@ -104,6 +104,6 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
     }
 
     logger.debug(f"option={option}")
-    state_table.update_item(**option)
+    device_state_table.update_item(**option)
 
     return
