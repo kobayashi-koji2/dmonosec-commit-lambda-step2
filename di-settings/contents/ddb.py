@@ -39,7 +39,7 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
 
         # 接点入力ヘルシーチェックが未設定の場合、1を保持
         if di["di_healthy_period"] == 0 :
-            di_state[do_no] = 1
+            di_state[di_no] = 1
 
     di_key = "di_list"
     update_expression = "SET #map.#sub1.#sub2.#di_key = :di_new_val"
@@ -92,14 +92,14 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
             "#di8_healthy_state": "di8_healthy_state",
         },
         "ExpressionAttributeValues": {
-            ":di1_healthy_state": 0 if di_state.get("1") == 1 else device_state.get("di1_healthy_state", 0),
-            ":di2_healthy_state": 0 if di_state.get("2") == 1 else device_state.get("di2_healthy_state", 0),
-            ":di3_healthy_state": 0 if di_state.get("3") == 1 else device_state.get("di3_healthy_state", 0),
-            ":di4_healthy_state": 0 if di_state.get("4") == 1 else device_state.get("di4_healthy_state", 0),
-            ":di5_healthy_state": 0 if di_state.get("5") == 1 else device_state.get("di5_healthy_state", 0),
-            ":di6_healthy_state": 0 if di_state.get("6") == 1 else device_state.get("di6_healthy_state", 0),
-            ":di7_healthy_state": 0 if di_state.get("7") == 1 else device_state.get("di7_healthy_state", 0),
-            ":di8_healthy_state": 0 if di_state.get("8") == 1 else device_state.get("di8_healthy_state", 0),
+            ":di1_healthy_state": 0 if di_state.get(1) == 1 else device_state.get("di1_healthy_state", 0),
+            ":di2_healthy_state": 0 if di_state.get(2) == 1 else device_state.get("di2_healthy_state", 0),
+            ":di3_healthy_state": 0 if di_state.get(3) == 1 else device_state.get("di3_healthy_state", 0),
+            ":di4_healthy_state": 0 if di_state.get(4) == 1 else device_state.get("di4_healthy_state", 0),
+            ":di5_healthy_state": 0 if di_state.get(5) == 1 else device_state.get("di5_healthy_state", 0),
+            ":di6_healthy_state": 0 if di_state.get(6) == 1 else device_state.get("di6_healthy_state", 0),
+            ":di7_healthy_state": 0 if di_state.get(7) == 1 else device_state.get("di7_healthy_state", 0),
+            ":di8_healthy_state": 0 if di_state.get(8) == 1 else device_state.get("di8_healthy_state", 0),
         },
     }
 
