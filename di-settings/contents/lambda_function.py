@@ -63,7 +63,7 @@ def lambda_handler(event, context, user_info):
         logger.info(f"デバイスID:{device_id}")
         logger.info(f"IMEI:{imei}")
         try:
-            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
+            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"], tables["device_state_table"])
         except ClientError as e:
             logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"message": "デバイス設定の更新に失敗しました。"}
