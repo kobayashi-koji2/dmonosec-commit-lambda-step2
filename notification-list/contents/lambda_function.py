@@ -76,6 +76,7 @@ def lambda_handler(event, context, user):
                 group_name_list.append(
                     group_info.get("group_data", {}).get("config", {}).get("group_name")
                 )
+            group_name_list.sort()
 
             device_list.append(
                 {

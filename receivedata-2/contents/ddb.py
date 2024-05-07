@@ -203,6 +203,7 @@ def get_device_group_list(device_id, device_relation_table, group_table):
                     "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
+    group_list = sorted(group_list, key=lambda x:x['group_name'])
     return group_list
 
 

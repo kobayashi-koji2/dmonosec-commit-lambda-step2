@@ -52,6 +52,7 @@ def send_mail(
         group_name_list.append(
             group_info.get("group_data", {}).get("config", {}).get("group_name")
         )
+    group_name_list.sort()
     group_name = "、".join(group_name_list)
 
     do_no = remote_control.get("do_no")

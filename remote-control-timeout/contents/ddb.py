@@ -108,6 +108,7 @@ def put_hist_list(
                     "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
+    group_list = sorted(group_list, key=lambda x:x['group_name'])
 
     expire_datetime = int(
         (datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()

@@ -188,6 +188,9 @@ def create_response(request_params, hist_list):
     res_hist_list = []
     device_last_hist_id_pair = {}
     for hist in hist_list:
+        group_list = hist["hist_data"].get("group_list", [])
+        if group_list:
+            group_list = sorted(hist["hist_data"].get("group_list"), key=lambda x:x['group_name'])
         res_hist_list.append(
             {
                 "event_datetime": int(hist["event_datetime"] / 1000),
@@ -196,7 +199,7 @@ def create_response(request_params, hist_list):
                 ),
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
-                "group_list": hist["hist_data"].get("group_list"),
+                "group_list": group_list,
                 "device_imei": hist["hist_data"].get("imei"),
                 "event_type": hist["hist_data"].get("event_type"),
                 "history_message": create_history_message(hist["hist_data"]),

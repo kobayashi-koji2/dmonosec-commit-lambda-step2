@@ -71,6 +71,7 @@ def lambda_handler(event, context, user):
             group_name_list.append(
                 group_info.get("group_data", {}).get("config", {}).get("group_name")
             )
+        group_name_list.sort()
 
         notification_settings = device.get("device_data", {}).get("config", {}).get("notification_settings", {})
         notification_target_list = device.get("device_data", []).get("config", []).get("notification_target_list", [])

@@ -147,6 +147,7 @@ def lambda_handler(event, context, user_info):
                 group_info_list.append(group_info)
             else:
                 logger.info(f"group information does not exist:{item}")
+        group_info_list = sorted(group_info_list, key=lambda x:x['group_name'])
         logger.info(f"グループ情報:{group_info_list}")
 
         ##################
@@ -187,6 +188,7 @@ def lambda_handler(event, context, user_info):
                     .get("config", {})
                     .get("group_name", "")
                 )
+            group_name_list.sort()
             logger.info(f"グループ名:{group_name_list}")
             # デバイス現状態取得
             device_state = db.get_device_state(item1, tables["device_state_table"])

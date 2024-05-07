@@ -471,6 +471,7 @@ def __register_hist_info(
                 "group_name": group_info["group_data"]["config"]["group_name"],
             }
         )
+    group_list = sorted(group_list, key=lambda x:x['group_name'])
 
     # メール通知設定を取得
     notification_settings_list = (
