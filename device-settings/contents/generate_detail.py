@@ -22,6 +22,16 @@ def get_device_detail(device_info, device_state, group_info_list):
             }
         )
 
+    # 機器異常状態判定
+    device_abnormality = 0
+    if (
+        device_state.get("device_abnormality", 0)
+        or device_state.get("parameter_abnormality", 0)
+        or device_state.get("fw_update_abnormality", 0)
+        or device_state.get("device_healthy_state", 0)
+    ):
+        device_abnormality = 1
+
     # レスポンス生成
     device_detail = {
         "message": "",
@@ -35,6 +45,7 @@ def get_device_detail(device_info, device_state, group_info_list):
         "last_receiving_time": last_receiving_time,
         "signal_status": device_state.get("signal_state", 0),
         "battery_near_status": device_state.get("battery_near_state", 0),
+        "device_abnormality": device_abnormality,
         "device_healthy_period": device_info["device_data"]["config"].get(
             "device_healthy_period", 0
         ),
