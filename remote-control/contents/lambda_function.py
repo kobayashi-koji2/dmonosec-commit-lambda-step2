@@ -480,7 +480,8 @@ def __send_mail(
     device_config = device_info.get("device_data", {}).get("config", {})
     device_name = device_config.get("device_name", device_info.get("imei"))
     group_name_list = [g["group_name"] for g in group_list]
-    group_name_list.sort()
+    if group_name_list:
+        group_name_list.sort()
     group_name = "、".join(group_name_list)
 
     # 接点出力名の設定

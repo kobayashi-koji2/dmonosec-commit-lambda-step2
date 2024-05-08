@@ -65,7 +65,8 @@ def lambda_handler(event, context, user):
                     }
                 )
                 logger.info(group_list)
-            group_list = sorted(group_list, key=lambda x:x['group_name'])
+            if group_list:
+                group_list = sorted(group_list, key=lambda x:x['group_name'])
         except ClientError as e:
             logger.info(e)
             logger.info(traceback.format_exc())

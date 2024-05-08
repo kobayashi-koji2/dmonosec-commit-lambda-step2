@@ -80,7 +80,8 @@ def lambda_handler(event, context, user):
                     .get("group_name"),
                 }
             )
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        if group_list:
+            group_list = sorted(group_list, key=lambda x:x['group_name'])
 
         device_id_list = db.get_user_relation_device_id_list(
             user_id, device_relation_table, include_group_relation=False

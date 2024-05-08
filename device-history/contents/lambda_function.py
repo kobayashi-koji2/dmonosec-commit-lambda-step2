@@ -190,7 +190,7 @@ def create_response(request_params, hist_list):
     for hist in hist_list:
         group_list = hist["hist_data"].get("group_list", [])
         if group_list:
-            group_list = sorted(hist["hist_data"].get("group_list"), key=lambda x:x['group_name'])
+            group_list = sorted(group_list, key=lambda x:x['group_name'])
         res_hist_list.append(
             {
                 "event_datetime": int(hist["event_datetime"] / 1000),

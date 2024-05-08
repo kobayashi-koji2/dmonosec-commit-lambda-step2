@@ -90,7 +90,8 @@ def lambda_handler(event, context, user_info):
                 group_info = db.get_group_info(group_id, tables["group_table"])
                 if group_info:
                     group_info_list.append(group_info)
-            group_info_list = sorted(group_info_list, key=lambda x:x['group_name'])
+            if group_info_list:
+                group_info_list = sorted(group_info_list, key=lambda x:x['group_data']['config']['group_name'])
             # デバイス詳細情報生成
             res_body = generate_detail.get_device_detail(
                 device_info, device_state, group_info_list
