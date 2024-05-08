@@ -23,6 +23,8 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
                 "group_name": item["group_data"]["config"]["group_name"],
             }
         )
+    if group_list:
+        group_list = sorted(group_list, key=lambda x:x['group_name'])
     terminal_info = terminal_info_fmt(
         device_info["device_data"]["config"]["terminal_settings"],
         device_state,
