@@ -118,6 +118,8 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                     "group_name": group_info["group_data"]["config"]["group_name"],
                 }
             )
+    if group_list:
+        group_list = sorted(group_list, key=lambda x:x['group_name'])
 
     # 制御対象デバイスの紐づけ接点入力が指定されている場合、接点入力状態をチェック
     if control_do.get("do_di_return") and automation["control_di_state"] in [0, 1]:
@@ -501,6 +503,8 @@ def _send_not_exec_mail(
             group_name_list = []
             for group in group_list:
                 group_name_list.append(group["group_name"])
+            if group_name_list:
+                group_name_list.sort()
             group_name = "、".join(group_name_list)
 
             do_name = (
