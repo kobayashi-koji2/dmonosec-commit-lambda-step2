@@ -28,7 +28,7 @@ def create_history_message(hist):
     msg = ""
     # 接点入力変化
     if hist["event_type"] == "di_change":
-        terminal_name = hist.get("terminal_name", "接点入力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点入力" + str(hist.get("terminal_no", ""))
@@ -36,7 +36,7 @@ def create_history_message(hist):
 
     # 接点入力未変化検出（Ph2）
     elif hist["event_type"] == "di_unhealthy":
-        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
@@ -51,7 +51,7 @@ def create_history_message(hist):
 
     # 接点出力変化
     elif hist["event_type"] == "do_change":
-        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
@@ -103,7 +103,7 @@ def create_history_message(hist):
 
     # 画面操作による制御
     elif hist["event_type"] == "manual_control":
-        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
@@ -122,9 +122,7 @@ def create_history_message(hist):
             elif hist["control_result"] == "not_excuted_done":
                 msg = f"【画面操作による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中だったため、制御を行いませんでした。\n ※{control_exec_uer_name}が操作を行いました。"
         else:
-            link_terminal_name = hist.get(
-                "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
-            )
+            link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
@@ -144,7 +142,7 @@ def create_history_message(hist):
             on_off = "ON制御　"
         elif hist["event_type"] == "off_timer_control":
             on_off = "OFF制御　"
-        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
@@ -156,9 +154,7 @@ def create_history_message(hist):
             elif hist["control_result"] == "not_excuted_done":
                 msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
         else:
-            link_terminal_name = hist.get(
-                "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
-            )
+            link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
@@ -178,7 +174,7 @@ def create_history_message(hist):
 
     # 連動設定による制御（Ph2）
     elif hist["event_type"] in ["automation_control", "on_automation_control", "off_automation_control"]:
-        terminal_name = hist.get("terminal_name", "接点出力" + str(hist.get("terminal_no", "")))
+        terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
@@ -192,9 +188,7 @@ def create_history_message(hist):
             elif hist["control_result"] == "not_excuted_done":
                 msg = f"【連動設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。\nそのため、制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
         else:
-            link_terminal_name = hist.get(
-                "link_terminal_name", "接点入力" + str(hist.get("link_terminal_no", ""))
-            )
+            link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
