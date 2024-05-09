@@ -149,7 +149,9 @@ def lambda_handler(event, context, user_info):
                 logger.info(f"group information does not exist:{item}")
         logger.info(f"グループ情報:{group_info_list}")
         if group_info_list:
-            group_info_list = sorted(group_info_list, key=lambda x:x['group_data']['config']['group_name'])
+            group_info_list = sorted(
+                group_info_list, key=lambda x: x["group_data"]["config"]["group_name"]
+            )
 
         ##################
         # 6 デバイス一覧生成
@@ -254,7 +256,7 @@ def lambda_handler(event, context, user_info):
                     "device_order": order,
                     "di_list": di_list,
                     "do_list": do_list,
-                    "battery_near_status": device_state.get("battery_near_status", 0),
+                    "battery_near_status": device_state.get("battery_near_state", 0),
                     "device_abnormality": device_abnormality,
                 }
             )
