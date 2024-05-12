@@ -8,7 +8,7 @@ logger = Logger()
 
 
 # パラメータチェック
-def validate(event, user, contract_table):
+def validate(event, user, contract_table, group_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"message": "グループの操作権限がありません。"}
@@ -35,10 +35,19 @@ def validate(event, user, contract_table):
         if device_id not in contract["contract_data"]["device_list"]:
             return {"message": "不正なデバイスIDが指定されています。"}
 
+    # グループ名の重複チェック
+    group_name = body_params.get("group_name", "")
+    for group_id in contract.get("contract_data", {}).get("group_list", {}):
+        if http_method == "PUT" and group_id == path_params.get("group_id"):
+            continue
+        group = db.get_group_info(group_id, group_table)
+        if group.get("group_data", {}).get("config", {}).get("group_name") == group_name:
+            return {"message": "グループ名が重複しています。"}
+
     params = {
         "group_id": path_params.get("group_id"),
-        "group_name": body_params.get("group_name", ""),
-        "device_list": body_params.get("device_list", []),
+        "group_name": group_name,
+        "device_list": device_list,
     }
 
     return {

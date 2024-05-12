@@ -12,6 +12,11 @@ logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 
 
+class SettingLimitError(Exception):
+    def __init__(self, message=""):
+        self.message = message
+
+
 # デバイス設定更新
 def update_device_settings(device_id, timer_settings, table):
     timer_value = {}
@@ -50,6 +55,13 @@ def update_device_settings(device_id, timer_settings, table):
                 logger.info(f"update timer_id={timer_value['do_timer_id']}")
                 break
     logger.debug(f"do_list: {do_list}")
+
+    # タイマー設定の上限件数チェック
+    timer_count = 0
+    for do in do_list:
+        timer_count += len(do.get("do_timer_list", []))
+    if timer_count > 100:
+        raise SettingLimitError("設定可能な上限を超えています。")
 
     update_expression = "SET #map.#sub1.#sub2.#sub3 = :do_list"
     expression_attribute_values = {":do_list": do_list}

@@ -72,6 +72,16 @@ def lambda_handler(event, context, user_info):
                     res_body, ensure_ascii=False, default=convert.decimal_default_proc
                 ),
             }
+        except ddb.SettingLimitError as e:
+            logger.info(f"デバイス設定更新エラー e={e}")
+            res_body = {"message": e.message}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(
+                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                ),
+            }
 
         # デバイス情報取得
         try:

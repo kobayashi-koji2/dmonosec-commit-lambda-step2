@@ -44,7 +44,7 @@ def lambda_handler(event, context, user_info):
             }
 
         # パラメータチェック
-        validate_result = validate.validate(event, user_info, contract_table)
+        validate_result = validate.validate(event, user_info, contract_table, group_table)
         if validate_result.get("message"):
             return {
                 "statusCode": 400,
