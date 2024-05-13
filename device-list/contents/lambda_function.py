@@ -209,6 +209,14 @@ def lambda_handler(event, context, user_info):
             ):
                 device_abnormality = 1
 
+            # 最終受信日時取得
+            last_receiving_time = ""
+            if device_state:
+                pattern = re.compile(r".*update_datetime$")
+                matching_keys = [key for key in device_state.keys() if pattern.match(key)]
+                matching_values = {key: device_state[key] for key in matching_keys}
+                last_receiving_time = max(matching_values.values())
+
             # 接点入力リスト
             di_list = []
             for di in device_info["Items"][0]["device_data"]["config"]["terminal_settings"].get(
@@ -253,6 +261,8 @@ def lambda_handler(event, context, user_info):
                     "device_imei": device_info["Items"][0]["imei"],
                     "device_type": device_info["Items"][0]["device_type"],
                     "group_name_list": group_name_list,
+                    "device_code": device_info["Items"][0]["device_data"]["param"].get("device_code"),
+                    "last_receiving_time": last_receiving_time,
                     "device_order": order,
                     "di_list": di_list,
                     "do_list": do_list,
