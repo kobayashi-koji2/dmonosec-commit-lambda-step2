@@ -177,7 +177,7 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
     # 連動制御設定数の確認（上限100）
     automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
     if len(automation_info) >= 100:
-        res_body = {"message": "連動制御設定数が上限に達しています。"}
+        res_body = {"message": "設定可能なオートメーション設定の上限を超えています。"}
         return False, res_body
 
     # 連動制御設定の追加

@@ -61,7 +61,7 @@ def update_device_settings(device_id, timer_settings, table):
     for do in do_list:
         timer_count += len(do.get("do_timer_list", []))
     if timer_count > 100:
-        raise SettingLimitError("設定可能な上限を超えています。")
+        raise SettingLimitError("設定可能なスケジュール設定の上限を超えています。")
 
     update_expression = "SET #map.#sub1.#sub2.#sub3 = :do_list"
     expression_attribute_values = {":do_list": do_list}
