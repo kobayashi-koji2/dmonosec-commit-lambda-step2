@@ -73,7 +73,7 @@ def create_user_info(
             or request_params["mfa_flag"] != account["user_data"]["config"]["mfa_flag"]
         ):
             if request_params["mfa_flag"] == 0:
-                cognito.clear_cognito_mfa(account["auth_id"])
+                cognito.clear_cognito_mfa(account["email_address"])
 
             account_update_expression = "SET #email_address_attr = :email_address, #map.#config_attr.#user_name_attr = :user_name, #map.#config_attr.#mfa_flag_attr = :mfa_flag"
             account_expression_attribute_values = {
@@ -216,7 +216,7 @@ def update_user_info(
         "mfa_flag"
     ):
         if request_params["mfa_flag"] == 0:
-            cognito.clear_cognito_mfa(account["auth_id"])
+            cognito.clear_cognito_mfa(account["email_address"])
 
         account_update_expression = f"SET #map.#config_attr.#user_name_attr = :user_name, #map.#config_attr.#mfa_flag_attr = :mfa_flag"
         account_expression_attribute_values = {
