@@ -84,21 +84,21 @@ def update_cognito_user(auth_id, email_address):
     return response["User"]["Username"]
 
 
-def clear_cognito_mfa(auth_id):
+def clear_cognito_mfa(email_address):
     client = boto3.client(
         "cognito-idp",
         region_name=os.environ.get("AWS_REGION"),
         endpoint_url=os.environ.get("endpoint_url"),
     )
     client.admin_set_user_mfa_preference(
-        Username=auth_id,
+        Username=email_address,
         UserPoolId=COGNITO_USER_POOL_ID,
         SMSMfaSettings={"Enabled": False, "PreferredMfa": False},
         SoftwareTokenMfaSettings={"Enabled": False, "PreferredMfa": False},
     )
     client.admin_update_user_attributes(
         UserPoolId=COGNITO_USER_POOL_ID,
-        Username=auth_id,
+        Username=email_address,
         UserAttributes=[
             {
                 "Name": "phone_number",
