@@ -94,6 +94,9 @@ def lambda_handler(event, context, user_info):
                         device_id, device_name, device_imei, do_info, di_list, state_info
                     )
                     results.append(res_item)
+                
+                # グループ情報取得
+                
 
         ### 5. メッセージ応答
         results = __decimal_to_integer_or_float(results)
