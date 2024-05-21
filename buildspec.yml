@@ -41,7 +41,7 @@ phases:
         for dir in $dirs;
         do
           echo $dir
-          exist_tag=`aws ecr list-images --repository-name ${dir} --output text --query "imageIds[?imageTag=='${image_tag}'].imageTag"`
+          exist_tag=`aws ecr list-images --repository-name ${global_name}-ecr-${dir} --output text --query "imageIds[?imageTag=='${image_tag}'].imageTag"`
           if [ "$exist_tag" == "" ]; then
             echo 'コミットID更新なしのためビルドをスキップ'
             continue
