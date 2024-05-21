@@ -123,6 +123,7 @@ def lambda_handler(event, context, user_info):
                 ).get("group_list", [])
                 logger.info(f"グループID参照:{filtered_device_group_relation}")
                 # グループ名参照
+                group_name_list = []
                 for group_id in filtered_device_group_relation:
                     group_name_list.append(
                         next((group for group in group_info_list if group["group_id"] == group_id), {})
