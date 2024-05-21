@@ -41,6 +41,11 @@ phases:
         for dir in $dirs;
         do
           echo $dir
+          exist_tag=`aws ecr list-images --repository-name ${dir} --output text --query "imageIds[?imageTag=='${image_tag}'].imageTag"`
+          if [ "$exist_tag" == "" ]; then
+            echo 'コミットID更新なしのためビルドをスキップ'
+            continue
+          fi
           ecr_repository_uri=${account_id}.dkr.ecr.${AWS_REGION}.amazonaws.com/${global_name}-ecr-${dir}
           docker build -t ${dir}:latest -f ${dir}/Dockerfile .
           docker tag ${dir}:latest ${ecr_repository_uri}:${image_tag}
