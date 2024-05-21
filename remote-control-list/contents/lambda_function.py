@@ -42,6 +42,7 @@ def lambda_handler(event, context, user_info):
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
+        group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
 
         logger.debug(f"user_info: {user_info}")
 
@@ -63,7 +64,37 @@ def lambda_handler(event, context, user_info):
 
         logger.debug(f"device_id_list: {device_id_list}")
 
-        ### 4. 遠隔制御一覧生成
+        ### 4. グループ名一覧取得
+        # グループID取得
+        device_group_relation, all_groups = (
+            [],
+            [],
+        )  # デバイスID毎のグループID一覧、重複のないグループID一覧
+        for device_id in device_id_list:
+            group_id_list = db.get_device_relation_group_id_list(
+                device_id, device_relation_table
+            )
+            device_group_relation.append({"device_id": device_id, "group_list": group_id_list})
+            all_groups += group_id_list
+        all_groups = set(all_groups)
+        logger.info(f"デバイスグループ関連:{device_group_relation}")
+        logger.info(f"重複のないグループID一覧:{all_groups}")
+
+        # グループ情報取得
+        group_info_list = []
+        for item in all_groups:
+            group_info = db.get_group_info(item, group_table)
+            if group_info:
+                group_info_list.append(group_info)
+            else:
+                logger.info(f"group information does not exist:{item}")
+        logger.info(f"グループ情報:{group_info_list}")
+        if group_info_list:
+            group_info_list = sorted(
+                group_info_list, key=lambda x: x["group_data"]["config"]["group_name"]
+            )
+
+        ### 5. 遠隔制御一覧生成
         results = list()
         # デバイス情報取得
         for device_id in device_id_list:
@@ -86,19 +117,34 @@ def lambda_handler(event, context, user_info):
                 # 接点入力一覧
                 di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
 
+                # グループ情報取得
+                filtered_device_group_relation = next(
+                    (group for group in device_group_relation if group["device_id"] == device_id), {}
+                ).get("group_list", [])
+                logger.info(f"グループID参照:{filtered_device_group_relation}")
+                # グループ名参照
+                for group_id in filtered_device_group_relation:
+                    group_name_list.append(
+                        next((group for group in group_info_list if group["group_id"] == group_id), {})
+                        .get("group_data", {})
+                        .get("config", {})
+                        .get("group_name", "")
+                    )
+                if group_name_list:
+                    group_name_list.sort()
+                logger.info(f"グループ名:{group_name_list}")
+
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
                 for do_info in do_list:
                     if not do_info["do_control"]:
                         continue
                     res_item = __generate_response_items(
-                        device_id, device_name, device_imei, do_info, di_list, state_info
+                        device_id, device_name, device_imei, do_info, di_list, state_info, group_name_list
                     )
                     results.append(res_item)
                 
-                # グループ情報取得
-                
 
-        ### 5. メッセージ応答
+        ### 6. メッセージ応答
         results = __decimal_to_integer_or_float(results)
         logger.info({"results": results})
         res_body = {"message": "", "remote_control_list": results}
@@ -117,7 +163,7 @@ def lambda_handler(event, context, user_info):
         }
 
 
-def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info):
+def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info, group_name_list):
     results_item = dict()
     results_item["device_id"] = device_id
     results_item["device_name"] = device_name
@@ -156,6 +202,9 @@ def __generate_response_items(device_id, device_name, device_imei, do_info, di_l
         else:
             results_item["di_state_name"] = di_info["di_on_name"]
             results_item["di_state_icon"] = di_info["di_on_icon"]
+
+    # グループ名を設定
+    results_item["group_name_list"] = group_name_list
 
     return results_item
 
