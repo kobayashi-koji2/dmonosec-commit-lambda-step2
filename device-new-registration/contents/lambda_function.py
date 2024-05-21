@@ -249,9 +249,9 @@ def __generate_device_data_config(device_type):
             "di_no": di_no,
             "di_name": "接点入力" + str(di_no),
             "di_on_name": "Open",
-            "di_on_icon": "state_icon_1",
+            "di_on_icon": "on",
             "di_off_name": "Close",
-            "di_off_icon": "state_icon_2",
+            "di_off_icon": "off",
         }
         di_list.append(di_item)
 

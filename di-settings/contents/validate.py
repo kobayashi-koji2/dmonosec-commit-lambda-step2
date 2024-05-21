@@ -152,16 +152,17 @@ def input_check(param):
     # 桁数の制限
     int_float_value_limits = {"di_healthy_period": {0, 100}}
 
-    # アイコン(TBD) コード一覧参照
+    # アイコンコード一覧参照
     icon_list = [
-        "state_icon_1",
-        "state_icon_2",
-        "state_icon_3",
-        "state_icon_4",
-        "state_icon_5",
-        "state_icon_6",
-        "state_icon_7",
-        "state_icon_8",
+        "on",
+        "off",
+        "open",
+        "close",
+        "lock",
+        "unlock",
+        "on_light",
+        "off_light",
+        "wave",
     ]
 
     # 特定の文字列に一致

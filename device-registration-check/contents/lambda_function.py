@@ -117,9 +117,9 @@ def _register_device(pre_device, contract, device_announcements):
                             "di_no": di_no,
                             "di_name": f"接点入力{di_no}",
                             "di_on_name": "Open",
-                            "di_on_icon": "state_icon_1",
+                            "di_on_icon": "on",
                             "di_off_name": "Close",
-                            "di_off_icon": "state_icon_2",
+                            "di_off_icon": "off",
                         }
                         for di_no in range(1, di_num + 1)
                     ],
