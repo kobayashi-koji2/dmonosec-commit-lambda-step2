@@ -196,6 +196,10 @@ def lambda_handler(event, context, user_info):
                     notification_hist_table,
                     hist_list_table,
                 )
+                # 制御状況を削除
+                control_status_table.delete_item(
+                    Key={"device_id": device_id, "do_no": do_no},
+                )
                 if not regist_result[0]:
                     return {
                         "statusCode": 500,
@@ -232,6 +236,10 @@ def lambda_handler(event, context, user_info):
             ]
             result = db.execute_transact_write_item(write_items)
             if not result:
+                # 制御状況を削除
+                control_status_table.delete_item(
+                    Key={"device_id": device_id, "do_no": do_no},
+                )
                 res_body = {"message": "要求番号カウンタ情報への書き込みに失敗しました。"}
                 return {
                     "statusCode": 500,
@@ -260,6 +268,10 @@ def lambda_handler(event, context, user_info):
             do_control = "10"
             do_control_time = "0000"
         else:
+            # 制御状況を削除
+            control_status_table.delete_item(
+                Key={"device_id": device_id, "do_no": do_no},
+            )
             res_body = {"message": "接点出力_制御方法の値が不正です。"}
             return {
                 "statusCode": 500,
@@ -318,6 +330,10 @@ def lambda_handler(event, context, user_info):
         ]
         result = db.execute_transact_write_item(put_items)
         if not result:
+            # 制御状況を削除
+            control_status_table.delete_item(
+                Key={"device_id": device_id, "do_no": do_no},
+            )
             res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
             return {
                 "statusCode": 500,

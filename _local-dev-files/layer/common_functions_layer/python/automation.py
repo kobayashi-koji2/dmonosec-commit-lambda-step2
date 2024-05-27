@@ -119,7 +119,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 }
             )
     if group_list:
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        group_list = sorted(group_list, key=lambda x: x["group_name"])
 
     # 制御対象デバイスの紐づけ接点入力が指定されている場合、接点入力状態をチェック
     if control_do.get("do_di_return") and automation["control_di_state"] in [0, 1]:
@@ -252,6 +252,14 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 notification_hist_id,
                 "not_excuted_done",
                 hist_list_table,
+            )
+
+            # 制御状況を削除
+            control_status_table.delete_item(
+                Key={
+                    "device_id": control_device.get("device_id"),
+                    "do_no": control_do.get("do_no"),
+                },
             )
 
             return {
