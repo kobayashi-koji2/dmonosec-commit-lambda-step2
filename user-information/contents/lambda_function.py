@@ -28,6 +28,7 @@ def lambda_handler(event, context, user):
         account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         announcement_table = dynamodb.Table(ssm.table_names["ANNOUNCEMENT_TABLE"])
         device_announcement_table = dynamodb.Table(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"])
+        contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
     except KeyError as e:
         body = {"message": e}
         return {
@@ -46,6 +47,20 @@ def lambda_handler(event, context, user):
             user.get("contract_id"),
         )
 
+        # 契約情報取得
+        contract_id = user.get("contract_id")
+        contract_info = db.get_contract_info(contract_id, contract_table)
+        if not contract_info:
+            res_body = {"message": "契約情報が存在しません。"}
+            return {
+                "statusCode": 404,
+                "headers": res_headers,
+                "body": json.dumps(
+                    res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                ),
+            }
+        logger.debug(f"contract_info: {contract_info}")
+
         res_body = {
             "message": "",
             "user_id": user.get("user_id"),
@@ -54,6 +69,7 @@ def lambda_handler(event, context, user):
             "user_name": account.get("user_data", {}).get("config", {}).get("user_name"),
             "announcement_flag": announcement_flag,
             "display_information": user.get("user_data", {}).get("display_information"),
+            "history_storage_period": contract_info["history_storage_period"],
         }
         return {
             "statusCode": 200,
