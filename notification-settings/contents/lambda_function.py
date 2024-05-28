@@ -121,7 +121,7 @@ def lambda_handler(event, context, user, body):
         res_body = {
             "message": "",
             "notification_list": res_notification_list,
-            "res_notification_target_list": res_notification_target_list,
+            "notification_target_list": res_notification_target_list,
         }
         return {
             "statusCode": 200,
