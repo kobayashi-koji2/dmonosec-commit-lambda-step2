@@ -106,22 +106,35 @@ def lambda_handler(event, context, user, body):
             )
 
         # デバイス管理テーブルの通知設定更新
-        device = ddb.update_device_notification_settings(device_id, notificaton_settings, notification_target_list, device_table)
+        ddb.update_device_notification_settings(device_id, notificaton_settings, notification_target_list, device_table)
 
-        # 通知設定を取得しなおして返却
-        res_notification_list = (
-            device.get("device_data", []).get("config", []).get("notification_settings", [])
-        )
-        logger.debug(res_notification_list)
-        res_notification_target_list = (
-            device.get("device_data", []).get("config", []).get("notification_target_list", [])
-        )
-        logger.debug(res_notification_target_list)
+        # デバイス情報取得
+        logger.debug(device_id)
+        device = db.get_device_info_other_than_unavailable(device_id, device_table)
+        logger.info({"device": device})
+
+        # 通知設定取得
+        notification_settings = device.get("device_data", {}).get("config", {}).get("notification_settings", {})
+        notification_target_list = device.get("device_data", []).get("config", []).get("notification_target_list", [])
+        logger.debug(notification_settings)
+        notification_list = []
+        for notification_setting in notification_settings:
+            notification_list.append(
+                {
+                    "event_trigger": notification_setting.get("event_trigger", ""),
+                    "terminal_no": notification_setting.get("terminal_no", ""),
+                    "event_type": notification_setting.get("event_type", ""),
+                    "change_detail": notification_setting.get("change_detail", "")
+                }
+            )
+
+        logger.debug(notification_list)
+        logger.debug(notification_target_list)
 
         res_body = {
             "message": "",
-            "notification_list": res_notification_list,
-            "notification_target_list": res_notification_target_list,
+            "notification_list": notification_list,
+            "notification_target_list": notification_target_list,
         }
         return {
             "statusCode": 200,
