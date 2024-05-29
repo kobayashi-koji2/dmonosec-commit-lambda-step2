@@ -87,9 +87,7 @@ def lambda_handler(event, context, user_info):
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
             # 4.2 デバイス現状態取得
-            device_state = db.get_device_state(
-                device_id, tables["device_state_table"], consistent_read=True
-            )
+            device_state = db.get_device_state(device_id, tables["device_state_table"])
             # 4.3 グループ情報取得
             group_id_list = db.get_device_relation_group_id_list(
                 device_id, tables["device_relation_table"]
