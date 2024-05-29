@@ -249,8 +249,11 @@ def get_device_info_other_than_unavailable(device_id, table):
 
 
 # 現状態取得
-def get_device_state(device_id, device_state_table):
-    device_state = device_state_table.get_item(Key={"device_id": device_id}).get("Item", {})
+def get_device_state(device_id, device_state_table, consistent_read=False):
+    device_state = device_state_table.get_item(
+        Key={"device_id": device_id},
+        ConsistentRead=consistent_read,
+    ).get("Item", {})
     return device_state
 
 
