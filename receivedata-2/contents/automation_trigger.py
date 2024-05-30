@@ -28,7 +28,7 @@ def automationTrigger(hist_list, device_info):
             automation.automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, hist["hist_data"]["occurrence_flag"])
         # 電源オン
         elif hist["hist_data"]["event_type"]  == "power_on":
-            automation.automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, 1)
+            automation.automation_control(hist["device_id"], hist["hist_data"]["event_type"], None, None, 0)
         # その他
         else:
             continue
