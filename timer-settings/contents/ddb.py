@@ -49,11 +49,26 @@ def update_device_settings(device_id, timer_settings, table):
         do_timer_list.append(timer_value)
         logger.info(f"add timer_id={timer_value['do_timer_id']}")
     else:
-        for index, item in enumerate(do_timer_list):
-            if item["do_timer_id"] == timer_value["do_timer_id"]:
-                do_timer_list[index] = timer_value
-                logger.info(f"update timer_id={timer_value['do_timer_id']}")
+        update_flag = False
+        for do_timer in do_timer_list:
+            if do_timer["do_timer_id"] == timer_value["do_timer_id"]:
+                update_flag = True
                 break
+        if update_flag:
+            for index, item in enumerate(do_timer_list):
+                if item["do_timer_id"] == timer_value["do_timer_id"]:
+                    do_timer_list[index] = timer_value
+                    logger.info(f"update timer_id={timer_value['do_timer_id']}")
+                    break
+        else:
+            for do in do_list:
+                wk_do_timer_list = do.get("do_timer_list", [])
+                for do_timer in wk_do_timer_list:
+                    if do_timer.get("do_timer_id") == timer_value["do_timer_id"]:
+                        wk_do_timer_list.remove(do_timer)
+                        logger.info(f"remove timer_id={timer_value['do_timer_id']}")
+                        break
+            do_timer_list.append(timer_value)
     logger.debug(f"do_list: {do_list}")
 
     # タイマー設定の上限件数チェック
