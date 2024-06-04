@@ -112,10 +112,10 @@ def lambda_handler(event, context, user_info):
         # 順序比較
         device_order_update = device_order_comparison(device_order, device_id_list)
         # 順序更新
-        if device_order_update:
+        if device_order_update or type(device_order_update) is list:
             logger.info("try device order update")
             logger.info(f"最新のデバイス順序:{device_order_update}")
-            res = db.update_device_order(device_order_update, user_id, tables["user_table"])
+            db.update_device_order(device_order_update, user_id, tables["user_table"])
             logger.info("tried device order update")
             device_order = device_order_update
         else:
@@ -261,7 +261,9 @@ def lambda_handler(event, context, user_info):
                     "device_imei": device_info["Items"][0]["imei"],
                     "device_type": device_info["Items"][0]["device_type"],
                     "group_name_list": group_name_list,
-                    "device_code": device_info["Items"][0]["device_data"]["param"].get("device_code"),
+                    "device_code": device_info["Items"][0]["device_data"]["param"].get(
+                        "device_code"
+                    ),
                     "last_receiving_time": last_receiving_time,
                     "signal_status": device_state.get("signal_state", 0),
                     "device_order": order,
