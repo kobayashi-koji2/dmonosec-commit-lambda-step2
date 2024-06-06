@@ -416,9 +416,9 @@ def _put_hist_list(
             di_name = f"接点入力{di_no}"
 
         if automation["control_di_state"] == 0:
-            di_state_name = di[0].get("di_off_name", "クローズ")
+            di_state_name = di[0].get("di_off_name", "オープン")
         elif automation["control_di_state"] == 1:
-            di_state_name = di[0].get("di_on_name", "オープン")
+            di_state_name = di[0].get("di_on_name", "クローズ")
 
     event_type = ""
     if automation.get("control_di_state") == 0:
