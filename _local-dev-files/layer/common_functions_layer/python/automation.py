@@ -537,18 +537,18 @@ def _send_not_exec_mail(
 
                 di_state_name = ""
                 if automation["control_di_state"] == 0:
-                    di_state_name = di[0].get("di_off_name", "クローズ")
+                    di_state_name = di[0].get("di_off_name", "オープン")
                 elif automation["control_di_state"] == 1:
-                    di_state_name = di[0].get("di_on_name", "オープン")
+                    di_state_name = di[0].get("di_on_name", "クローズ")
 
             event_type_name = ""
             event_detail_name = ""
             if automation["trigger_event_type"] == "di_change_state":
                 event_type_name = f"接点入力{di[0].get('di_no')}変化"
                 if automation["trigger_event_detail_state"] == 0:
-                    event_detail_name = "クローズ"
-                elif automation["trigger_event_detail_state"] == 1:
                     event_detail_name = "オープン"
+                elif automation["trigger_event_detail_state"] == 1:
+                    event_detail_name = "クローズ"
             elif automation["trigger_event_type"] == "di_unhealthy":
                 event_type_name = f"接点入力{di[0].get('di_no')}未変化検出"
                 if automation["trigger_event_detail_flag"] == 0:
