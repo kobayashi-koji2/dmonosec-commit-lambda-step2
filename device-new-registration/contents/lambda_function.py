@@ -58,10 +58,11 @@ def lambda_handler(event, context, user_info, request_body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
         device_imei = request_body["device_imei"]
+        contract_id = user_info["contract_id"]
 
         ### 2. デバイス情報登録
         transact_items = list()
-        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, pre_register_table)
+        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, contract_id, pre_register_table)
         if not pre_device_info:
             res_body = {"message": "登録前デバイス情報が存在しません。"}
             return {

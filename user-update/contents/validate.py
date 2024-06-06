@@ -59,6 +59,8 @@ def validate(event, user, account_table, contract_table, user_table):
             return {"message": "ユーザ情報が存在しません。"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:
             return {"message": "不正なユーザIDが指定されています。"}
+        if update_user_res["user_type"] in ["admin"]:
+            return {"message": "管理ユーザーは更新できません。"}
 
     # グループの権限チェック
     group_list = body_params.get("management_group_list", [])
