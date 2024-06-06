@@ -248,9 +248,9 @@ def __generate_device_data_config(device_type):
         di_item = {
             "di_no": di_no,
             "di_name": "接点入力" + str(di_no),
-            "di_on_name": "Open",
+            "di_on_name": "Close",
             "di_on_icon": "on",
-            "di_off_name": "Close",
+            "di_off_name": "Open",
             "di_off_icon": "off",
         }
         di_list.append(di_item)
@@ -266,6 +266,10 @@ def __generate_device_data_config(device_type):
         }
         do_list.append(do_item)
 
-    result = {"device_name": None, "device_healthy_period": 3,  "terminal_settings": {"do_list": do_list, "di_list": di_list}}
+    result = {
+        "device_name": None,
+        "device_healthy_period": 3,
+        "terminal_settings": {"do_list": do_list, "di_list": di_list},
+    }
 
     return result

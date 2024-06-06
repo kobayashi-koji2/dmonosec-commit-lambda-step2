@@ -472,7 +472,7 @@ def __register_hist_info(
             }
         )
     if group_list:
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        group_list = sorted(group_list, key=lambda x: x["group_name"])
 
     # メール通知設定を取得
     notification_settings_list = (
@@ -621,12 +621,12 @@ def __send_mail(
         control_name = "OFF制御"
         di_state = link_terminal["di_off_name"]
         if not di_state:
-            di_state = "クローズ"
+            di_state = "オープン"
     elif do_onoff_control == 1:
         control_name = "ON制御"
         di_state = link_terminal["di_on_name"]
         if not di_state:
-            di_state = "オープン"
+            di_state = "クローズ"
     elif do_onoff_control == 9:
         control_name = ""
         di_state = ""

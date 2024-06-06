@@ -109,7 +109,7 @@ def put_hist_list(
                 }
             )
     if group_list:
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        group_list = sorted(group_list, key=lambda x: x["group_name"])
 
     expire_datetime = int(
         (datetime.now() + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp()
@@ -173,9 +173,9 @@ def put_hist_list(
             for di_list in device["device_data"]["config"]["terminal_settings"]["di_list"]:
                 if di_list["di_no"] == remote_control.get("link_di_no"):
                     if link_terminal_state == 0:
-                        link_terminal_state_name = di_list.get("di_off_name", "クローズ")
+                        link_terminal_state_name = di_list.get("di_off_name", "オープン")
                     elif link_terminal_state == 1:
-                        link_terminal_state_name = di_list.get("di_on_name", "オープン")
+                        link_terminal_state_name = di_list.get("di_on_name", "クローズ")
             hist_data["link_terminal_state_name"] = link_terminal_state_name
 
     hist_list_table.put_item(Item=hist_list_item)
