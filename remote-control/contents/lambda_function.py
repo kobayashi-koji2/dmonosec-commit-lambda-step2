@@ -161,7 +161,7 @@ def lambda_handler(event, context, user_info):
             res_body = {"message": "他のユーザー操作、タイマーまたは連動により制御中です。"}
             logger.info(res_body)
             return {
-                "statusCode": 200,
+                "statusCode": 409,
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
@@ -208,7 +208,7 @@ def lambda_handler(event, context, user_info):
                     }
                 res_body = {"message": "他のユーザー操作、タイマーまたは連動により制御中です。"}
                 return {
-                    "statusCode": 200,
+                    "statusCode": 409,
                     "headers": res_headers,
                     "body": json.dumps(res_body, ensure_ascii=False),
                 }
