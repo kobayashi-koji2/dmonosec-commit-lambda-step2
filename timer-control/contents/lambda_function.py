@@ -235,9 +235,9 @@ def lambda_handler(event, context):
                 do_di_return = int(do_info["do_di_return"])
                 do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
                 if do_onoff_control == 0:
-                    control_trigger = "off_timer_control"
-                elif do_onoff_control == 1:
                     control_trigger = "on_timer_control"
+                elif do_onoff_control == 1:
+                    control_trigger = "off_timer_control"
                 elif do_onoff_control == 9:
                     control_trigger = "timer_control"
                 else:
@@ -503,17 +503,17 @@ def __register_hist_info(
     # 履歴情報登録
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
-        event_type = "off_timer_control"
-        if flg == "__check_under_control":
-            control_result = "not_excuted_done"
-        else:
-            control_result = "not_excuted_on"
-    elif do_onoff_control == 1:
         event_type = "on_timer_control"
         if flg == "__check_under_control":
             control_result = "not_excuted_done"
         else:
             control_result = "not_excuted_off"
+    elif do_onoff_control == 1:
+        event_type = "off_timer_control"
+        if flg == "__check_under_control":
+            control_result = "not_excuted_done"
+        else:
+            control_result = "not_excuted_on"
     elif do_onoff_control == 9:
         # ON/OFF指定されていない場合、不実施になるのは制御中のケースのみ
         event_type = "timer_control"
@@ -545,9 +545,9 @@ def __register_hist_info(
 
     if flg == "__check_return_di_state":
         if do_onoff_control == 0:
-            hist_data["link_terminal_state_name"] = link_terminal["di_off_name"]
-        elif do_onoff_control == 1:
             hist_data["link_terminal_state_name"] = link_terminal["di_on_name"]
+        elif do_onoff_control == 1:
+            hist_data["link_terminal_state_name"] = link_terminal["di_off_name"]
 
     now_unixtime = int(time.time() * 1000)
     expire_datetime = int(
@@ -618,15 +618,15 @@ def __send_mail(
 
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
-        control_name = "OFF制御"
-        di_state = link_terminal["di_off_name"]
-        if not di_state:
-            di_state = "オープン"
-    elif do_onoff_control == 1:
         control_name = "ON制御"
         di_state = link_terminal["di_on_name"]
         if not di_state:
             di_state = "クローズ"
+    elif do_onoff_control == 1:
+        control_name = "OFF制御"
+        di_state = link_terminal["di_off_name"]
+        if not di_state:
+            di_state = "オープン"
     elif do_onoff_control == 9:
         control_name = ""
         di_state = ""

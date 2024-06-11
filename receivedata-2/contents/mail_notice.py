@@ -23,10 +23,10 @@ def diNameToState(terminal_state_name, device_info):
     )
     for di in di_list:
         if di.get("di_on_name") == terminal_state_name:
-            di_state = 1
+            di_state = 0
             break
         elif di.get("di_off_name") == terminal_state_name:
-            di_state = 0
+            di_state = 1
             break
     return di_state
 
