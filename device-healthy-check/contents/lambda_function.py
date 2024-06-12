@@ -60,7 +60,7 @@ def lambda_handler(event, context):
             logger.debug(f"event_trigger={event_trigger}, device_id={device_id}, contract_id={contract_id}, event_datetime={event_datetime}")
 
             # パラメータチェック
-            validate_result = validate(event_trigger, device_id, di_no, contract_id, event_type, event_datetime)
+            validate_result = validate(event_trigger, device_id, di_no, contract_id, event_type, event_datetime, device_table)
             if validate_result != 0:
                 return -1
 

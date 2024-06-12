@@ -16,6 +16,8 @@ services:
       - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
       - NOTIFICATION_HIST_TTL=3
       - HIST_LIST_TTL=3
+      - REMOTE_CONTROLS_TTL=3
+      - LAMBDA_TIMEOUT_CHECK=lmonosc-lambda-remote-control-timeout-check
     volumes:
       - ./contents:/var/task
     ports:

@@ -21,7 +21,20 @@ def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_da
 
     # 接点入力端子数分ループ
     for di_info in device_info.get("device_data", {}).get("config", {}).get("terminal_settings", {}).get("di_list", []):
-        if event_trigger in ["lambda-receivedata-2", "lambda_device_settings"] and di_info.get("di_no") != di_no:
+        if event_trigger in ["lambda-receivedata-2"] and di_info.get("di_no") != di_no:
+            continue
+
+        # デバイス種別ごとに接点数を判定
+        device_type = device_info["device_type"]
+        if device_type == "PJ1":
+            max_di_no = 1
+        elif device_type == "PJ2":
+            max_di_no = 8
+        else:
+            max_di_no = 0
+
+        if 1 > di_info.get("di_no") or di_info.get("di_no") > max_di_no:
+            logger.debug(f"DI接点番号不正 device_id={device_info.get("device_id")} di_no={di_info.get("di_no")}")
             continue
 
         # DIヘルシーチェック情報チェック
