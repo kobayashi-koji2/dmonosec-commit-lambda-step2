@@ -100,7 +100,7 @@ def lambda_handler(event, context, user_info):
             # 4.4 連動制御情報取得
             automation_info_list = ddb.get_automation_info_list(
                 device_id, tables["automation_table"]
-            ).get("Items", [])
+            )
             # 4.5 ユーザー権限による絞り込み
             if user_info["user_type"] == "worker" or user_info["user_type"] == "referrer":
                 # ユーザに紐づくデバイスID取得

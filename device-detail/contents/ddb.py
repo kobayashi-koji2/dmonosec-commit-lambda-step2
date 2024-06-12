@@ -21,5 +21,6 @@ def get_automation_info_list(trigger_device_id, table):
     response = table.query(
         IndexName="trigger_device_id_index",
         KeyConditionExpression=Key("trigger_device_id").eq(trigger_device_id),
-    )
+    ).get("Items", [])
+    response = sorted(response, key=lambda x: x.get("automation_reg_datetime", 0))
     return response
