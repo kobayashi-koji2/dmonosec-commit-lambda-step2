@@ -24,7 +24,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
             }
         )
     if group_list:
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        group_list = sorted(group_list, key=lambda x: x["group_name"])
     terminal_info = terminal_info_fmt(
         device_info["device_data"]["config"]["terminal_settings"],
         device_state,
@@ -74,6 +74,7 @@ def automation_info_fmt(automation_info_list):
         formated_automation_list.append(
             {
                 "automation_id": automation_item["automation_id"],
+                "automation_reg_datetime": automation_item.get("automation_reg_datetime", 0),
                 "automation_name": automation_item["automation_name"],
                 "control_device_id": automation_item["control_device_id"],
                 "trigger_event_type": automation_item["trigger_event_type"],
@@ -118,6 +119,7 @@ def terminal_info_fmt(terminal_settings, device_state):
             do_timer_list.append(
                 {
                     "do_timer_id": timer_item.get("do_timer_id", ""),
+                    "do_timer_reg_datetime": timer_item.get("do_timer_reg_datetime", 0),
                     "do_timer_name": timer_item.get("do_timer_name", ""),
                     "do_onoff_control": timer_item.get("do_onoff_control", ""),
                     "do_time": timer_item.get("do_time", ""),

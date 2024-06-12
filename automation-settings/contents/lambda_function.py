@@ -140,7 +140,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         for item in automation_info:
             do_automation_item = {
                 "automation_id": item["automation_id"],
-                "automation_reg_datetime": item["automation_reg_datetime"],
+                "automation_reg_datetime": item.get("automation_reg_datetime", 0),
                 "automation_name": item["automation_name"],
                 "control_device_id": item["control_device_id"],
                 "trigger_event_type": item["trigger_event_type"],
