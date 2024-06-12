@@ -2,6 +2,8 @@ import json
 import os
 import traceback
 import uuid
+import time
+from datetime import datetime
 
 import boto3
 from aws_lambda_powertools import Logger
@@ -138,6 +140,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         for item in automation_info:
             do_automation_item = {
                 "automation_id": item["automation_id"],
+                "automation_reg_datetime": item["automation_reg_datetime"],
                 "automation_name": item["automation_name"],
                 "control_device_id": item["control_device_id"],
                 "trigger_event_type": item["trigger_event_type"],
@@ -182,8 +185,11 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
 
     # 連動制御設定の追加
     event_type = request_body["trigger_event_type"]
+    now = datetime.now()
+    now_unixtime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
     put_item = {
         "automation_id": str(uuid.uuid4()),
+        "automation_reg_datetime": now_unixtime,
         "automation_name": request_body["automation_name"],
         "trigger_device_id": trigger_device_id,
         "trigger_event_type": request_body["trigger_event_type"],
@@ -217,11 +223,18 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
 
 def update_automation_setting(trigger_device_id, request_body, automation_table):
 
+    # 更新対象の連動制御設定を取得
+    automation = automation_table.get_item(Key={"automation_id": request_body["automation_id"]})
+    if not automation:
+        res_body = {"message": "連動制御設定情報が存在しません。"}
+        return False, res_body
+
     # 連動制御設定の更新
     update_expression = (
         "SET #an  = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds"
     )
     expression_attribute_names = {
+        "#ard": "automation_reg_datetime",
         "#an": "automation_name",
         "#tdi": "trigger_device_id",
         "#ttn": "trigger_terminal_no",
@@ -230,6 +243,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
         "#cds": "control_di_state",
     }
     expression_attribute_values = {
+        ":ard": automation.get("automation_reg_datetime"),
         ":an": request_body["automation_name"],
         ":tdi": trigger_device_id,
         ":ttn": request_body.get("trigger_terminal_no", 0),

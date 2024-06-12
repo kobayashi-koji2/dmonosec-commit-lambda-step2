@@ -29,6 +29,7 @@ def terminal_info_fmt(terminal_settings):
                     "do_onoff_control": timer_item.get("do_onoff_control", ""),
                     "do_time": timer_item.get("do_time", ""),
                     "do_weekday": timer_item.get("do_weekday", ""),
+                    "do_timer_reg_datetime": timer_item.get("do_timer_reg_datetime", 0),
                 }
             )
         do_list.append(

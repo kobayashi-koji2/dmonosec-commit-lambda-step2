@@ -1,5 +1,7 @@
 import uuid
 from decimal import Decimal
+import time
+from datetime import datetime
 
 from aws_lambda_powertools import Logger
 import boto3
@@ -45,7 +47,10 @@ def update_device_settings(device_id, timer_settings, table):
 
     # 接点出力_タイマーIDがなければ、新規作成
     if not timer_value["do_timer_id"]:
+        now = datetime.now()
+        now_unixtime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
         timer_value["do_timer_id"] = str(uuid.uuid4())
+        timer_value["do_timer_reg_datetime"] = now_unixtime
         do_timer_list.append(timer_value)
         logger.info(f"add timer_id={timer_value['do_timer_id']}")
     else:
@@ -55,16 +60,22 @@ def update_device_settings(device_id, timer_settings, table):
                 update_flag = True
                 break
         if update_flag:
+            # 同じ接点出力番号のタイマー設定がある場合、更新
             for index, item in enumerate(do_timer_list):
                 if item["do_timer_id"] == timer_value["do_timer_id"]:
+                    timer_value["do_timer_reg_datetime"] = item.get("do_timer_reg_datetime")
                     do_timer_list[index] = timer_value
                     logger.info(f"update timer_id={timer_value['do_timer_id']}")
                     break
         else:
+            # 接点出力番号が変更になっている場合、変更前の接点出力番号のタイマー設定を削除
             for do in do_list:
                 wk_do_timer_list = do.get("do_timer_list", [])
                 for do_timer in wk_do_timer_list:
                     if do_timer.get("do_timer_id") == timer_value["do_timer_id"]:
+                        timer_value["do_timer_reg_datetime"] = do_timer.get(
+                            "do_timer_reg_datetime"
+                        )
                         wk_do_timer_list.remove(do_timer)
                         logger.info(f"remove timer_id={timer_value['do_timer_id']}")
                         break
