@@ -272,9 +272,9 @@ def automation_setting(hist):
 
     if event_type == "di_change_state":
         if hist["automation_trigger_event_detail_state"] == 1:
-            event_detail_label = "クローズ"
-        else:
             event_detail_label = "オープン"
+        else:
+            event_detail_label = "クローズ"
     elif event_type == "di_unhealthy":
         if hist["automation_trigger_event_detail_flag"] == 0:
             event_detail_label = "接点入力検出復旧"
