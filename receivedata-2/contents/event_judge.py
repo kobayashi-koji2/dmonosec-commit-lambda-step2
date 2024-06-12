@@ -129,9 +129,9 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 if int(di_list.get("di_no")) == int(event_info.get("link_di_no")):
                     di_terminal_name = di_list.get("di_name", f"接点入力{link_di_no}")
                     if event_info.get("di_state") == 0:
-                        terminal_state_name = di_list.get("di_off_name", "クローズ")
+                        terminal_state_name = di_list.get("di_on_name", "クローズ")
                     else:
-                        terminal_state_name = di_list.get("di_on_name", "オープン")
+                        terminal_state_name = di_list.get("di_off_name", "オープン")
                     break
             hist_list_data["hist_data"]["link_terminal_name"] = di_terminal_name
             hist_list_data["hist_data"]["link_terminal_state_name"] = terminal_state_name
