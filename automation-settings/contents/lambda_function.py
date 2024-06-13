@@ -230,9 +230,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
         return False, res_body
 
     # 連動制御設定の更新
-    update_expression = (
-        "SET #an  = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds"
-    )
+    update_expression = "SET #ard = :ard, #an = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds"
     expression_attribute_names = {
         "#ard": "automation_reg_datetime",
         "#an": "automation_name",
