@@ -1,6 +1,7 @@
 import os
 import boto3
 import uuid
+import time
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from datetime import datetime
@@ -34,8 +35,8 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         logger.debug(f"elapsed_time={elapsed_time}, device_healthy_period_time={device_healthy_period_time}")
         if elapsed_time >= device_healthy_period_time:
             device_healthy_state = 1
-            # 発生日時 = 最終受信日時 + アラート期間
-            healthy_datetime = int(last_recv_datetime + device_healthy_period_time)
+            now = datetime.now()
+            event_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
         else:
             device_healthy_state = 0
     else:
@@ -55,11 +56,11 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         return device_current_state, hist_list_items
 
     # 履歴一覧データ作成
-    expire_datetime = int((datetime.fromtimestamp(healthy_datetime / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
+    expire_datetime = int((datetime.fromtimestamp(event_datetime / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
     hist_list_item = {
         "device_id": device_info.get("device_id"),
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": healthy_datetime,
+        "event_datetime": event_datetime,
         "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),

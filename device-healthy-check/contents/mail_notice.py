@@ -10,6 +10,7 @@ from aws_lambda_powertools import Logger
 import mail
 
 NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
+HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 
 logger = Logger()
 
@@ -94,7 +95,12 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
             if (mail_send_flg):
                 mail_address_list = ddb.get_notice_mailaddress(notification_target_list, user_table, account_table)
                 JST = timezone(timedelta(hours=+9), 'JST')
-                event_dt = datetime.fromtimestamp(now_datetime / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
+                now = datetime.now()
+                notice_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+                if healthy_state == 0:
+                    event_dt = datetime.fromtimestamp(notice_datetime / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
+                else:
+                    event_dt = datetime.fromtimestamp(hist_list_items[i]['event_datetime'] / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
 
                 mail_subject = "イベントが発生しました"
                 event_detail = textwrap.dedent(event_detail)
@@ -113,17 +119,22 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                 mail.send_email(mail_address_list, mail_subject, mail_body)
 
                 # 通知履歴保存
-                expire_datetime = int((datetime.fromtimestamp(now_datetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
+                expire_datetime = int((datetime.fromtimestamp(notice_datetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
                 notice_hist_info = {
                     'notification_hist_id': str(uuid.uuid4()),
                     'contract_id': device_info.get('device_data', {}).get('param', {}).get('contract_id'),
-                    'notification_datetime': now_datetime,
+                    'notification_datetime': notice_datetime,
                     'expire_datetime': expire_datetime,
                     'notification_user_list': notification_target_list
                 }
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
                 # 履歴一覧編集
                 hist_list_items[i]['hist_data']['notification_hist_id'] = notice_hist_info.get("notification_hist_id")
+                # 復旧時はメール通知日時を発生日時に設定
+                if healthy_state == 0:
+                    hist_list_items[i]['event_datetime'] = notice_datetime
+                    hist_list_expire_datetime = int((datetime.fromtimestamp(notice_datetime / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
+                    hist_list_items[i]['expire_datetime'] = hist_list_expire_datetime
                 break
 
     logger.debug("mailNotice終了")
