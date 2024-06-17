@@ -18,7 +18,7 @@ def update_device_settings(device_id, params, device_table, automation_table):
 
     device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
     do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-    is_control_updated = False
+    update_control_list = {}
     for do in do_list:
         for param_do in param_do_list:
             if do["do_no"] == param_do.get("do_no"):
@@ -29,6 +29,7 @@ def update_device_settings(device_id, params, device_table, automation_table):
                     or do["do_di_return"] != param_do.get("do_di_return")
                 ):
                     do["do_timer_list"] = []
+                    update_control_list.append(do["do_no"])
                     is_control_updated = True
                 do["do_control"] = param_do.get("do_control")
                 do["do_di_return"] = param_do.get("do_di_return") or 0
@@ -57,18 +58,19 @@ def update_device_settings(device_id, params, device_table, automation_table):
 
     logger.debug(f"is_control_updated={is_control_updated}")
     logger.debug(f"param_do.get('do_no')={param_do.get("do_no")}")
-    if is_control_updated:
-        # コントロール設定が変更されている場合は対象のオートメーション設定クリア
-        automation_list = automation_table.query(
-            IndexName="control_device_id_index",
-            KeyConditionExpression=Key("control_device_id").eq(device_id),
-        ).get("Items", [])
-        for automation in automation_list:
-            logger.debug(automation)
-            if automation.get("control_do_no") == param_do.get("do_no"):
-                logger.debug(f"delete_item:automation_id={automation.get('automation_id')}")
-                automation_table.delete_item(
-                    Key={"automation_id": automation.get("automation_id")}
-                )
+    if update_control_list:
+        for do_no in update_control_list:
+            # コントロール設定が変更されている場合は対象のオートメーション設定クリア
+            automation_list = automation_table.query(
+                IndexName="control_device_id_index",
+                KeyConditionExpression=Key("control_device_id").eq(device_id),
+            ).get("Items", [])
+            for automation in automation_list:
+                logger.debug(automation)
+                if automation.get("control_do_no") == do_no:
+                    logger.debug(f"delete_item:automation_id={automation.get('automation_id')}")
+                    automation_table.delete_item(
+                        Key={"automation_id": automation.get("automation_id")}
+                    )
 
     return
