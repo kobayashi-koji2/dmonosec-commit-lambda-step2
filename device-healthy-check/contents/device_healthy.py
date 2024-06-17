@@ -19,6 +19,8 @@ logger = Logger()
 def device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime, group_list):
     logger.debug(f"device_healthy開始 device_info={device_info}, ")
 
+    event_datetime = now_datetime
+
     # デバイスヘルシーチェック情報チェック
     device_healthy_period = device_info.get("device_data", {}).get("config", {}).get("device_healthy_period", 0)
     logger.debug(f"device_healthy_period={device_healthy_period}")

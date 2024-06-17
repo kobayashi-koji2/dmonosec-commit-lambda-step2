@@ -19,6 +19,8 @@ logger = Logger()
 def di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger, group_list):
     logger.debug(f"di_healthy開始 device_info={device_info}")
 
+    event_datetime = now_datetime
+
     # 接点入力端子数分ループ
     for di_info in device_info.get("device_data", {}).get("config", {}).get("terminal_settings", {}).get("di_list", []):
         if event_trigger in ["lambda-receivedata-2"] and di_info.get("di_no") != di_no:
