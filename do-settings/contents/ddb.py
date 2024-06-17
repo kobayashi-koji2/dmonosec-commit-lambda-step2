@@ -55,6 +55,8 @@ def update_device_settings(device_id, params, device_table, automation_table):
         ExpressionAttributeNames=expression_attribute_name,
     )
 
+    logger.debug(f"is_control_updated={is_control_updated}")
+    logger.debug(f"param_do.get('do_no')={param_do.get("do_no")}")
     if is_control_updated:
         # コントロール設定が変更されている場合は対象のオートメーション設定クリア
         automation_list = automation_table.query(
@@ -62,7 +64,9 @@ def update_device_settings(device_id, params, device_table, automation_table):
             KeyConditionExpression=Key("control_device_id").eq(device_id),
         ).get("Items", [])
         for automation in automation_list:
+            logger.debug(automation)
             if automation.get("control_do_no") == param_do.get("do_no"):
+                logger.debug(f"delete_item:automation_id={automation.get('automation_id')}")
                 automation_table.delete_item(
                     Key={"automation_id": automation.get("automation_id")}
                 )
