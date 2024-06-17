@@ -38,6 +38,7 @@ def lambda_handler(event, context, user_info):
                 "device_state_table": dynamodb.Table(ssm.table_names["STATE_TABLE"]),
                 "contract_table": dynamodb.Table(ssm.table_names["CONTRACT_TABLE"]),
                 "device_relation_table": dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"]),
+                "automation_table": dynamodb.Table(ssm.table_names["AUTOMATION_TABLE"]),
             }
         except KeyError as e:
             body = {"message": e}
@@ -61,7 +62,9 @@ def lambda_handler(event, context, user_info):
         convert_param = convert.float_to_decimal(body)
         logger.info(f"デバイスID:{device_id}")
         try:
-            ddb.update_device_settings(device_id, convert_param, tables["device_table"])
+            ddb.update_device_settings(
+                device_id, convert_param, tables["device_table"], tables["automation_table"]
+            )
         except ClientError as e:
             logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"message": "デバイス設定の更新に失敗しました。"}
@@ -91,7 +94,9 @@ def lambda_handler(event, context, user_info):
                 if group_info:
                     group_info_list.append(group_info)
             if group_info_list:
-                group_info_list = sorted(group_info_list, key=lambda x:x['group_data']['config']['group_name'])
+                group_info_list = sorted(
+                    group_info_list, key=lambda x: x["group_data"]["config"]["group_name"]
+                )
             # デバイス詳細情報生成
             res_body = generate_detail.get_device_detail(
                 device_info, device_state, group_info_list
