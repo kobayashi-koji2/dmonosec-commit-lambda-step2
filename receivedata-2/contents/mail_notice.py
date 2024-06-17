@@ -247,6 +247,8 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                     "off_timer_control",
                     "timer_control",
                     "automation_control",
+                    "on_automation_control",
+                    "off_automation_control",
                 ]
                 and notification_settings.get("event_trigger") == "do_change"
             ):

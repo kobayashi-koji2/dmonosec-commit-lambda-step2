@@ -137,7 +137,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 control_device,
                 group_list,
                 automation,
-                terminal_no,
                 control_do,
                 account_table,
                 user_table,
@@ -184,7 +183,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
             control_device,
             group_list,
             automation,
-            terminal_no,
             control_do,
             account_table,
             user_table,
@@ -233,7 +231,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 control_device,
                 group_list,
                 automation,
-                terminal_no,
                 control_do,
                 account_table,
                 user_table,
@@ -429,7 +426,7 @@ def _put_hist_list(
         event_type = "automation_control"
 
     hist_list_item = {
-        "device_id": trigger_device.get("device_id"),
+        "device_id": control_device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
         "event_datetime": event_datetime_ms,
         "expire_datetime": expire_datetime,
@@ -464,7 +461,6 @@ def _send_not_exec_mail(
     control_device,
     group_list,
     automation,
-    terminal_no,
     control_do,
     account_table,
     user_table,
@@ -478,7 +474,7 @@ def _send_not_exec_mail(
         .get("config", {})
         .get("notification_settings", [])
         if (setting.get("event_trigger") == "do_change")
-        and (setting.get("terminal_no") == terminal_no)
+        and (setting.get("terminal_no") == control_do.get("do_no"))
     ]
     if notification_setting:
         mail_to_list = []
