@@ -11,8 +11,7 @@ REQUEST_BODY_SCHEMA = {
     "required": ["user_name"],
     "properties": {
         "user_name": {
-            "type": "string",
-            "minLength": 1,
+            "type": "string"
         }
     },
 }
