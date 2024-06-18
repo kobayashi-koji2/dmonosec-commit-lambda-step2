@@ -614,7 +614,8 @@ def __send_mail(
     if do_di_return != 0:
         link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
         di_name = link_terminal["di_name"]
-        di_name = "接点入力" + str(link_terminal["di_no"])
+        if not di_name:
+            di_name = "接点入力" + str(link_terminal["di_no"])
 
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
