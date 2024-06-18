@@ -16,7 +16,7 @@ BODY_SCHEMA = {
         },
         "auth_code": {
             "type": "string",
-            "pattern": r"^\S+$",
+            "pattern": "^[0-9]+$",
         },
         "new_email": {
             "type": "string",
