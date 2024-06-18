@@ -292,6 +292,8 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                                 == "off_timer_control"
                             ):
                                 control = "OFF制御"
+                            else:
+                                control = ""
                             terminal_name = hist_list_data.get("hist_data", {}).get(
                                 "terminal_name"
                             )
