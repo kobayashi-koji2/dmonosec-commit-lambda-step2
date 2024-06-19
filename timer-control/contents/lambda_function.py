@@ -647,7 +647,7 @@ def __send_mail(
         event_detail = f"""\
             【タイマー設定による制御（不実施）】
             {di_name}がすでに{di_state}のため、{do_name}の制御を行いませんでした。
-            ※タイマー設定「{control_name} {do_timer}」による制御信号を送信しませんでした。
+            ※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
         """
     elif flg == "__check_under_control":
         event_detail = f"""\
