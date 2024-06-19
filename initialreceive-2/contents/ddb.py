@@ -32,7 +32,7 @@ def get_opid_info(operator_table):
 # 初期受信日時更新
 def update_init_recv(device_id, imei, device_table):
     contract_state = 1
-    init_date = int(time.time() * 1000)
+    init_datetime = int(time.time() * 1000)
 
     option = {
         "Key": {
@@ -40,14 +40,14 @@ def update_init_recv(device_id, imei, device_table):
             "imei": imei,
         },
         "UpdateExpression": "set #contract_state = :contract_state,\
-          #device_data.#param.#init_date = :init_date",
+          #device_data.#param.#init_datetime = :init_datetime",
         "ExpressionAttributeNames": {
             "#contract_state": "contract_state",
             "#device_data": "device_data",
             "#param": "param",
-            "#init_date": "init_date",
+            "#init_datetime": "init_datetime",
         },
-        "ExpressionAttributeValues": {":contract_state": contract_state, ":init_date": init_date},
+        "ExpressionAttributeValues": {":contract_state": contract_state, ":init_datetime": init_datetime},
     }
     device_table.update_item(**option)
 
@@ -55,7 +55,7 @@ def update_init_recv(device_id, imei, device_table):
 # デバイス解約更新
 def update_sim_stop(device_id, imei, device_table):
     contract_state = 2
-    del_date = int(time.time() * 1000)
+    del_datetime = int(time.time() * 1000)
 
     option = {
         "Key": {
@@ -63,13 +63,13 @@ def update_sim_stop(device_id, imei, device_table):
             "imei": imei,
         },
         "UpdateExpression": "set #contract_state = :contract_state,\
-          #device_data.#param.#del_date = :del_date",
+          #device_data.#param.#del_datetime = :del_datetime",
         "ExpressionAttributeNames": {
             "#contract_state": "contract_state",
             "#device_data": "device_data",
             "#param": "param",
-            "#del_date": "del_date",
+            "#del_datetime": "del_datetime",
         },
-        "ExpressionAttributeValues": {":contract_state": contract_state, ":del_date": del_date},
+        "ExpressionAttributeValues": {":contract_state": contract_state, ":del_datetime": del_datetime},
     }
     device_table.update_item(**option)
