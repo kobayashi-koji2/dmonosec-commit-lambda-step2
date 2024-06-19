@@ -525,8 +525,11 @@ def __register_hist_info(
         return respons
 
     do_di_return = do_info["do_di_return"]
-    link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
-    link_terminal_name = link_terminal["di_name"]
+    if do_di_return != 0:
+        link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
+        link_terminal_name = link_terminal["di_name"]
+    else:
+        link_terminal_name = ""
 
     hist_data = {
         "device_name": device_info["device_data"]["config"]["device_name"],
