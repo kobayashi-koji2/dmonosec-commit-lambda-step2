@@ -178,7 +178,9 @@ def create_history_message(hist):
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
-        device_name = hist.get("automation_trigger_device_name", hist["automation_trigger_imei"])
+        device_name = hist.get("automation_trigger_device_name")
+        if not device_name:
+            device_name = hist["automation_trigger_imei"]
         event_type_label, event_detail_label = automation_setting(hist)
         if not hist.get("link_terminal_no"):
             if hist["control_result"] in ["success", "falure"]:

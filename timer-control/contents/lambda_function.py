@@ -622,12 +622,12 @@ def __send_mail(
 
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
-        control_name = "ON制御"
+        control_name = "ON制御 "
         di_state = link_terminal["di_on_name"]
         if not di_state:
             di_state = "クローズ"
     elif do_onoff_control == 1:
-        control_name = "OFF制御"
+        control_name = "OFF制御 "
         di_state = link_terminal["di_off_name"]
         if not di_state:
             di_state = "オープン"
@@ -654,7 +654,7 @@ def __send_mail(
             【タイマーによる制御（不実施）】
             他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
             そのため、制御を行いませんでした。
-            ※タイマー設定「{control_name} {do_timer}」による制御信号を送信しませんでした。
+            ※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
         """
     event_detail = textwrap.dedent(event_detail)
 
