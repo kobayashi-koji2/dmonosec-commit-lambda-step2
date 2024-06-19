@@ -70,7 +70,7 @@ def lambda_handler(event, context, user_list, body):
                 "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(
-                    {"message": "ユーザー属性(email)の検証に失敗しました。"}, ensure_ascii=False
+                    {"message": "認証に失敗しました。"}, ensure_ascii=False
                 ),
             }
 

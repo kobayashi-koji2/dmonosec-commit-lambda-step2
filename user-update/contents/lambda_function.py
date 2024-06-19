@@ -76,12 +76,14 @@ def lambda_handler(event, context, user):
                 validate_result["contract_info"],
                 account_table,
                 ssm.table_names["ACCOUNT_TABLE"],
+                user_table,
                 ssm.table_names["USER_TABLE"],
                 ssm.table_names["CONTRACT_TABLE"],
                 ssm.table_names["DEVICE_RELATION_TABLE"],
             )
             # 招待メール送信
-            send_invite_email(validate_result["request_params"]["email_address"])
+            if result[0]:
+                send_invite_email(validate_result["request_params"]["email_address"])
 
         # ユーザ更新
         elif event["httpMethod"] == "PUT":
@@ -97,7 +99,7 @@ def lambda_handler(event, context, user):
 
         if not result[0]:
             logger.info(result[0])
-            res_body = {"message": "ユーザの登録・更新に失敗しました。"}
+            res_body = result[2] if result[2] else {"message": "ユーザの登録・更新に失敗しました。"}
             return {
                 "statusCode": 500,
                 "headers": res_headers,

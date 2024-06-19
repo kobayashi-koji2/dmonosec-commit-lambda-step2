@@ -20,6 +20,7 @@ def create_user_info(
     contract,
     account_table,
     account_table_name,
+    user_table,
     user_table_name,
     contract_table_name,
     device_relation_table_name,
@@ -66,8 +67,14 @@ def create_user_info(
         }
         transact_items.append(put_group)
     else:
-        # すでにアカウントがあれば更新
         account_id = account["account_id"]
+
+        # ユーザー管理テーブルに同契約IDで同じメールアドレスで登録済みであればエラー
+        user = db.get_user_info(account_id, contract_id, user_table)
+        if user is not None:
+            return False, None, "既に登録されているメールアドレスです。"
+
+        # すでにアカウントがあれば更新
         if (
             request_params["user_name"] != account["user_data"]["config"]["user_name"]
             or request_params["mfa_flag"] != account["user_data"]["config"]["mfa_flag"]
