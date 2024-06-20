@@ -35,7 +35,6 @@ def get_remote_control_latest(device_id, do_no, table):
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("do_no").eq(do_no),
         ScanIndexForward=False,  # 降順
-        Limit=1,
     ).get("Items", [])
     return response
 
@@ -61,7 +60,12 @@ def put_notification_hist(
     unix_time = int(time.mktime(notification_datetime.timetuple()) * 1000)
     unix_microsecond = int(notification_datetime.microsecond / 1000)
     setting_datetime = unix_time + unix_microsecond
-    expire_datetime = int((datetime.fromtimestamp(setting_datetime / 1000) + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)).timestamp())
+    expire_datetime = int(
+        (
+            datetime.fromtimestamp(setting_datetime / 1000)
+            + relativedelta.relativedelta(years=NOTIFICATION_HIST_TTL)
+        ).timestamp()
+    )
     notice_hist_item = {
         "notification_hist_id": notification_hist_id,
         "contract_id": contract_id,

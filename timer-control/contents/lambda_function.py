@@ -392,10 +392,10 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
     remote_control_latest = ddb.get_remote_control_latest(
         device_id, do_info["do_no"], remote_controls_table
     )
+    logger.info(f"remote_control_list: {remote_control_latest}")
     if len(remote_control_latest) > 0:
         remote_control_latest = remote_control_latest[0]
         link_di_no = remote_control_latest.get("link_di_no")
-        logger.info(f"remote_control_latest: {remote_control_latest}")
 
         # 制御中判定
         if not remote_control_latest.get("control_result") or (
