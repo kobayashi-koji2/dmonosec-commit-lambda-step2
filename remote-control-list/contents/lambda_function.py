@@ -198,11 +198,11 @@ def __generate_response_items(device_id, device_name, device_imei, do_info, di_l
 
         # 「接点入力状態名称・接点入力状態アイコン」は現状態TBLの「接点入力{接点入力端子番号}_現状態」に対応する値を設定
         if state_info[f"di{di_number}_state"] == 0:
-            results_item["di_state_name"] = di_info["di_off_name"]
-            results_item["di_state_icon"] = di_info["di_off_icon"]
-        else:
             results_item["di_state_name"] = di_info["di_on_name"]
             results_item["di_state_icon"] = di_info["di_on_icon"]
+        else:
+            results_item["di_state_name"] = di_info["di_off_name"]
+            results_item["di_state_icon"] = di_info["di_off_icon"]
 
     # グループ名を設定
     results_item["group_name_list"] = group_name_list
