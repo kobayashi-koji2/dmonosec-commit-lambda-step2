@@ -31,6 +31,7 @@ def lambda_handler(event, context, user_info):
         try:
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -54,9 +55,11 @@ def lambda_handler(event, context, user_info):
             validate_result["request_params"]["group_id"],
             validate_result["contract_info"],
             device_relation_table,
+            device_table,
             ssm.table_names["CONTRACT_TABLE"],
             ssm.table_names["GROUP_TABLE"],
             ssm.table_names["DEVICE_RELATION_TABLE"],
+            ssm.table_names["DEVICE_TABLE"],
         )
 
         if not transact_result:

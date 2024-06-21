@@ -90,9 +90,12 @@ def lambda_handler(event, context, user):
                 account_table,
                 user_table,
                 device_relation_table,
+                device_table,
+                contract_table,
                 ssm.table_names["ACCOUNT_TABLE"],
                 ssm.table_names["USER_TABLE"],
                 ssm.table_names["DEVICE_RELATION_TABLE"],
+                ssm.table_names["DEVICE_TABLE"],
             )
 
         if not result[0]:

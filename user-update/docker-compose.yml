@@ -16,6 +16,7 @@ services:
       - WEB_DOMAIN=d3hdq58d7rxji5.cloudfront.net
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - COGNITO_USER_POOL_ID=dummy
+      - TEMPORARY_PASSWORD_PERIOD_DAYS=7
     volumes:
       - ./contents:/var/task
     ports:

@@ -71,8 +71,10 @@ def lambda_handler(event, context, user_info):
                 group_info,
                 group_id,
                 device_relation_table,
+                device_table,
                 ssm.table_names["GROUP_TABLE"],
                 ssm.table_names["DEVICE_RELATION_TABLE"],
+                ssm.table_names["DEVICE_TABLE"],
             )
 
         if not result[0]:

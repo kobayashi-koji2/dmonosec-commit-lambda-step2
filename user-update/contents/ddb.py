@@ -196,12 +196,17 @@ def update_user_info(
     account_table,
     user_table,
     device_relation_table,
+    device_table,
+    contract_table,
     account_table_name,
     user_table_name,
     device_relation_table_name,
+    device_table_name,
 ):
     # トランザクション書き込み用オブジェクト
     transact_items = []
+    remove_device_id_list = []
+    added_device_id_list = []
 
     user_id = request_params["update_user_id"]
 
@@ -209,6 +214,7 @@ def update_user_info(
     # アカウント管理テーブル、Cognito UserPool
     #################################################
     user = db.get_user_info_by_user_id(user_id, user_table)
+    logger.info(user)
     account = db.get_account_info_by_account_id(user["account_id"], account_table)
     if request_params["user_name"] != account.get("user_data", {}).get("config", {}).get(
         "user_name"
@@ -281,6 +287,8 @@ def update_user_info(
     # 削除されたグループ
     removed_group_list = set(group_list_old) - set(request_params["management_group_list"])
     for remove_group_id in removed_group_list:
+        remove_group_relation_device_id_list = db.get_group_relation_device_id_list(remove_group_id, device_relation_table)
+        remove_device_id_list.extend(remove_group_relation_device_id_list)
         remove_group = {
             "Delete": {
                 "TableName": device_relation_table_name,
@@ -291,9 +299,12 @@ def update_user_info(
             }
         }
         transact_items.append(remove_group)
+
     # 追加されたグループ
     added_group_list = set(request_params["management_group_list"]) - set(group_list_old)
     for add_group_id in added_group_list:
+        added_group_relation_device_id_list = db.get_group_relation_device_id_list(add_group_id, device_relation_table)
+        added_device_id_list.extend(added_group_relation_device_id_list)
         group_relation_item = {
             "key1": "u-" + user_id,
             "key2": "g-" + add_group_id,
@@ -317,6 +328,7 @@ def update_user_info(
 
     # 削除されたデバイス
     removed_device_list = set(device_list_old) - set(request_params["management_device_list"])
+    remove_device_id_list.extend(removed_device_list)
     for remove_device_id in removed_device_list:
         remove_device = {
             "Delete": {
@@ -330,6 +342,7 @@ def update_user_info(
         transact_items.append(remove_device)
     # 追加されたデバイス
     added_device_list = set(request_params["management_device_list"]) - set(device_list_old)
+    added_device_id_list.extend(added_device_list)
     for add_device_id in added_device_list:
         device_relation_item = {
             "key1": "u-" + user_id,
@@ -343,6 +356,81 @@ def update_user_info(
             }
         }
         transact_items.append(add_device)
+
+
+    #################################################
+    # デバイス管理テーブル（通知先設定）
+    #################################################
+    logger.info(user)
+    if user["user_type"] in ["worker", "referrer"] and request_params["user_type"] in ["worker", "referrer"]:
+        remove_device_id_list = set(remove_device_id_list) - set(added_device_id_list)
+        for device_id in remove_device_id_list:
+            device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+            logger.info(device_info)
+            notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
+            if user_id in notification_target_list:
+                notification_target_list.remove(user_id)
+                device_update_expression = f"SET #device_data.#config.#notification_target_list = :notification_target_list"
+                device_expression_attribute_values = {
+                    ":notification_target_list": notification_target_list,
+                }
+                device_expression_attribute_name = {
+                    "#device_data": "device_data",
+                    "#config": "config",
+                    "#notification_target_list": "notification_target_list",
+                }
+                device_expression_attribute_values_fmt = convert.dict_dynamo_format(
+                    device_expression_attribute_values
+                )
+
+                update_device = {
+                    "Update": {
+                        "TableName": device_table_name,
+                        "Key": {
+                            "device_id": {"S": device_info["device_id"]},
+                            "imei": {"S": device_info["imei"]}
+                        },
+                        "UpdateExpression": device_update_expression,
+                        "ExpressionAttributeValues": device_expression_attribute_values_fmt,
+                        "ExpressionAttributeNames": device_expression_attribute_name,
+                    }
+                }
+                transact_items.append(update_device)
+    elif user["user_type"] in ["admin", "sub_admin"] and request_params["user_type"] in ["worker", "referrer"]:
+        contract_info = db.get_contract_info(user.get("contract_id"), contract_table)
+        contract_device_id_list = contract_info.get("contract_data", {}).get("device_list", [])
+        admin_remove_device_id_list = set(contract_device_id_list) - set(added_device_id_list)
+        for device_id in admin_remove_device_id_list:
+            device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+            notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
+            if user_id in notification_target_list:
+                notification_target_list.remove(user_id)
+                device_update_expression = f"SET #device_data.#config.#notification_target_list = :notification_target_list"
+                device_expression_attribute_values = {
+                    ":notification_target_list": notification_target_list,
+                }
+                device_expression_attribute_name = {
+                    "#device_data": "device_data",
+                    "#config": "config",
+                    "#notification_target_list": "notification_target_list",
+                }
+                device_expression_attribute_values_fmt = convert.dict_dynamo_format(
+                    device_expression_attribute_values
+                )
+
+                update_device = {
+                    "Update": {
+                        "TableName": device_table_name,
+                        "Key": {
+                            "device_id": {"S": device_info["device_id"]},
+                            "imei": {"S": device_info["imei"]}
+                        },
+                        "UpdateExpression": device_update_expression,
+                        "ExpressionAttributeValues": device_expression_attribute_values_fmt,
+                        "ExpressionAttributeNames": device_expression_attribute_name,
+                    }
+                }
+                transact_items.append(update_device)
 
     logger.info("------------transact_items-----------")
     logger.info(transact_items)

@@ -139,6 +139,18 @@ def get_device_relation_user_id_list(
     return list(set(user_id_list))
 
 
+# グループに紐づくユーザーID一覧を取得
+def get_group_relation_user_id_list(group_id, device_relation_table):
+    device_relation_group_list = get_device_relation(
+        f"g-{group_id}",
+        device_relation_table,
+        sk_prefix="u-",
+        gsi_name="key2_index",
+    )
+    user_id_list = [relation["key1"][2:] for relation in device_relation_group_list]
+    return user_id_list
+
+
 # トランザクション(書き込み)
 def execute_transact_write_item(transact_items):
     try:

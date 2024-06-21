@@ -16,9 +16,11 @@ def delete_group_info(
     group_id,
     contract,
     device_relation_table,
+    device_table,
     contract_table_name,
     group_table_name,
     device_relation_table_name,
+    device_table_name,
 ):
     # トランザクション書き込み用オブジェクト
     transact_items = []
@@ -54,6 +56,44 @@ def delete_group_info(
         }
     }
     transact_items.append(update_contract)
+
+    #################################################
+    # デバイス管理テーブル（通知先設定）
+    #################################################
+    relation_device_id_list = db.get_group_relation_device_id_list(group_id, device_relation_table)
+    relation_user_id_list = db.get_group_relation_user_id_list(group_id, device_relation_table)
+    for device_id in relation_device_id_list:
+        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+        notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
+        remove_user_id_list = list(set(relation_user_id_list) & set(notification_target_list))
+        if remove_user_id_list:
+            notification_target_list = list(set(notification_target_list) - set(remove_user_id_list))
+            device_update_expression = f"SET #device_data.#config.#notification_target_list = :notification_target_list"
+            device_expression_attribute_values = {
+                ":notification_target_list": notification_target_list,
+            }
+            device_expression_attribute_name = {
+                "#device_data": "device_data",
+                "#config": "config",
+                "#notification_target_list": "notification_target_list",
+            }
+            device_expression_attribute_values_fmt = convert.dict_dynamo_format(
+                device_expression_attribute_values
+            )
+
+            update_device = {
+                "Update": {
+                    "TableName": device_table_name,
+                    "Key": {
+                        "device_id": {"S": device_info["device_id"]},
+                        "imei": {"S": device_info["imei"]}
+                    },
+                    "UpdateExpression": device_update_expression,
+                    "ExpressionAttributeValues": device_expression_attribute_values_fmt,
+                    "ExpressionAttributeNames": device_expression_attribute_name,
+                }
+            }
+            transact_items.append(update_device)
 
     #################################################
     # デバイス関係テーブル削除用オブジェクト作成
