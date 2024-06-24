@@ -285,7 +285,7 @@ def update_user_info(
     group_list_old = [relation["key2"][2:] for relation in group_relation_list]
 
     # 削除されたグループ
-    removed_group_list = set(group_list_old) - set(request_params["management_group_list"])
+    removed_group_list = convert.list_difference(group_list_old, request_params["management_group_list"])
     for remove_group_id in removed_group_list:
         remove_group_relation_device_id_list = db.get_group_relation_device_id_list(remove_group_id, device_relation_table)
         remove_device_id_list.extend(remove_group_relation_device_id_list)
@@ -301,7 +301,7 @@ def update_user_info(
         transact_items.append(remove_group)
 
     # 追加されたグループ
-    added_group_list = set(request_params["management_group_list"]) - set(group_list_old)
+    added_group_list = convert.list_difference(request_params["management_group_list"], group_list_old)
     for add_group_id in added_group_list:
         added_group_relation_device_id_list = db.get_group_relation_device_id_list(add_group_id, device_relation_table)
         added_device_id_list.extend(added_group_relation_device_id_list)
@@ -327,7 +327,7 @@ def update_user_info(
     device_list_old = [relation["key2"][2:] for relation in device_relation_list]
 
     # 削除されたデバイス
-    removed_device_list = set(device_list_old) - set(request_params["management_device_list"])
+    removed_device_list = convert.list_difference(device_list_old, request_params["management_device_list"])
     remove_device_id_list.extend(removed_device_list)
     for remove_device_id in removed_device_list:
         remove_device = {
@@ -341,7 +341,7 @@ def update_user_info(
         }
         transact_items.append(remove_device)
     # 追加されたデバイス
-    added_device_list = set(request_params["management_device_list"]) - set(device_list_old)
+    added_device_list = convert.list_difference(request_params["management_device_list"], device_list_old)
     added_device_id_list.extend(added_device_list)
     for add_device_id in added_device_list:
         device_relation_item = {
@@ -363,7 +363,9 @@ def update_user_info(
     #################################################
     logger.info(user)
     if user["user_type"] in ["worker", "referrer"] and request_params["user_type"] in ["worker", "referrer"]:
-        remove_device_id_list = set(remove_device_id_list) - set(added_device_id_list)
+        device_id_list_old = db.get_user_relation_duplication_device_id_list(user_id, device_relation_table)
+        remove_device_id_list = convert.list_difference(remove_device_id_list, added_device_id_list)
+        remove_device_id_list = set(convert.list_difference(remove_device_id_list, device_id_list_old))
         for device_id in remove_device_id_list:
             device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
             logger.info(device_info)

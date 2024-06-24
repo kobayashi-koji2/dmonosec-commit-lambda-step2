@@ -110,6 +110,27 @@ def get_user_relation_device_id_list(user_id, device_relation_table, include_gro
     return list(set(device_id_list))
 
 
+# ユーザーに紐づく重複を含むデバイスID一覧を取得
+def get_user_relation_duplication_device_id_list(user_id, device_relation_table, include_group_relation=True):
+    device_relation_list = get_device_relation(f"u-{user_id}", device_relation_table)
+    device_id_list = []
+    for relation in device_relation_list:
+        relation_id = relation["key2"]
+        if relation_id.startswith("d-"):
+            device_id_list.append(relation_id[2:])
+        elif relation_id.startswith("g-"):
+            if include_group_relation:
+                device_id_list.extend(
+                    [
+                        relation_device_id["key2"][2:]
+                        for relation_device_id in get_device_relation(
+                            relation_id, device_relation_table, sk_prefix="d-"
+                        )
+                    ]
+                )
+    return device_id_list
+
+
 # デバイスに紐づくユーザーID一覧を取得
 def get_device_relation_user_id_list(
     device_id, device_relation_table, include_group_relation=True

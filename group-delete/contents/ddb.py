@@ -63,9 +63,14 @@ def delete_group_info(
     relation_device_id_list = db.get_group_relation_device_id_list(group_id, device_relation_table)
     relation_user_id_list = db.get_group_relation_user_id_list(group_id, device_relation_table)
     for device_id in relation_device_id_list:
+        remove_user_id_list = []
         device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         notification_target_list = device_info.get('device_data', {}).get('config', {}).get('notification_target_list', [])
-        remove_user_id_list = list(set(relation_user_id_list) & set(notification_target_list))
+        user_id_list = list(set(relation_user_id_list) & set(notification_target_list))
+        for user_id in user_id_list:
+            device_id_list_old = db.get_user_relation_duplication_device_id_list(user_id, device_relation_table)
+            if device_id_list_old.count(device_id) <= 1:
+                remove_user_id_list.append(user_id)
         if remove_user_id_list:
             notification_target_list = list(set(notification_target_list) - set(remove_user_id_list))
             device_update_expression = f"SET #device_data.#config.#notification_target_list = :notification_target_list"
