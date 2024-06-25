@@ -494,7 +494,11 @@ def __send_mail(
     send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
 
     device_config = device_info.get("device_data", {}).get("config", {})
-    device_name = device_config.get("device_name", device_info.get("imei"))
+    device_name = (
+        device_config.get("device_name")
+        if device_config.get("device_name")
+        else f"{device_info.get("imei")}（IMEI）"
+    )
     group_name_list = [g["group_name"] for g in group_list]
     if group_name_list:
         group_name_list.sort()

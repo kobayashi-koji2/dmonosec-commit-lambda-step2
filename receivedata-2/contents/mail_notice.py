@@ -322,9 +322,11 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
                                 "automation_trigger_imei"
                             )
-                            automation_trigger_device_name = hist_list_data.get(
-                                "hist_data", {}
-                            ).get("automation_trigger_device_name", automation_trigger_imei)
+                            automation_trigger_device_name = (
+                                hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                                if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                                else f"{automation_trigger_imei}（IMEI）"
+                            )
                             automation_trigger_event_type = hist_list_data.get(
                                 "hist_data", {}
                             ).get("automation_trigger_event_type")
@@ -383,8 +385,10 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
                             "automation_trigger_imei"
                         )
-                        automation_trigger_device_name = hist_list_data.get("hist_data", {}).get(
-                            "automation_trigger_device_name", automation_trigger_imei
+                        automation_trigger_device_name = (
+                            hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                            if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                            else f"{automation_trigger_imei}（IMEI）"
                         )
                         automation_trigger_event_type = hist_list_data.get("hist_data", {}).get(
                             "automation_trigger_event_type"
@@ -438,19 +442,24 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
 
                 mail_subject = "イベントが発生しました"
                 event_detail = textwrap.dedent(event_detail)
+                device_name = (
+                    hist_list_data.get('hist_data', {}).get("device_name")
+                    if hist_list_data.get('hist_data', {}).get("device_name")
+                    else f"{device_info.get("imei")}（IMEI）"
+                )
                 mail_body = textwrap.dedent(
                     f"""
                     ■発生日時：{event_dt}
                     　受信日時：{recv_dt}
 
                     ■グループ：{group_name}
-                    　デバイス：{hist_list_data.get('hist_data', {}).get("device_name", device_info.get("imei"))}
+                    　デバイス：{device_name}
 
                     ■イベント内容
                 """
                 ).strip()
 
-                # 招待メール送信
+                # メール送信
                 mail_body = mail_body + event_detail
                 logger.debug(f"mail_body={mail_body}")
                 mail.send_email(mail_address_list, mail_subject, mail_body)

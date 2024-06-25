@@ -104,11 +104,16 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
 
                 mail_subject = "イベントが発生しました"
                 event_detail = textwrap.dedent(event_detail)
+                device_name = (
+                    device_info.get("device_data", {}).get("config", {}).get("device_name")
+                    if device_info.get("device_data", {}).get("config", {}).get("device_name")
+                    else f"{device_info.get("imei")}（IMEI）"
+                )
                 mail_body = textwrap.dedent(f"""
                     ■発生日時：{event_dt}
 
                     ■グループ：{group_name}
-                    　デバイス：{device_info.get("device_data", {}).get("config", {}).get("device_name", device_info.get("imei"))}
+                    　デバイス：{device_name}
 
                     ■イベント内容
                 """).strip()
