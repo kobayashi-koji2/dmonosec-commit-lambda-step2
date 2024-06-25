@@ -87,212 +87,226 @@ def lambda_handler(event, context):
             return respons
 
         ### 2. 接点出力制御要求
+        error_flg = False
         for device_info in device_info_list:
-            logger.info(f"--- device_info: {device_info}")
-            device_id = device_info["device_id"]
-            contract_id = device_info["device_data"]["param"]["contract_id"]
-            icc_id = device_info["device_data"]["param"]["iccid"]
-            do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-            di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
+            try:
+                logger.info(f"--- device_info: {device_info}")
+                device_id = device_info["device_id"]
+                contract_id = device_info["device_data"]["param"]["contract_id"]
+                icc_id = device_info["device_data"]["param"]["iccid"]
+                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
+                di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
 
-            for do_info in do_list:
-                # タイマー設定チェック
-                checked_timer_do_info = __check_timer_settings(do_info, dt_now)
-                if not checked_timer_do_info:
-                    logger.info(
-                        f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info: {do_info}"
-                    )
-                    continue
+                for do_info in do_list:
+                    # タイマー設定チェック
+                    checked_timer_do_info = __check_timer_settings(do_info, dt_now)
+                    if not checked_timer_do_info:
+                        logger.info(
+                            f"[__check_timer_settings(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                        )
+                        continue
 
-                # 接点入力状態チェック
-                error_flg, result = __check_return_di_state(
-                    checked_timer_do_info, device_id, device_state_table
-                )
-                if not error_flg:
-                    respons["statusCode"] = 500
-                    respons["body"] = json.dumps(result, ensure_ascii=False)
-                    logger.info(respons)
-                    return respons
-                if result == 1:
-                    error_flg, result = __register_hist_info(
-                        "__check_return_di_state",
-                        device_info,
-                        do_info,
-                        di_list,
-                        group_table,
-                        device_relation_table,
-                        user_table,
-                        account_table,
-                        notification_hist_table,
-                        hist_list_table,
-                    )
-                    logger.info(
-                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
-                    )
-                    continue
-                elif not result:
-                    logger.info(
-                        f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
-                    )
-                    continue
-                checked_di_state_info = result
-
-                # 制御中判定
-                error_flg, result = __check_under_control(
-                    checked_di_state_info,
-                    icc_id,
-                    device_id,
-                    req_no_counter_table,
-                    remote_controls_table,
-                )
-                if not error_flg:
-                    respons["statusCode"] = 500
-                    respons["body"] = json.dumps(result, ensure_ascii=False)
-                    logger.info(respons)
-                    return respons
-                if result == 1:
-                    error_flg, result = __register_hist_info(
-                        "__check_under_control",
-                        device_info,
-                        do_info,
-                        di_list,
-                        group_table,
-                        device_relation_table,
-                        user_table,
-                        account_table,
-                        notification_hist_table,
-                        hist_list_table,
+                    # 接点入力状態チェック
+                    error_flg, result = __check_return_di_state(
+                        checked_timer_do_info, device_id, device_state_table
                     )
                     if not error_flg:
                         respons["statusCode"] = 500
                         respons["body"] = json.dumps(result, ensure_ascii=False)
                         logger.info(respons)
                         return respons
-                    logger.info(
-                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                    if result == 1:
+                        error_flg, result = __register_hist_info(
+                            "__check_return_di_state",
+                            device_info,
+                            do_info,
+                            di_list,
+                            group_table,
+                            device_relation_table,
+                            user_table,
+                            account_table,
+                            notification_hist_table,
+                            hist_list_table,
+                        )
+                        logger.info(
+                            f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                        )
+                        continue
+                    elif not result:
+                        logger.info(
+                            f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                        )
+                        continue
+                    checked_di_state_info = result
+
+                    # 制御中判定
+                    error_flg, result = __check_under_control(
+                        checked_di_state_info,
+                        icc_id,
+                        device_id,
+                        req_no_counter_table,
+                        remote_controls_table,
                     )
-                    continue
-                elif not result:
-                    logger.info(
-                        f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                    if not error_flg:
+                        respons["statusCode"] = 500
+                        respons["body"] = json.dumps(result, ensure_ascii=False)
+                        logger.info(respons)
+                        return respons
+                    if result == 1:
+                        error_flg, result = __register_hist_info(
+                            "__check_under_control",
+                            device_info,
+                            do_info,
+                            di_list,
+                            group_table,
+                            device_relation_table,
+                            user_table,
+                            account_table,
+                            notification_hist_table,
+                            hist_list_table,
+                        )
+                        if not error_flg:
+                            respons["statusCode"] = 500
+                            respons["body"] = json.dumps(result, ensure_ascii=False)
+                            logger.info(respons)
+                            return respons
+                        logger.info(
+                            f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                        )
+                        continue
+                    elif not result:
+                        logger.info(
+                            f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
+                        )
+                        continue
+                    checked_under_control_info = result
+
+                    # 端末向け要求番号生成
+                    req_no = re.sub(
+                        "^0x", "", format(checked_under_control_info["req_num"] % 65535, "#010x")
                     )
-                    continue
-                checked_under_control_info = result
 
-                # 端末向け要求番号生成
-                req_no = re.sub(
-                    "^0x", "", format(checked_under_control_info["req_num"] % 65535, "#010x")
-                )
+                    # 接点出力制御要求メッセージを生成
+                    topic = "cmd/" + icc_id
+                    do_no = int(do_info["do_no"])
 
-                # 接点出力制御要求メッセージを生成
-                topic = "cmd/" + icc_id
-                do_no = int(do_info["do_no"])
+                    if do_info["do_control"] == "open":
+                        do_specified_time = float(do_info["do_specified_time"])
+                        do_control = "01"
+                        # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
+                        do_control_time = re.sub(
+                            "^0x", "", format(int(do_specified_time * 10), "#06x")
+                        )
+                    elif do_info["do_control"] == "close":
+                        do_specified_time = float(do_info["do_specified_time"])
+                        do_control = "00"
+                        # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
+                        do_control_time = re.sub(
+                            "^0x", "", format(int(do_specified_time * 10), "#06x")
+                        )
+                    elif do_info["do_control"] == "toggle":
+                        do_control = "10"
+                        do_control_time = "0000"
+                    else:
+                        res_body = {"message": "接点出力_制御方法の値が不正です。"}
+                        respons["statusCode"] = 500
+                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                        logger.info(respons)
+                        return respons
 
-                if do_info["do_control"] == "open":
-                    do_specified_time = float(do_info["do_specified_time"])
-                    do_control = "01"
-                    # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
-                    do_control_time = re.sub(
-                        "^0x", "", format(int(do_specified_time * 10), "#06x")
-                    )
-                elif do_info["do_control"] == "close":
-                    do_specified_time = float(do_info["do_specified_time"])
-                    do_control = "00"
-                    # 制御時間は 0.1 秒を 1 として16進数4バイトの値を設定
-                    do_control_time = re.sub(
-                        "^0x", "", format(int(do_specified_time * 10), "#06x")
-                    )
-                elif do_info["do_control"] == "toggle":
-                    do_control = "10"
-                    do_control_time = "0000"
-                else:
-                    res_body = {"message": "接点出力_制御方法の値が不正です。"}
-                    respons["statusCode"] = 500
-                    respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                    logger.info(respons)
-                    return respons
-
-                payload = {
-                    "Message_Length": "000C",
-                    "Message_type": "8002",
-                    "Req_No": req_no,
-                    "DO_No": format(do_no, "#02"),
-                    "DO_Control": do_control,
-                    "DO_ControlTime": do_control_time,
-                }
-                logger.info(f"Iot Core Message: {payload}")
-                pubhex = "".join(payload.values())
-                logger.info(f"Iot Core Message(hexadecimal): {pubhex}")
-
-                # AWS Iot Core へメッセージ送信
-                iot_result = iot.publish(
-                    topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex)
-                )
-                logger.info(f"iot_result: {iot_result}")
-
-                # 要求データを接点出力制御応答TBLへ登録
-                device_req_no = icc_id + "-" + req_no
-                do_di_return = int(do_info["do_di_return"])
-                do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
-                if do_onoff_control == 0:
-                    control_trigger = "on_timer_control"
-                elif do_onoff_control == 1:
-                    control_trigger = "off_timer_control"
-                elif do_onoff_control == 9:
-                    control_trigger = "timer_control"
-                else:
-                    res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
-                    respons["statusCode"] = 500
-                    respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                    logger.info(respons)
-                    return respons
-
-                now_unixtime = int(time.time() * 1000)
-                expire_datetime = int(
-                    (
-                        datetime.fromtimestamp(now_unixtime / 1000)
-                        + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
-                    ).timestamp()
-                )
-                put_items = [
-                    {
-                        "Put": {
-                            "TableName": remote_controls_table.name,
-                            "Item": {
-                                "device_req_no": {"S": device_req_no},
-                                "req_datetime": {"N": str(now_unixtime)},
-                                "expire_datetime": {"N": str(expire_datetime)},
-                                "device_id": {"S": device_id},
-                                "contract_id": {"S": contract_id},
-                                "control": {"S": do_info["do_control"]},
-                                "control_trigger": {"S": control_trigger},
-                                "do_no": {"N": str(do_no)},
-                                "link_di_no": {"N": str(do_di_return)},
-                                "iccid": {"S": icc_id},
-                                "timer_time": {"S": do_info["do_timer"]["do_time"]},
-                            },
-                        }
+                    payload = {
+                        "Message_Length": "000C",
+                        "Message_type": "8002",
+                        "Req_No": req_no,
+                        "DO_No": format(do_no, "#02"),
+                        "DO_Control": do_control,
+                        "DO_ControlTime": do_control_time,
                     }
-                ]
-                result = db.execute_transact_write_item(put_items)
-                if not result:
-                    res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
-                    respons["statusCode"] = 500
-                    respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                    logger.info(respons)
-                    return respons
-                logger.info(f"put_items: {put_items}")
+                    logger.info(f"Iot Core Message: {payload}")
+                    pubhex = "".join(payload.values())
+                    logger.info(f"Iot Core Message(hexadecimal): {pubhex}")
 
-                # タイムアウト判定Lambda呼び出し
-                payload = {"body": json.dumps({"device_req_no": device_req_no})}
-                lambda_invoke_result = aws_lambda.invoke(
-                    FunctionName=LAMBDA_TIMEOUT_CHECK,
-                    InvocationType="Event",
-                    Payload=json.dumps(payload, ensure_ascii=False),
-                )
-                logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
+                    # AWS Iot Core へメッセージ送信
+                    iot_result = iot.publish(
+                        topic=topic, qos=0, retain=False, payload=bytes.fromhex(pubhex)
+                    )
+                    logger.info(f"iot_result: {iot_result}")
+
+                    # 要求データを接点出力制御応答TBLへ登録
+                    device_req_no = icc_id + "-" + req_no
+                    do_di_return = int(do_info["do_di_return"])
+                    do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
+                    if do_onoff_control == 0:
+                        control_trigger = "on_timer_control"
+                    elif do_onoff_control == 1:
+                        control_trigger = "off_timer_control"
+                    elif do_onoff_control == 9:
+                        control_trigger = "timer_control"
+                    else:
+                        res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
+                        respons["statusCode"] = 500
+                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                        logger.info(respons)
+                        return respons
+
+                    now_unixtime = int(time.time() * 1000)
+                    expire_datetime = int(
+                        (
+                            datetime.fromtimestamp(now_unixtime / 1000)
+                            + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
+                        ).timestamp()
+                    )
+                    put_items = [
+                        {
+                            "Put": {
+                                "TableName": remote_controls_table.name,
+                                "Item": {
+                                    "device_req_no": {"S": device_req_no},
+                                    "req_datetime": {"N": str(now_unixtime)},
+                                    "expire_datetime": {"N": str(expire_datetime)},
+                                    "device_id": {"S": device_id},
+                                    "contract_id": {"S": contract_id},
+                                    "control": {"S": do_info["do_control"]},
+                                    "control_trigger": {"S": control_trigger},
+                                    "do_no": {"N": str(do_no)},
+                                    "link_di_no": {"N": str(do_di_return)},
+                                    "iccid": {"S": icc_id},
+                                    "timer_time": {"S": do_info["do_timer"]["do_time"]},
+                                },
+                            }
+                        }
+                    ]
+                    result = db.execute_transact_write_item(put_items)
+                    if not result:
+                        res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
+                        respons["statusCode"] = 500
+                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
+                        logger.info(respons)
+                        return respons
+                    logger.info(f"put_items: {put_items}")
+
+                    # タイムアウト判定Lambda呼び出し
+                    payload = {"body": json.dumps({"device_req_no": device_req_no})}
+                    lambda_invoke_result = aws_lambda.invoke(
+                        FunctionName=LAMBDA_TIMEOUT_CHECK,
+                        InvocationType="Event",
+                        Payload=json.dumps(payload, ensure_ascii=False),
+                    )
+                    logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
+            except Exception as e:
+                logger.info(device_info["device_id"])
+                logger.info(e)
+                logger.info(traceback.format_exc())
+                error_flg = True
+                continue
 
         ### 3. メッセージ応答
+        if error_flg:
+            res_body = {"message": "予期しないエラーが発生しました。"}
+            respons["statusCode"] = 500
+            respons["body"] = json.dumps(res_body, ensure_ascii=False)
+            logger.info(respons)
+            return respons
         res_body = {"message": ""}
         respons["body"] = json.dumps(res_body, ensure_ascii=False)
         logger.info(respons)

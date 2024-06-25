@@ -76,6 +76,9 @@ def lambda_handler(event, context, user):
 
         notification_settings = device.get("device_data", {}).get("config", {}).get("notification_settings", {})
         notification_target_list = device.get("device_data", []).get("config", []).get("notification_target_list", [])
+        contract_info = db.get_contract_info(user.get("contract_id"), tables["contract_table"])
+        contract_user_id_list = contract_info.get("contract_data", {}).get("user_list", [])
+        notification_target_list = list(set(notification_target_list) & set(contract_user_id_list))
         logger.debug(notification_settings)
         notification_list = []
         for notification_setting in notification_settings:

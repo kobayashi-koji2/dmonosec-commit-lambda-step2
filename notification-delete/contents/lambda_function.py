@@ -64,6 +64,16 @@ def lambda_handler(event, context, user):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
 
+        # 契約状態チェック
+        device = db.get_device_info_other_than_unavailable(device_id, device_table)
+        if device is None:
+            res_body = {"message": "デバイス情報が存在しません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
+
         # デバイス管理テーブルの通知設定削除
         ddb.delete_device_notification_settings(device_id, device_table)
 

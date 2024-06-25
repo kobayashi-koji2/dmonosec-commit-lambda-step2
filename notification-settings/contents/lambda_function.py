@@ -68,6 +68,15 @@ def lambda_handler(event, context, user, body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
 
+        # パラメータチェック
+        validate_result = validate.validate(event, body, device_table)
+        if validate_result.get("message"):
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(validate_result, ensure_ascii=False),
+            }
+
         notification_target_list = body["notification_target_list"]
         for user_id in notification_target_list:
             if user_id not in contract["contract_data"]["user_list"]:

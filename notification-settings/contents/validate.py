@@ -1,4 +1,5 @@
 import json
+import db
 
 from aws_lambda_powertools import Logger
 from aws_lambda_powertools.utilities.validation import SchemaValidationError, envelopes, validator
@@ -67,3 +68,65 @@ def validate_parameter(func):
 @validator(inbound_schema=BODY_SCHEMA, envelope=envelopes.API_GATEWAY_REST)
 def _validate_body(event, context):
     return event
+
+
+# パラメータチェック
+def validate(event, body, device_table):
+    device_id = event.get("pathParameters", {}).get("device_id")
+
+    # 契約状態チェック
+    device = db.get_device_info_other_than_unavailable(device_id, device_table)
+    if not device:
+        return {"message": "デバイス情報が存在しません。"}
+
+    # 入力値チェック
+    notification_list = body["notification_list"]
+    for notification in notification_list:
+        event_trigger = notification.get("event_trigger")
+        terminal_no = notification.get("terminal_no")
+        event_type = notification.get("event_type")
+        change_detail = notification.get("change_detail")
+
+        if event_trigger == "di_change":
+            if event_type:
+                return {"message": "パラメータが不正です"}
+
+            if device["device_type"] == "PJ1":
+                if terminal_no != 1:
+                    return {"message": "パラメータが不正です"}
+            elif device["device_type"] == "PJ2":
+                if 1 > terminal_no  or terminal_no > 8:
+                    return {"message": "パラメータが不正です"}
+            else:
+                return {"message": "パラメータが不正です"}
+
+            if change_detail not in [0, 1, 2]:
+                return {"message": "パラメータが不正です"}
+
+        elif event_trigger == "do_change":
+            if event_type:
+                return {"message": "パラメータが不正です"}
+
+            if device["device_type"] == "PJ2":
+                if terminal_no not in [1, 2]:
+                    return {"message": "パラメータが不正です"}
+            else:
+                return {"message": "パラメータが不正です"}
+
+            if change_detail != 0:
+                return {"message": "パラメータが不正です"}
+
+        elif event_trigger == "device_change":
+            if event_type not in ["device_unhealthy", "battery_near", "device_abnormality",\
+                                  "parameter_abnormality", "fw_update_abnormality", "power_on"]:
+                return {"message": "パラメータが不正です"}
+
+            if terminal_no != 0:
+                return {"message": "パラメータが不正です"}
+
+            if change_detail != 0:
+                return {"message": "パラメータが不正です"}
+
+        else:
+            return {"message": "パラメータが不正です"}
+    return {}
