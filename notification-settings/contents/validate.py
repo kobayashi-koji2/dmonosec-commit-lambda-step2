@@ -113,7 +113,7 @@ def validate(event, body, device_table):
             else:
                 return {"message": "パラメータが不正です"}
 
-            if change_detail != 0:
+            if change_detail != 1:
                 return {"message": "パラメータが不正です"}
 
         elif event_trigger == "device_change":
@@ -124,7 +124,7 @@ def validate(event, body, device_table):
             if terminal_no != 0:
                 return {"message": "パラメータが不正です"}
 
-            if change_detail != 0:
+            if change_detail != 1:
                 return {"message": "パラメータが不正です"}
 
         else:
