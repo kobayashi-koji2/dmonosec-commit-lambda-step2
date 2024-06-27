@@ -86,6 +86,15 @@ def terminal_check(body, device_id, device_type, tables):
         # 端子番号
         for item in body.get("do_list", {}):
             do_no_list.append(item.get("do_no"))
+            # 紐づき接点入力番号
+            if "do_di_return" in item:
+                if (
+                    (device_type == "PJ2" and 1 <= do <= 8)
+                    or (device_type == "PJ3" and 1 <= do <= 8)
+                ):
+                    pass
+                else:
+                    return False
         # 端子番号の範囲
         if all(1 <= int(num) <= do for num in do_no_list):
             # 端子番号の重複
@@ -104,7 +113,7 @@ def input_check(param):
     str_value_limits = {"do_name": {0, 30}}
 
     # 桁数の制限
-    int_float_value_limits = {"do_specified_time": {0.4, 6553.5}}
+    int_float_value_limits = {"do_specified_time": {0.3, 4.0}}
 
     # 特定の文字列に一致
     str_format = {"do_control": ["", "open", "close", "toggle"]}
