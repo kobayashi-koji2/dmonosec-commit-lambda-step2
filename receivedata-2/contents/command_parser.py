@@ -5,7 +5,7 @@ import json
 import boto3
 import logging
 import uuid
-from datetime import datetime 
+from datetime import datetime
 from dateutil import relativedelta
 from event_judge import eventJudge
 from mail_notice import mailNotice
@@ -17,7 +17,8 @@ sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 logger = Logger()
 
 DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
-CNT_HIST_TTL= int(os.environ["CNT_HIST_TTL"])
+CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
+
 
 def getByteArray(Payload, index, len):
     start = index[0]
@@ -31,7 +32,9 @@ def signed_hex2int(signed_hex, digit):
     mask = 0x00
     for num in range(digit):
         mask = mask | (0x01 << num)
-    signed_int = (int(signed_hex ^ mask) * -1) - 1 if (signed_hex & signed) else int(signed_hex)
+    signed_int = (
+        (int(signed_hex ^ mask) * -1) - 1 if (signed_hex & signed) else int(signed_hex)
+    )
     return signed_int
 
 
@@ -56,7 +59,12 @@ def commandParser(
     )
 
     # TTL有効期限
-    szExpireDatetime = int((datetime.fromtimestamp(szRecvDatetime / 1000) + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
+    szExpireDatetime = int(
+        (
+            datetime.fromtimestamp(szRecvDatetime / 1000)
+            + relativedelta.relativedelta(years=CNT_HIST_TTL)
+        ).timestamp()
+    )
 
     ### コマンド共通部 ###
     index = [0]
@@ -118,8 +126,12 @@ def commandParser(
         nDItrg = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOtrg = int.from_bytes(getByteArray(Payload, index, 1), "big")
-        nAI1 = signed_hex2int(int.from_bytes(getByteArray(Payload, index, 2), "big"), 16)
-        nAI2 = signed_hex2int(int.from_bytes(getByteArray(Payload, index, 2), "big"), 16)
+        nAI1 = signed_hex2int(
+            int.from_bytes(getByteArray(Payload, index, 2), "big"), 16
+        )
+        nAI2 = signed_hex2int(
+            int.from_bytes(getByteArray(Payload, index, 2), "big"), 16
+        )
         nAItrg = int.from_bytes(getByteArray(Payload, index, 1), "big")
         hist_flg = True
         logger.debug(
@@ -154,10 +166,16 @@ def commandParser(
     elif nMsgType in [0x0011, 0x0012] and szDeviceType in ["PJ1", "PJ2", "PJ3"]:
         nDIState = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
-        nAI1 = signed_hex2int(int.from_bytes(getByteArray(Payload, index, 2), "big"), 16)
-        nAI2 = signed_hex2int(int.from_bytes(getByteArray(Payload, index, 2), "big"), 16)
+        nAI1 = signed_hex2int(
+            int.from_bytes(getByteArray(Payload, index, 2), "big"), 16
+        )
+        nAI2 = signed_hex2int(
+            int.from_bytes(getByteArray(Payload, index, 2), "big"), 16
+        )
         hist_flg = True
-        logger.debug(f"現状態通知 nDIState={nDIState}, nDOState={nDOState}, nAI1={nAI1}, nAI2={nAI2}")
+        logger.debug(
+            f"現状態通知 nDIState={nDIState}, nDOState={nDOState}, nAI1={nAI1}, nAI2={nAI2}"
+        )
 
         recv_data = {
             "cnt_hist_id": str(uuid.uuid4()),
@@ -182,7 +200,9 @@ def commandParser(
     elif nMsgType == 0x8002 and szDeviceType in ["PJ2", "PJ3"]:
         nControlResult = int.from_bytes(getByteArray(Payload, index, 1), "big")
         nDOState = int.from_bytes(getByteArray(Payload, index, 1), "big")
-        logger.debug(f"接点出力制御応答 control_result={nControlResult}, nDOState={nDOState}")
+        logger.debug(
+            f"接点出力制御応答 control_result={nControlResult}, nDOState={nDOState}"
+        )
 
         recv_data = {
             "device_req_no": szSimid + "-" + szReqNo,
@@ -200,7 +220,9 @@ def commandParser(
             "iccid": szSimid,
         }
     else:
-        logger.error(f"規定外メッセージ受信: szSimid={szSimid}, szRecvDatetime={szRecvDatetime}, Payload={Payload}")
+        logger.error(
+            f"規定外メッセージ受信: szSimid={szSimid}, szRecvDatetime={szRecvDatetime}, Payload={Payload}"
+        )
         raise Exception("規定外メッセージ受信")
 
     if not stray_flag:
@@ -230,7 +252,9 @@ def commandParser(
         ddb.put_cnt_hist(recv_data, hist_table)
     else:
         logger.debug(f"接点出力制御応答テーブル dbItem={recv_data}")
-        ddb.update_control_res(recv_data, remote_control_table)
+        if not ddb.update_control_res(recv_data, remote_control_table):
+            # 制御結果記録済み（=タイムアウト時）は履歴を作成しない
+            hist_list = []
 
     if not stray_flag:
         if hist_list:
@@ -245,21 +269,21 @@ def commandParser(
 
             # デバイスヘルシー判定
             queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
-            if current_state_info.get("device_healthy_state") == 1 and\
-                current_state_info.get("device_abnormality_last_update_datetime") != device_current_state.get("device_abnormality_last_update_datetime"):
+            if current_state_info.get(
+                "device_healthy_state"
+            ) == 1 and current_state_info.get(
+                "device_abnormality_last_update_datetime"
+            ) != device_current_state.get(
+                "device_abnormality_last_update_datetime"
+            ):
                 body = {
                     "event_trigger": "lambda-receivedata-2",
                     "event_type": "device_unhealthy",
                     "event_datetime": szRecvDatetime,
-                    "device_id": device_id
+                    "device_id": device_id,
                 }
 
-                queue.send_message(
-                    DelaySeconds=0,
-                    MessageBody=(
-                        json.dumps(body)
-                    )
-                )
+                queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
 
             # 接点入力未変化判定
             di_range = 2 if szDeviceType == "PJ1" else 9
@@ -267,21 +291,18 @@ def commandParser(
                 di_healthy_state_key = f"di{i}_healthy_state"
                 di_healthy_state = current_state_info.get(di_healthy_state_key)
                 di_last_change_datetime = f"di{i}_last_change_datetime"
-                if di_healthy_state == 1 and current_state_info.get(di_last_change_datetime) != device_current_state.get(di_last_change_datetime):
+                if di_healthy_state == 1 and current_state_info.get(
+                    di_last_change_datetime
+                ) != device_current_state.get(di_last_change_datetime):
                     body = {
                         "event_trigger": "lambda-receivedata-2",
                         "event_type": "di_unhealthy",
                         "event_datetime": szRecvDatetime,
                         "device_id": device_id,
-                        "di_no": i
+                        "di_no": i,
                     }
 
-                    queue.send_message(
-                        DelaySeconds=0,
-                        MessageBody=(
-                            json.dumps(body)
-                        )
-                    )
+                    queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
 
         if hist_list:
             # 連動制御呼び出し
