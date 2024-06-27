@@ -17,15 +17,17 @@ def decimal_to_num(obj):
 
 # ICCID管理情報取得
 def get_iccid_info(sim_id, iccid_table):
-    iccid_list = iccid_table.query(KeyConditionExpression=Key("iccid").eq(sim_id)).get("Items")
+    iccid_list = iccid_table.query(KeyConditionExpression=Key("iccid").eq(sim_id)).get(
+        "Items"
+    )
     return iccid_list[0] if iccid_list else None
 
 
 # デバイス情報取得
 def get_device_info(device_id, device_table):
-    device_list = device_table.query(KeyConditionExpression=Key("device_id").eq(device_id)).get(
-        "Items"
-    )
+    device_list = device_table.query(
+        KeyConditionExpression=Key("device_id").eq(device_id)
+    ).get("Items")
     return device_list[0] if device_list else None
 
 
@@ -46,7 +48,9 @@ def get_remote_control_info(device_req_no, remote_control_table):
 
 
 # 接点出力制御応答デバイスIDキー取得
-def get_remote_control_info_by_device_id(device_id, recv_datetime, remote_control_table, di_trigger):
+def get_remote_control_info_by_device_id(
+    device_id, recv_datetime, remote_control_table, di_trigger
+):
     start_recv_datetime = recv_datetime - 20000
     remote_control_info = remote_control_table.query(
         IndexName="device_id_index",
@@ -73,7 +77,9 @@ def put_cnt_hist(db_item, hist_table):
 # 履歴一覧データ挿入
 def put_cnt_hist_list(db_items, hist_list_table):
     for db_item in db_items:
-        item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
+        item = json.loads(
+            json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal
+        )
         try:
             hist_list_table.put_item(Item=item)
         except ClientError as e:
@@ -82,7 +88,9 @@ def put_cnt_hist_list(db_items, hist_list_table):
 
 # 現状態データ更新
 def update_current_state(db_item, state_table):
-    item = json.loads(json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal)
+    item = json.loads(
+        json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal
+    )
     try:
         state_table.put_item(Item=item)
     except ClientError as e:
@@ -100,7 +108,7 @@ def update_control_res(db_item, remote_control_table):
         req_datetime = cnt_state["req_datetime"]
         # 制御結果記録済みの場合は未更新
         if "control_result" in cnt_state:
-            return
+            return False
 
     logger.debug(f"req_datetime={req_datetime}")
     option = {
@@ -144,12 +152,15 @@ def update_control_res(db_item, remote_control_table):
 
     try:
         remote_control_table.update_item(**option)
+        return True
     except ClientError as e:
         logger.debug(f"update_control_resエラー e={e}")
 
 
 # 接点出力制御応答データ更新
-def update_control_res_link_di_result(device_req_no, req_datetime, remote_control_table):
+def update_control_res_link_di_result(
+    device_req_no, req_datetime, remote_control_table
+):
     option = {
         "Key": {
             "device_req_no": device_req_no,
@@ -159,9 +170,7 @@ def update_control_res_link_di_result(device_req_no, req_datetime, remote_contro
         "ExpressionAttributeNames": {
             "#link_di_result": "link_di_result",
         },
-        "ExpressionAttributeValues": {
-            ":link_di_result": "0"
-        },
+        "ExpressionAttributeValues": {":link_di_result": "0"},
     }
 
     try:
@@ -174,7 +183,8 @@ def update_control_res_link_di_result(device_req_no, req_datetime, remote_contro
 def get_history_count(simid, eventtime, hist_table):
     res = hist_table.query(
         IndexName="simid_index",
-        KeyConditionExpression=Key("simid").eq(simid) & Key("event_datetime").eq(eventtime),
+        KeyConditionExpression=Key("simid").eq(simid)
+        & Key("event_datetime").eq(eventtime),
     )
     return res["Count"]
 
@@ -204,7 +214,7 @@ def get_device_group_list(device_id, device_relation_table, group_table):
                 }
             )
     if group_list:
-        group_list = sorted(group_list, key=lambda x:x['group_name'])
+        group_list = sorted(group_list, key=lambda x: x["group_name"])
     return group_list
 
 
