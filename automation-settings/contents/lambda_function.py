@@ -58,17 +58,46 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
             }
 
         ### 2. デバイス種別チェック(共通)
-        device_info = db.get_device_info_other_than_unavailable(control_device_id, device_table)
-        if not device_info:
+        trigger_device_info = db.get_device_info_other_than_unavailable(
+            trigger_device_id, device_table
+        )
+        control_device_info = db.get_device_info_other_than_unavailable(
+            control_device_id, device_table
+        )
+        if not trigger_device_info or not control_device_info:
             res_body = {"message": "デバイス情報が存在しません。"}
             return {
                 "statusCode": 404,
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        logger.debug(f"device_info: {device_info}")
-        if device_info["device_type"] != "PJ2":
+        logger.debug(f"trigger_device_info: {trigger_device_info}")
+        logger.debug(f"control_device_info: {control_device_info}")
+
+        if request_body.get("trigger_event_type") == "di_change_state":
+            if (
+                trigger_device_info["device_type"] == "PJ1"
+                and request_body.get("trigger_terminal_no") not in [1]
+            ) or (
+                trigger_device_info["device_type"] == "PJ2"
+                and request_body.get("trigger_terminal_no") not in [1, 2]
+            ):
+                res_body = {"message": "トリガー端子番号が不正です。"}
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
+
+        if control_device_info["device_type"] != "PJ2":
             res_body = {"message": "デバイス種別が想定と一致しません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
+        if request_body.get("control_di_no") not in [1, 2]:
+            res_body = {"message": "コントロール接点出力端子が不正です。"}
             return {
                 "statusCode": 400,
                 "headers": res_headers,
@@ -101,7 +130,44 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 }
             logger.debug(f"device_relation_info: {user_devices}")
 
-        ### 5. 連動制御設定
+        ### 5. 重複チェック
+        automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
+        for item in automation_info:
+            if item["automation_id"] != request_body.get("automation_id") and (
+                item.get("trigger_event_type") == request_body["trigger_event_type"]
+                and item.get("control_device_id") == control_device_id
+                and item.get("control_do_no") == request_body.get("control_do_no")
+                and item.get("control_di_state") == request_body.get("control_di_state")
+                and (
+                    (
+                        item["trigger_event_type"] == "di_change_state"
+                        and item.get("trigger_terminal_no")
+                        == request_body.get("trigger_terminal_no")
+                        and item.get("trigger_event_detail_state")
+                        == request_body.get("trigger_event_detail_state")
+                    )
+                    or (
+                        item["trigger_event_type"] == "di_unhealthy"
+                        and item.get("trigger_terminal_no")
+                        == request_body.get("trigger_terminal_no")
+                        and item.get("trigger_event_detail_flag")
+                        == request_body.get("trigger_event_detail_flag")
+                    )
+                    or (
+                        item["trigger_event_type"] not in ["di_change_state", "di_unhealthy"]
+                        and item.get("trigger_event_detail_flag")
+                        == request_body.get("trigger_event_detail_flag")
+                    )
+                )
+            ):
+                res_body = {"message": "連動制御設定が重複しています。"}
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
+
+        ### 6. 連動制御設定
         # 連動制御設定新規登録
         if event["httpMethod"] == "POST":
             flag, result = create_automation_setting(
@@ -125,7 +191,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                     "body": json.dumps(result, ensure_ascii=False),
                 }
 
-        ### 6. 連動制御設定情報取得
+        ### 7. 連動制御設定情報取得
         automation_info = ddb.get_automation_info_device(trigger_device_id, automation_table)
         if user_info["user_type"] == "worker":
             # ユーザに紐づくデバイスID取得
@@ -135,7 +201,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 if automation["control_device_id"] in set(user_devices)
             ]
 
-        ### 5. メッセージ応答
+        ### 8. メッセージ応答
         automation_list = list()
         for item in automation_info:
             do_automation_item = {
@@ -224,9 +290,7 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
 def update_automation_setting(trigger_device_id, request_body, automation_table):
 
     # 連動制御設定の更新
-    update_expression = (
-        "SET #an = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds"
-    )
+    update_expression = "SET #an = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds, #teds = :teds, #tedf = :tedf"
     expression_attribute_names = {
         "#an": "automation_name",
         "#tdi": "trigger_device_id",
@@ -234,6 +298,8 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
         "#ctd": "control_device_id",
         "#cdo": "control_do_no",
         "#cds": "control_di_state",
+        "#teds": "trigger_event_detail_state",
+        "#tedf": "trigger_event_detail_flag",
     }
     expression_attribute_values = {
         ":an": request_body["automation_name"],
@@ -242,17 +308,9 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
         ":ctd": request_body["control_device_id"],
         ":cdo": request_body["control_do_no"],
         ":cds": request_body["control_di_state"],
+        ":teds": request_body.get("trigger_event_detail_state"),
+        ":tedf": request_body.get("trigger_event_detail_flag"),
     }
-    event_type = request_body["trigger_event_type"]
-    if event_type == "di_change_state":
-        update_expression += ", #teds = :teds"
-        expression_attribute_names["#teds"] = "trigger_event_detail_state"
-        expression_attribute_values[":teds"] = request_body["trigger_event_detail_state"]
-    else:
-        update_expression += ", #tedf = :tedf"
-        expression_attribute_names["#tedf"] = "trigger_event_detail_flag"
-        expression_attribute_values[":tedf"] = request_body["trigger_event_detail_flag"]
-
     expression_attribute_values_fmt = convert.dict_dynamo_format(expression_attribute_values)
     update_automation = [
         {
