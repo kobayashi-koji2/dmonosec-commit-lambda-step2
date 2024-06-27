@@ -96,7 +96,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        if request_body.get("control_di_no") not in [1, 2]:
+        if request_body.get("control_do_no") not in [1, 2]:
             res_body = {"message": "コントロール接点出力端子が不正です。"}
             return {
                 "statusCode": 400,
