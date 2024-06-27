@@ -113,7 +113,7 @@ def input_check(param):
     str_value_limits = {"do_name": {0, 30}}
 
     # 桁数の制限
-    int_float_value_limits = {"do_specified_time": {0.3, 4.0}}
+    int_float_value_limits = {"do_specified_time": {0.4, 3.0}}
 
     # 特定の文字列に一致
     str_format = {"do_control": ["", "open", "close", "toggle"]}
