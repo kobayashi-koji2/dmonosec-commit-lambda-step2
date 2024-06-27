@@ -248,6 +248,7 @@ def lambda_handler(event, context, user_info):
                         "do_no": do.get("do_no"),
                         "do_name": do.get("do_name"),
                         "do_di_return": do.get("do_di_return"),
+                        "do_control": do.get("do_control"),
                     }
                 )
 
