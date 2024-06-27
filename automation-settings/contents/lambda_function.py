@@ -74,7 +74,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         logger.debug(f"trigger_device_info: {trigger_device_info}")
         logger.debug(f"control_device_info: {control_device_info}")
 
-        if request_body.get("trigger_event_type") == "di_change_state":
+        if request_body.get("trigger_event_type") in ["di_change_state", "di_unhealthy"]:
             if (
                 trigger_device_info["device_type"] == "PJ1"
                 and request_body.get("trigger_terminal_no") not in [1]
