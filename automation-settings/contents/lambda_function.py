@@ -160,7 +160,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                     )
                 )
             ):
-                res_body = {"message": "連動制御設定が重複しています。"}
+                res_body = {"message": "同じ設定が重複しています。"}
                 return {
                     "statusCode": 400,
                     "headers": res_headers,
