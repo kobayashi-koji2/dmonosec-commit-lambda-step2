@@ -92,6 +92,11 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         automation["control_device_id"], device_table
     )
 
+    # デバイス情報存在チェック
+    if not trigger_device or not control_device:
+        logger.info("device_info not found")
+        return {"result": False, "message": "デバイス情報が存在しません。"}
+
     # 制御対象デバイスの接点出力設定取得
     control_device_do_list = (
         control_device.get("device_data", {})
@@ -331,7 +336,7 @@ def _put_remote_controls(
         "control_trigger": control_trigger,
         "do_no": control_do.get("do_no"),
         "link_di_no": control_do.get("do_di_return"),
-        "iccid": control_device.get("device_data", {}).get("param", {}).get("icc_id"),
+        "iccid": control_device.get("device_data", {}).get("param", {}).get("iccid"),
         "automation_trigger_device_name": trigger_device.get("device_data", {})
         .get("config", {})
         .get("device_name"),

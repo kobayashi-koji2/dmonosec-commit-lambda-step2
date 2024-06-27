@@ -68,8 +68,10 @@ def send_mail(
         if do.get("do_no") == do_no
     ]
     do_name = do[0].get("do_name") if do and do[0].get("do_name") else f"接点出力{do_no}"
-    user_name = remote_control.get(
-        "control_exec_user_name", remote_control.get("control_exec_user_email_address")
+    user_name = (
+        remote_control.get("control_exec_user_name")
+        if remote_control.get("control_exec_user_name")
+        else remote_control.get("control_exec_user_email_address")
     )
 
     # メール送信
@@ -356,7 +358,11 @@ def lambda_handler(event, context):
             remote_controls_table,
         )
         if validate_result["code"] != "0000":
-            raise Exception(json.dumps(validate_result))
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(validate_result, ensure_ascii=False),
+            }
 
         remote_control = validate_result["remote_control"]
 
@@ -371,8 +377,23 @@ def lambda_handler(event, context):
         remote_control = ddb.get_remote_control_info(
             remote_control["device_req_no"], remote_controls_table
         )
+        if not remote_control:
+            body = {"code": "9999", "message": "端末要求番号が存在しません。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(body, ensure_ascii=False),
+            }
 
-        device = db.get_device_info(remote_control.get("device_id"), device_table)
+
+        device = ddb.get_device_info(remote_control.get("device_id"), device_table)
+        if not device:
+            body = {"code": "9999", "message": "デバイス情報が存在しません。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(body, ensure_ascii=False),
+            }
 
         if remote_control.get("control_result") is None:
             # タイムアウト発生
