@@ -19,15 +19,6 @@ NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 
 
-# デバイス情報取得
-def get_device_info(device_id, device_table, consistent_read=False):
-    device_list = device_table.query(
-        KeyConditionExpression=Key("device_id").eq(device_id),
-        ConsistentRead=consistent_read,
-    ).get("Items", [])
-    return device_list[0] if device_list else None
-
-
 # 接点出力制御応答取得
 def get_remote_control_info(device_req_no, remote_controls_table):
     remote_control_res = remote_controls_table.query(

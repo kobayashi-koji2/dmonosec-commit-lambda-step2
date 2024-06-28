@@ -386,7 +386,7 @@ def lambda_handler(event, context):
             }
 
 
-        device = ddb.get_device_info(remote_control.get("device_id"), device_table)
+        device = db.get_device_info_other_than_unavailable(remote_control.get("device_id"), device_table)
         if not device:
             body = {"code": "9999", "message": "デバイス情報が存在しません。"}
             return {
