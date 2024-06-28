@@ -80,7 +80,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
                 and request_body.get("trigger_terminal_no") not in [1]
             ) or (
                 trigger_device_info["device_type"] == "PJ2"
-                and request_body.get("trigger_terminal_no") not in [1, 2]
+                and request_body.get("trigger_terminal_no") not in [1, 2, 3, 4, 5, 6, 7, 8]
             ):
                 res_body = {"message": "トリガー端子番号が不正です。"}
                 return {
