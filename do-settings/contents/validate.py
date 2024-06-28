@@ -89,8 +89,8 @@ def terminal_check(body, device_id, device_type, tables):
             # 紐づき接点入力番号
             if "do_di_return" in item:
                 if (
-                    (device_type == "PJ2" and 1 <= do <= 8)
-                    or (device_type == "PJ3" and 1 <= do <= 8)
+                    (device_type == "PJ2" and 1 <= item.get("do_di_return") <= 8)
+                    or (device_type == "PJ3" and 1 <= item.get("do_di_return") <= 8)
                 ):
                     pass
                 else:
