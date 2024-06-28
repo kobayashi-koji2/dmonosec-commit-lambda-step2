@@ -243,131 +243,126 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                 hist_list_data.get("hist_data", {}).get("event_type")
                 in [
                     "manual_control",
+                    "timer_control",
                     "on_timer_control",
                     "off_timer_control",
-                    "timer_control",
                     "automation_control",
                     "on_automation_control",
                     "off_automation_control",
                 ]
                 and notification_settings.get("event_trigger") == "do_change"
+                and notification_settings.get("terminal_no") == hist_list_data.get("hist_data", {}).get("terminal_no")
             ):
                 if "link_terminal_no" in hist_list_data.get("hist_data", {}):
-                    if notification_settings.get("terminal_no") == hist_list_data.get(
-                        "hist_data", {}
-                    ).get("terminal_no"):
-                        if (
-                            hist_list_data.get("hist_data", {}).get("event_type")
-                            == "manual_control"
-                        ):
-                            terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "terminal_name"
-                            )
-                            link_terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_name"
-                            )
-                            link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_state_name"
-                            )
-                            control_exec_user_name = hist_list_data.get("hist_data", {}).get(
-                                "control_exec_user_name"
-                            )
-                            event_detail = f"""
-                                　【画面操作による制御（成功）】
-                                　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                                　※{control_exec_user_name}が操作を行いました。
-                            """
-                        elif hist_list_data.get("hist_data", {}).get("event_type") in [
-                            "on_timer_control",
-                            "off_timer_control",
-                            "timer_control",
-                        ]:
-                            if (
-                                hist_list_data.get("hist_data", {}).get("event_type")
-                                == "on_timer_control"
-                            ):
-                                control = "ON制御"
-                            elif (
-                                hist_list_data.get("hist_data", {}).get("event_type")
-                                == "off_timer_control"
-                            ):
-                                control = "OFF制御"
-                            else:
-                                control = ""
-                            terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "terminal_name"
-                            )
-                            link_terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_name"
-                            )
-                            link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_state_name"
-                            )
-                            timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
-                            event_detail = f"""
-                                　【タイマー設定による制御（成功）】
-                                　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                                　※タイマー設定「{control} {timer_time}」により制御信号を送信しました。
-                            """
-                        else:
-                            terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "terminal_name"
-                            )
-                            link_terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_name"
-                            )
-                            link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
-                                "link_terminal_state_name"
-                            )
-                            automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
-                                "automation_trigger_imei"
-                            )
-                            automation_trigger_device_name = (
-                                hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
-                                if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
-                                else f"{automation_trigger_imei}（IMEI）"
-                            )
-                            automation_trigger_event_type = hist_list_data.get(
-                                "hist_data", {}
-                            ).get("automation_trigger_event_type")
-                            automation_trigger_event_detail_state = hist_list_data.get(
-                                "hist_data", {}
-                            ).get("automation_trigger_event_detail_state")
-                            automation_trigger_event_detail_flag = hist_list_data.get(
-                                "hist_data", {}
-                            ).get("automation_trigger_event_detail_flag")
-                            event_label = automationSetting(
-                                automation_trigger_event_type,
-                                automation_trigger_event_detail_state,
-                                automation_trigger_event_detail_flag,
-                            )
-                            event_detail = f"""
-                                　【連動設定による制御（成功）】
-                                　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                                　※連動設定「{automation_trigger_device_name}、{event_label["event_type_label"]}、{event_label["event_detail_label"]}」により制御信号を送信しました。
-                            """
-                        mail_send_flg = True
-                else:
-                    if hist_list_data.get("hist_data", {}).get("event_type") == "manual_control":
-                        if hist_list_data.get("hist_data", {}).get(
-                            "terminal_no"
-                        ) == notification_settings.get("terminal_no"):
-                            terminal_name = hist_list_data.get("hist_data", {}).get(
-                                "terminal_name"
-                            )
-                            control_exec_user_name = hist_list_data.get("hist_data", {}).get(
-                                "control_exec_user_name"
-                            )
-                            event_detail = f"""
-                                　【画面操作による制御（成功）】
-                                　{terminal_name}の制御信号がデバイスに届きました。
-                                　※{control_exec_user_name}が操作を行いました。
-                            """
-                            mail_send_flg = True
+                    if (
+                        hist_list_data.get("hist_data", {}).get("event_type")
+                        == "manual_control"
+                    ):
+                        terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "terminal_name"
+                        )
+                        link_terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_name"
+                        )
+                        link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_state_name"
+                        )
+                        control_exec_user_name = hist_list_data.get("hist_data", {}).get(
+                            "control_exec_user_name"
+                        )
+                        event_detail = f"""
+                            　【画面操作による制御（成功）】
+                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　※{control_exec_user_name}が操作を行いました。
+                        """
                     elif hist_list_data.get("hist_data", {}).get("event_type") in [
+                        "timer_control",
                         "on_timer_control",
                         "off_timer_control",
+                    ]:
+                        if (
+                            hist_list_data.get("hist_data", {}).get("event_type")
+                            == "on_timer_control"
+                        ):
+                            control = "ON制御"
+                        elif (
+                            hist_list_data.get("hist_data", {}).get("event_type")
+                            == "off_timer_control"
+                        ):
+                            control = "OFF制御"
+                        else:
+                            control = ""
+                        terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "terminal_name"
+                        )
+                        link_terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_name"
+                        )
+                        link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_state_name"
+                        )
+                        timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                        event_detail = f"""
+                            　【タイマー設定による制御（成功）】
+                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　※タイマー設定「{control} {timer_time}」により制御信号を送信しました。
+                        """
+                    else:
+                        terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "terminal_name"
+                        )
+                        link_terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_name"
+                        )
+                        link_terminal_state_name = hist_list_data.get("hist_data", {}).get(
+                            "link_terminal_state_name"
+                        )
+                        automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
+                            "automation_trigger_imei"
+                        )
+                        automation_trigger_device_name = (
+                            hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                            if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
+                            else f"{automation_trigger_imei}（IMEI）"
+                        )
+                        automation_trigger_event_type = hist_list_data.get(
+                            "hist_data", {}
+                        ).get("automation_trigger_event_type")
+                        automation_trigger_event_detail_state = hist_list_data.get(
+                            "hist_data", {}
+                        ).get("automation_trigger_event_detail_state")
+                        automation_trigger_event_detail_flag = hist_list_data.get(
+                            "hist_data", {}
+                        ).get("automation_trigger_event_detail_flag")
+                        event_label = automationSetting(
+                            automation_trigger_event_type,
+                            automation_trigger_event_detail_state,
+                            automation_trigger_event_detail_flag,
+                        )
+                        event_detail = f"""
+                            　【連動設定による制御（成功）】
+                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　※連動設定「{automation_trigger_device_name}、{event_label["event_type_label"]}、{event_label["event_detail_label"]}」により制御信号を送信しました。
+                        """
+                    mail_send_flg = True
+                else:
+                    if hist_list_data.get("hist_data", {}).get("event_type") == "manual_control":
+                        terminal_name = hist_list_data.get("hist_data", {}).get(
+                            "terminal_name"
+                        )
+                        control_exec_user_name = hist_list_data.get("hist_data", {}).get(
+                            "control_exec_user_name"
+                        )
+                        event_detail = f"""
+                            　【画面操作による制御（成功）】
+                            　{terminal_name}の制御信号がデバイスに届きました。
+                            　※{control_exec_user_name}が操作を行いました。
+                        """
+                        mail_send_flg = True
+                    elif hist_list_data.get("hist_data", {}).get("event_type") in [
                         "timer_control",
+                        "on_timer_control",
+                        "off_timer_control",
                     ]:
                         terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                         timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
@@ -377,10 +372,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             　※タイマー設定「{timer_time}」により制御信号を送信しました。
                         """
                         mail_send_flg = True
-                    elif (
-                        hist_list_data.get("hist_data", {}).get("event_type")
-                        == "automation_control"
-                    ):
+                    else:
                         terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                         automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
                             "automation_trigger_imei"
