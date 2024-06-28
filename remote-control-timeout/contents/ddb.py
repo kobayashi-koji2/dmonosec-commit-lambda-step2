@@ -34,10 +34,8 @@ def get_remote_control_info(device_req_no, remote_controls_table):
         KeyConditionExpression=Key("device_req_no").eq(device_req_no),
         ScanIndexForward=False,
         Limit=1,
-    )
-    if "Items" not in remote_control_res:
-        return None
-    return remote_control_res["Items"][0]
+    ).get("Items", [])
+    return remote_control_res[0] if remote_control_res else None
 
 
 # 通知履歴テーブル作成
@@ -92,7 +90,7 @@ def put_hist_list(
 ):
     now_unixtime = int(time.time() * 1000)
 
-    device = db.get_device_info(remote_control["device_id"], device_table)
+    device = db.get_device_info_other_than_unavailable(remote_control["device_id"], device_table)
     terminal_name = None
     if remote_control.get("do_no"):
         for do_list in device["device_data"]["config"]["terminal_settings"]["do_list"]:
