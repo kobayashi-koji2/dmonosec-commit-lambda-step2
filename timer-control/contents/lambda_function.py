@@ -663,16 +663,16 @@ def __send_mail(
     event_detail = ""
     if flg == "__check_return_di_state":
         event_detail = f"""
-            【タイマー設定による制御（不実施）】
-            {di_name}がすでに{di_state}のため、{do_name}の制御を行いませんでした。
-            ※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
+            　【タイマー設定による制御（不実施）】
+            　{di_name}がすでに{di_state}のため、{do_name}の制御を行いませんでした。
+            　※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
         """
     elif flg == "__check_under_control":
         event_detail = f"""
-            【タイマーによる制御（不実施）】
-            他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
-            そのため、制御を行いませんでした。
-            ※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
+            　【タイマーによる制御（不実施）】
+            　他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
+            　そのため、制御を行いませんでした。
+            　※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
         """
     event_detail = textwrap.dedent(event_detail)
 

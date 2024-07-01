@@ -522,9 +522,9 @@ def __send_mail(
     logger.debug(f"mail_to_list: {mail_to_list}")
 
     event_detail = f"""
-        【画面制御による制御（不実施）】
-        他のユーザー操作、タイマーまたは連動設定により{do_name}を制御中だったため、制御を行いませんでした。
-        ※{user_name}が操作しました。
+        　【画面制御による制御（不実施）】
+        　他のユーザー操作、タイマーまたは連動設定により{do_name}を制御中だったため、制御を行いませんでした。
+        　※{user_name}が操作しました。
     """
     event_detail = textwrap.dedent(event_detail)
 
