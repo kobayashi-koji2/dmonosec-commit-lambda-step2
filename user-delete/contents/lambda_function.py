@@ -188,12 +188,38 @@ def lambda_handler(event, context, login_user, user_id):
             FilterExpression=Attr("user_id").ne(user["user_id"]),
         ).get("Items", [])
 
-        # 他契約で使われていなければ、アカウント管理テーブルに削除日時を設定
+        # 他契約で使われていなければ、Cognitoのユーザー削除、アカウント管理テーブルに削除日時を設定
         if not [
             x
             for x in user_list
             if x.get("user_data", {}).get("config", {}).get("del_datetime") is None
         ]:
+            # Cognitoのユーザープールからユーザー削除
+            try:
+                cognito_user = cognito.list_users(
+                    UserPoolId=COGNITO_USER_POOL_ID,
+                    AttributesToGet=["custom:auth_id"],
+                    Filter=f"email=\"{account['email_address']}\"",
+                )
+                logger.debug(cognito_user)
+                if cognito_user["Users"]:
+                    for attr in cognito_user["Users"][0]["Attributes"]:
+                        if attr["Name"] == "custom:auth_id":
+                            if attr["Value"] == account["auth_id"]:
+                                cognito.admin_delete_user(
+                                    UserPoolId=COGNITO_USER_POOL_ID,
+                                    Username=cognito_user["Users"][0]["Username"],
+                                )
+                            break
+            except ClientError:
+                logger.error("Cognitoのユーザー削除に失敗", exc_info=True)
+                return {
+                    "statusCode": 500,
+                    "headers": res_headers,
+                    "body": json.dumps({"message": "Cognitoのユーザー削除に失敗しました。"}, ensure_ascii=False),
+                }
+        
+            # アカウント管理テーブルに削除日時を設定
             transact_items.append(
                 {
                     "Update": {
@@ -219,31 +245,6 @@ def lambda_handler(event, context, login_user, user_id):
                 "statusCode": 500,
                 "headers": res_headers,
                 "body": json.dumps({"message": "ユーザー情報の削除に失敗しました。"}, ensure_ascii=False),
-            }
-
-        # Cognitoのユーザープールからユーザー削除
-        try:
-            cognito_user = cognito.list_users(
-                UserPoolId=COGNITO_USER_POOL_ID,
-                AttributesToGet=["custom:auth_id"],
-                Filter=f"email=\"{account['email_address']}\"",
-            )
-            logger.debug(cognito_user)
-            if cognito_user["Users"]:
-                for attr in cognito_user["Users"][0]["Attributes"]:
-                    if attr["Name"] == "custom:auth_id":
-                        if attr["Value"] == account["auth_id"]:
-                            cognito.admin_delete_user(
-                                UserPoolId=COGNITO_USER_POOL_ID,
-                                Username=cognito_user["Users"][0]["Username"],
-                            )
-                        break
-        except ClientError:
-            logger.error("Cognitoのユーザー削除に失敗", exc_info=True)
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps({"message": "Cognitoのユーザー削除に失敗しました。"}, ensure_ascii=False),
             }
 
         return {"statusCode": 204, "headers": res_headers}
