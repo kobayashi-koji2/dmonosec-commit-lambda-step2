@@ -87,12 +87,220 @@ def put_cnt_hist_list(db_items, hist_list_table):
 
 
 # 現状態データ更新
-def update_current_state(db_item, state_table):
-    item = json.loads(
-        json.dumps(db_item, default=decimal_to_num), parse_float=decimal.Decimal
-    )
+def update_current_state(current_state_info, device_info, state_table):
+    if device_info["device_type"] == "PJ1":
+        option = {
+            "Key": {
+                "device_id": current_state_info['device_id'],
+            },
+            "UpdateExpression": "set #signal_last_update_datetime = :signal_last_update_datetime, \
+                #battery_near_last_update_datetime = :battery_near_last_update_datetime, \
+                #device_abnormality_last_update_datetime = :device_abnormality_last_update_datetime, \
+                #parameter_abnormality_last_update_datetime = :parameter_abnormality_last_update_datetime, \
+                #fw_update_abnormality_last_update_datetime = :fw_update_abnormality_last_update_datetime, \
+                #di1_last_update_datetime = :di1_last_update_datetime, \
+                #signal_state = :signal_state, \
+                #battery_near_state = :battery_near_state, \
+                #device_abnormality = :device_abnormality, \
+                #parameter_abnormality = :parameter_abnormality, \
+                #fw_update_abnormality = :fw_update_abnormality, \
+                #di1_state = :di1_state, \
+                #signal_last_change_datetime = :signal_last_change_datetime, \
+                #battery_near_last_change_datetime = :battery_near_last_change_datetime, \
+                #device_abnormality_last_change_datetime = :device_abnormality_last_change_datetime, \
+                #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
+                #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
+                #di1_last_change_datetime = :di1_last_change_datetime",
+            "ExpressionAttributeNames": {
+                "#signal_last_update_datetime": "signal_last_update_datetime",
+                "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
+                "#device_abnormality_last_update_datetime": "device_abnormality_last_update_datetime",
+                "#parameter_abnormality_last_update_datetime": "parameter_abnormality_last_update_datetime",
+                "#fw_update_abnormality_last_update_datetime": "fw_update_abnormality_last_update_datetime",
+                "#di1_last_update_datetime": "di1_last_update_datetime",
+                "#signal_state": "signal_state",
+                "#battery_near_state": "battery_near_state",
+                "#device_abnormality": "device_abnormality",
+                "#parameter_abnormality": "parameter_abnormality",
+                "#fw_update_abnormality": "fw_update_abnormality",
+                "#di1_state": "di1_state",
+                "#signal_last_change_datetime": "signal_last_change_datetime",
+                "#battery_near_last_change_datetime": "battery_near_last_change_datetime",
+                "#device_abnormality_last_change_datetime": "device_abnormality_last_change_datetime",
+                "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
+                "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
+                "#di1_last_change_datetime": "di1_last_change_datetime",
+            },
+            "ExpressionAttributeValues": {
+                ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
+                ":battery_near_last_update_datetime": current_state_info.get("battery_near_last_update_datetime"),
+                ":device_abnormality_last_update_datetime": current_state_info.get("device_abnormality_last_update_datetime"),
+                ":parameter_abnormality_last_update_datetime": current_state_info.get("parameter_abnormality_last_update_datetime"),
+                ":fw_update_abnormality_last_update_datetime": current_state_info.get("fw_update_abnormality_last_update_datetime"),
+                ":di1_last_update_datetime": current_state_info.get("di1_last_update_datetime"),
+                ":signal_state": current_state_info.get("signal_state"),
+                ":battery_near_state": current_state_info.get("battery_near_state"),
+                ":device_abnormality": current_state_info.get("device_abnormality"),
+                ":parameter_abnormality": current_state_info.get("parameter_abnormality"),
+                ":fw_update_abnormality": current_state_info.get("fw_update_abnormality"),
+                ":di1_state": current_state_info.get("di1_state"),
+                ":signal_last_change_datetime": current_state_info.get("signal_last_change_datetime"),
+                ":battery_near_last_change_datetime": current_state_info.get("battery_near_last_change_datetime"),
+                ":device_abnormality_last_change_datetime": current_state_info.get("device_abnormality_last_change_datetime"),
+                ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
+                ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
+                ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
+            },
+        }
+    elif device_info["device_type"] == "PJ2":
+        option = {
+            "Key": {
+                "device_id": current_state_info['device_id'],
+            },
+            "UpdateExpression": "set #signal_last_update_datetime = :signal_last_update_datetime, \
+                #battery_near_last_update_datetime = :battery_near_last_update_datetime, \
+                #device_abnormality_last_update_datetime = :device_abnormality_last_update_datetime, \
+                #parameter_abnormality_last_update_datetime = :parameter_abnormality_last_update_datetime, \
+                #fw_update_abnormality_last_update_datetime = :fw_update_abnormality_last_update_datetime, \
+                #di1_last_update_datetime = :di1_last_update_datetime, \
+                #di2_last_update_datetime = :di2_last_update_datetime, \
+                #di3_last_update_datetime = :di3_last_update_datetime, \
+                #di4_last_update_datetime = :di4_last_update_datetime, \
+                #di5_last_update_datetime = :di5_last_update_datetime, \
+                #di6_last_update_datetime = :di6_last_update_datetime, \
+                #di7_last_update_datetime = :di7_last_update_datetime, \
+                #di8_last_update_datetime = :di8_last_update_datetime, \
+                #do1_last_update_datetime = :do1_last_update_datetime, \
+                #do2_last_update_datetime = :do2_last_update_datetime, \
+                #signal_state = :signal_state, \
+                #battery_near_state = :battery_near_state, \
+                #device_abnormality = :device_abnormality, \
+                #parameter_abnormality = :parameter_abnormality, \
+                #fw_update_abnormality = :fw_update_abnormality, \
+                #di1_state = :di1_state, \
+                #di2_state = :di2_state, \
+                #di3_state = :di3_state, \
+                #di4_state = :di4_state, \
+                #di5_state = :di5_state, \
+                #di6_state = :di6_state, \
+                #di7_state = :di7_state, \
+                #di8_state = :di8_state, \
+                #do1_state = :do1_state, \
+                #do2_state = :do2_state, \
+                #signal_last_change_datetime = :signal_last_change_datetime, \
+                #battery_near_last_change_datetime = :battery_near_last_change_datetime, \
+                #device_abnormality_last_change_datetime = :device_abnormality_last_change_datetime, \
+                #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
+                #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
+                #di1_last_change_datetime = :di1_last_change_datetime, \
+                #di2_last_change_datetime = :di2_last_change_datetime, \
+                #di3_last_change_datetime = :di3_last_change_datetime, \
+                #di4_last_change_datetime = :di4_last_change_datetime, \
+                #di5_last_change_datetime = :di5_last_change_datetime, \
+                #di6_last_change_datetime = :di6_last_change_datetime, \
+                #di7_last_change_datetime = :di7_last_change_datetime, \
+                #di8_last_change_datetime = :di8_last_change_datetime, \
+                #do1_last_change_datetime = :do1_last_change_datetime, \
+                #do2_last_change_datetime = :do2_last_change_datetime",
+            "ExpressionAttributeNames": {
+                "#signal_last_update_datetime": "signal_last_update_datetime",
+                "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
+                "#device_abnormality_last_update_datetime": "device_abnormality_last_update_datetime",
+                "#parameter_abnormality_last_update_datetime": "parameter_abnormality_last_update_datetime",
+                "#fw_update_abnormality_last_update_datetime": "fw_update_abnormality_last_update_datetime",
+                "#di1_last_update_datetime": "di1_last_update_datetime",
+                "#di2_last_update_datetime": "di2_last_update_datetime",
+                "#di3_last_update_datetime": "di3_last_update_datetime",
+                "#di4_last_update_datetime": "di4_last_update_datetime",
+                "#di5_last_update_datetime": "di5_last_update_datetime",
+                "#di6_last_update_datetime": "di6_last_update_datetime",
+                "#di7_last_update_datetime": "di7_last_update_datetime",
+                "#di8_last_update_datetime": "di8_last_update_datetime",
+                "#do1_last_update_datetime": "do1_last_update_datetime",
+                "#do2_last_update_datetime": "do2_last_update_datetime",
+                "#signal_state": "signal_state",
+                "#battery_near_state": "battery_near_state",
+                "#device_abnormality": "device_abnormality",
+                "#parameter_abnormality": "parameter_abnormality",
+                "#fw_update_abnormality": "fw_update_abnormality",
+                "#di1_state": "di1_state",
+                "#di2_state": "di2_state",
+                "#di3_state": "di3_state",
+                "#di4_state": "di4_state",
+                "#di5_state": "di5_state",
+                "#di6_state": "di6_state",
+                "#di7_state": "di7_state",
+                "#di8_state": "di8_state",
+                "#do1_state": "do1_state",
+                "#do2_state": "do2_state",
+                "#signal_last_change_datetime": "signal_last_change_datetime",
+                "#battery_near_last_change_datetime": "battery_near_last_change_datetime",
+                "#device_abnormality_last_change_datetime": "device_abnormality_last_change_datetime",
+                "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
+                "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
+                "#di1_last_change_datetime": "di1_last_change_datetime",
+                "#di2_last_change_datetime": "di2_last_change_datetime",
+                "#di3_last_change_datetime": "di3_last_change_datetime",
+                "#di4_last_change_datetime": "di4_last_change_datetime",
+                "#di5_last_change_datetime": "di5_last_change_datetime",
+                "#di6_last_change_datetime": "di6_last_change_datetime",
+                "#di7_last_change_datetime": "di7_last_change_datetime",
+                "#di8_last_change_datetime": "di8_last_change_datetime",
+                "#do1_last_change_datetime": "do1_last_change_datetime",
+                "#do2_last_change_datetime": "do2_last_change_datetime",
+            },
+            "ExpressionAttributeValues": {
+                ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
+                ":battery_near_last_update_datetime": current_state_info.get("battery_near_last_update_datetime"),
+                ":device_abnormality_last_update_datetime": current_state_info.get("device_abnormality_last_update_datetime"),
+                ":parameter_abnormality_last_update_datetime": current_state_info.get("parameter_abnormality_last_update_datetime"),
+                ":fw_update_abnormality_last_update_datetime": current_state_info.get("fw_update_abnormality_last_update_datetime"),
+                ":di1_last_update_datetime": current_state_info.get("di1_last_update_datetime"),
+                ":di2_last_update_datetime": current_state_info.get("di2_last_update_datetime"),
+                ":di3_last_update_datetime": current_state_info.get("di3_last_update_datetime"),
+                ":di4_last_update_datetime": current_state_info.get("di4_last_update_datetime"),
+                ":di5_last_update_datetime": current_state_info.get("di5_last_update_datetime"),
+                ":di6_last_update_datetime": current_state_info.get("di6_last_update_datetime"),
+                ":di7_last_update_datetime": current_state_info.get("di7_last_update_datetime"),
+                ":di8_last_update_datetime": current_state_info.get("di8_last_update_datetime"),
+                ":do1_last_update_datetime": current_state_info.get("do1_last_update_datetime"),
+                ":do2_last_update_datetime": current_state_info.get("do2_last_update_datetime"),
+                ":signal_state": current_state_info.get("signal_state"),
+                ":battery_near_state": current_state_info.get("battery_near_state"),
+                ":device_abnormality": current_state_info.get("device_abnormality"),
+                ":parameter_abnormality": current_state_info.get("parameter_abnormality"),
+                ":fw_update_abnormality": current_state_info.get("fw_update_abnormality"),
+                ":di1_state": current_state_info.get("di1_state"),
+                ":di2_state": current_state_info.get("di2_state"),
+                ":di3_state": current_state_info.get("di3_state"),
+                ":di4_state": current_state_info.get("di4_state"),
+                ":di5_state": current_state_info.get("di5_state"),
+                ":di6_state": current_state_info.get("di6_state"),
+                ":di7_state": current_state_info.get("di7_state"),
+                ":di8_state": current_state_info.get("di8_state"),
+                ":do1_state": current_state_info.get("do1_state"),
+                ":do2_state": current_state_info.get("do2_state"),
+                ":signal_last_change_datetime": current_state_info.get("signal_last_change_datetime"),
+                ":battery_near_last_change_datetime": current_state_info.get("battery_near_last_change_datetime"),
+                ":device_abnormality_last_change_datetime": current_state_info.get("device_abnormality_last_change_datetime"),
+                ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
+                ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
+                ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
+                ":di2_last_change_datetime": current_state_info.get("di2_last_change_datetime"),
+                ":di3_last_change_datetime": current_state_info.get("di3_last_change_datetime"),
+                ":di4_last_change_datetime": current_state_info.get("di4_last_change_datetime"),
+                ":di5_last_change_datetime": current_state_info.get("di5_last_change_datetime"),
+                ":di6_last_change_datetime": current_state_info.get("di6_last_change_datetime"),
+                ":di7_last_change_datetime": current_state_info.get("di7_last_change_datetime"),
+                ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
+                ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
+                ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
+            },
+        }
+    logger.debug(f"option={option}")
+
     try:
-        state_table.put_item(Item=item)
+        state_table.update_item(**option)
     except ClientError as e:
         logger.debug(f"update_current_stateエラー e={e}")
 

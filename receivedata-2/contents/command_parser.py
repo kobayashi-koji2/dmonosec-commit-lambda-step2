@@ -265,7 +265,7 @@ def commandParser(
         # 現状態テーブル
         if hist_flg:
             logger.debug(f"現状態テーブル dbItem={current_state_info}")
-            ddb.update_current_state(current_state_info, state_table)
+            ddb.update_current_state(current_state_info, device_info, state_table)
 
             # デバイスヘルシー判定
             queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
