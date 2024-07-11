@@ -425,12 +425,6 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                     .astimezone(tz=JST)
                     .strftime("%Y/%m/%d %H:%M:%S")
                 )
-                recv_dt = (
-                    datetime.fromtimestamp(int(hist_list_data.get("recv_datetime")) / 1000)
-                    .replace(tzinfo=timezone.utc)
-                    .astimezone(tz=JST)
-                    .strftime("%Y/%m/%d %H:%M:%S")
-                )
 
                 mail_subject = "イベントが発生しました"
                 event_detail = textwrap.dedent(event_detail)
@@ -442,7 +436,6 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                 mail_body = textwrap.dedent(
                     f"""
                     ■発生日時：{event_dt}
-                    　受信日時：{recv_dt}
 
                     ■グループ：{group_name}
                     　デバイス：{device_name}
