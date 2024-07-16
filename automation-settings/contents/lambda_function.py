@@ -320,7 +320,13 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
                 "UpdateExpression": update_expression,
                 "ExpressionAttributeNames": expression_attribute_names,
                 "ExpressionAttributeValues": expression_attribute_values_fmt,
-            }
+            },
+            "ConditionCheck": {
+                "TableName": automation_table.table_name,
+                "Key": {"automation_id": {"S": request_body["automation_id"]}},
+                "ConditionExpression": "attribute_exists(#automation_id)",
+                "ExpressionAttributeNames": {"#automation_id": "automation_id"},
+            },
         }
     ]
     logger.debug(f"update_automation_info: {update_automation}")
