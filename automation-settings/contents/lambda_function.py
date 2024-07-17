@@ -333,7 +333,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
     logger.debug(f"update_automation_info: {update_automation}")
     # 各データを登録・更新・削除
     if not db.execute_transact_write_item(update_automation):
-        res_body = {"message": "DynamoDBへの更新処理に失敗しました。"}
+        res_body = {"message": "データの更新が失敗しました。"}
         return False, res_body
 
     return True, request_body
