@@ -293,7 +293,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
         Key={"automation_id": request_body["automation_id"]}
     ).get("Item")
     if not automation:
-        res_body = {"message": "DynamoDBへの更新処理に失敗しました。"}
+        res_body = {"message": "データ更新処理に失敗しました。"}
         return False, res_body
 
     # 連動制御設定の更新
