@@ -289,6 +289,13 @@ def create_automation_setting(trigger_device_id, request_body, automation_table)
 
 def update_automation_setting(trigger_device_id, request_body, automation_table):
 
+    automation = automation_table.get_item(
+        Key={"automation_id": request_body["automation_id"]}
+    ).get("Item")
+    if not automation:
+        res_body = {"message": "DynamoDBへの更新処理に失敗しました。"}
+        return False, res_body
+
     # 連動制御設定の更新
     update_expression = "SET #an = :an, #tdi = :tdi, #ttn = :ttn, #ctd = :ctd, #cdo = :cdo, #cds = :cds, #teds = :teds, #tedf = :tedf"
     expression_attribute_names = {
@@ -320,13 +327,7 @@ def update_automation_setting(trigger_device_id, request_body, automation_table)
                 "UpdateExpression": update_expression,
                 "ExpressionAttributeNames": expression_attribute_names,
                 "ExpressionAttributeValues": expression_attribute_values_fmt,
-            },
-            "ConditionCheck": {
-                "TableName": automation_table.table_name,
-                "Key": {"automation_id": {"S": request_body["automation_id"]}},
-                "ConditionExpression": "attribute_exists(#automation_id)",
-                "ExpressionAttributeNames": {"#automation_id": "automation_id"},
-            },
+            }
         }
     ]
     logger.debug(f"update_automation_info: {update_automation}")
