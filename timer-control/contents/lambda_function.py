@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 import json
 import time
@@ -52,6 +52,7 @@ def lambda_handler(event, context):
     try:
         ### 0. DynamoDBの操作オブジェクト生成
         try:
+            contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
             user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
@@ -63,33 +64,28 @@ def lambda_handler(event, context):
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
             notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
         except KeyError as e:
-            res_body = {"message": e}
-            respons["statusCode"] = 500
-            logger.info(respons)
-            return respons
+            logger.error(e)
+            logger.error(traceback.format_exc())
+            return -1
 
-        ### 1. スケジュール設定チェック
-        # 現在時刻の保持(1分ごとに実行)
-        dt_now = datetime.now()
-        # dt_now = datetime(2022, 12, 31, 1, 0, 30, 1000)
-        if dt_now.tzname != "JST":
-            dt_now = dt_now + timedelta(hours=+9)
-        logger.info("now_time: {0}".format(dt_now.strftime("%H:%M")))
+        for record in event['Records']:
+            payload = json.loads(record["body"])
 
-        # 実行対象のデバイス情報取得
-        device_info_list = ddb.get_device_info_available(device_table)
-        # 有効デバイス有無チェック
-        if len(device_info_list) == 0:
-            # 正常終了
-            res_body = {"message": ""}
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            logger.info(respons)
-            return respons
+            ### 1. スケジュール設定チェック
 
-        ### 2. 接点出力制御要求
-        error_flg = False
-        for device_info in device_info_list:
-            try:
+            # パラメータ取得
+            dt_now = payload.get("event_datetime")
+            contract_id = payload.get("contract_id")
+            logger.info("now_time: {0}".format(dt_now.strftime("%H:%M")))
+            logger.info(f"contract_id: {contract_id}")
+
+            # 実行対象のデバイス情報取得
+            device_info_list = ddb.get_device_info_by_contract_id(contract_id, contract_table, device_table)
+            logger.debug(f"device_info_list={device_info_list}")
+
+            ### 2. 接点出力制御要求
+            error_flg = False
+            for device_info in device_info_list:
                 logger.info(f"--- device_info: {device_info}")
                 device_id = device_info["device_id"]
                 contract_id = device_info["device_data"]["param"]["contract_id"]
@@ -111,10 +107,10 @@ def lambda_handler(event, context):
                         checked_timer_do_info, device_id, device_state_table
                     )
                     if not error_flg:
-                        respons["statusCode"] = 500
-                        respons["body"] = json.dumps(result, ensure_ascii=False)
-                        logger.info(respons)
-                        return respons
+                        logger.info(
+                            f"[__check_return_di_state(): FALSE] device_id: {device_id}, result: {result}"
+                        )
+                        continue
                     if result == 1:
                         error_flg, result = __register_hist_info(
                             "__check_return_di_state",
@@ -148,10 +144,10 @@ def lambda_handler(event, context):
                         remote_controls_table,
                     )
                     if not error_flg:
-                        respons["statusCode"] = 500
-                        respons["body"] = json.dumps(result, ensure_ascii=False)
-                        logger.info(respons)
-                        return respons
+                        logger.info(
+                            f"[__check_under_control(): FALSE] device_id: {device_id}, result: {result}"
+                        )
+                        continue
                     if result == 1:
                         error_flg, result = __register_hist_info(
                             "__check_under_control",
@@ -166,10 +162,10 @@ def lambda_handler(event, context):
                             hist_list_table,
                         )
                         if not error_flg:
-                            respons["statusCode"] = 500
-                            respons["body"] = json.dumps(result, ensure_ascii=False)
-                            logger.info(respons)
-                            return respons
+                            logger.info(
+                                f"[__check_under_control(): FALSE] device_id: {device_id}, result: {result}"
+                            )
+                            continue
                         logger.info(
                             f"[__check_under_control(): FALSE] device_id: {device_id}, do_info: {do_info}"
                         )
@@ -208,11 +204,8 @@ def lambda_handler(event, context):
                         do_control = "10"
                         do_control_time = "0000"
                     else:
-                        res_body = {"message": "接点出力_制御方法の値が不正です。"}
-                        respons["statusCode"] = 500
-                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                        logger.info(respons)
-                        return respons
+                        logger.info(f"接点出力_制御方法の値が不正です。 device_id={device_id}")
+                        continue
 
                     payload = {
                         "Message_Length": "000C",
@@ -243,11 +236,8 @@ def lambda_handler(event, context):
                     elif do_onoff_control == 9:
                         control_trigger = "timer_control"
                     else:
-                        res_body = {"message": "接点出力_ON/OFF制御の値が不正です。"}
-                        respons["statusCode"] = 500
-                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                        logger.info(respons)
-                        return respons
+                        logger.info(f"接点出力_ON/OFF制御の値が不正です。 device_id={device_id}")
+                        continue
 
                     now_unixtime = int(time.time() * 1000)
                     expire_datetime = int(
@@ -278,11 +268,8 @@ def lambda_handler(event, context):
                     ]
                     result = db.execute_transact_write_item(put_items)
                     if not result:
-                        res_body = {"message": "接点出力制御応答情報への書き込みに失敗しました。"}
-                        respons["statusCode"] = 500
-                        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-                        logger.info(respons)
-                        return respons
+                        logger.info(f"接点出力制御応答情報への書き込みに失敗しました。 device_id={device_id}")
+                        continue
                     logger.info(f"put_items: {put_items}")
 
                     # タイムアウト判定Lambda呼び出し
@@ -293,32 +280,14 @@ def lambda_handler(event, context):
                         Payload=json.dumps(payload, ensure_ascii=False),
                     )
                     logger.info(f"lambda_invoke_result: {lambda_invoke_result}")
-            except Exception as e:
-                logger.info(device_info["device_id"])
-                logger.info(e)
-                logger.info(traceback.format_exc())
-                error_flg = True
-                continue
 
-        ### 3. メッセージ応答
-        if error_flg:
-            res_body = {"message": "予期しないエラーが発生しました。"}
-            respons["statusCode"] = 500
-            respons["body"] = json.dumps(res_body, ensure_ascii=False)
-            logger.info(respons)
-            return respons
-        res_body = {"message": ""}
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        logger.info(respons)
-        return respons
+        logger.debug("lambda_handler正常終了")
+        return 0
+
     except Exception as e:
-        logger.info(e)
-        logger.info(traceback.format_exc())
-        res_body = {"message": "予期しないエラーが発生しました。"}
-        respons["statusCode"] = 500
-        respons["body"] = json.dumps(res_body, ensure_ascii=False)
-        logger.info(respons)
-        return respons
+        logger.error(e)
+        logger.error(traceback.format_exc())
+        raise Exception('lambda_handler異常終了')
 
 
 def __check_timer_settings(do_info, dt_now):

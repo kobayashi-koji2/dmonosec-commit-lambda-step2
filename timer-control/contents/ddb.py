@@ -11,17 +11,23 @@ from dateutil import relativedelta
 
 # layer
 import convert
+import db
 
 logger = Logger()
 
 NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 
 
-def get_device_info_available(table):
-    response = table.scan(
-        FilterExpression=Attr("contract_state").eq(1),
-    ).get("Items", [])
-    return response
+def get_device_info_by_contract_id(contract_id, contract_table, device_table):
+    logger.debug(f"get_device_info_by_contract_id開始 contract_id={contract_id}")
+    contract_info = db.get_contract_info(contract_id, contract_table)
+    device_id_list = contract_info.get("contract_data", []).get("device_list", [])
+    device_list = []
+    for device_id in device_id_list:
+        device_info = db.get_device_info(device_id, device_table)
+        if device_info:
+            device_list.append(device_info)
+    return device_list
 
 
 def get_req_no_count_info(sim_id, table):
