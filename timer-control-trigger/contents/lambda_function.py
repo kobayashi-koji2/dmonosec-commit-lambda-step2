@@ -32,8 +32,8 @@ def lambda_handler(event, context):
 
         # 現在時刻取得
         event_datetime = datetime.now()
-        if dt_now.tzname != "JST":
-            dt_now = dt_now + timedelta(hours=+9)
+        if event_datetime.tzname != "JST":
+            event_datetime = event_datetime + timedelta(hours=+9)
 
         # 契約ID取得
         contract_id_list = ddb.get_contract_id_list(contract_table)
