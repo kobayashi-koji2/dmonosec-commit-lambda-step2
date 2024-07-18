@@ -1,4 +1,3 @@
-from datetime import datetime
 import os
 import json
 import time
@@ -7,7 +6,7 @@ import uuid
 import re
 import textwrap
 from zoneinfo import ZoneInfo
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import relativedelta
 
 from aws_lambda_powertools import Logger
@@ -74,7 +73,10 @@ def lambda_handler(event, context):
             ### 1. スケジュール設定チェック
 
             # パラメータ取得
-            dt_now = payload.get("event_datetime")
+            event_datetime = payload.get("event_datetime")
+            dt_now = datetime.fromtimestamp(event_datetime)
+            if dt_now.tzname != "JST":
+                dt_now = dt_now + timedelta(hours=+9)
             contract_id = payload.get("contract_id")
             logger.info("now_time: {0}".format(dt_now.strftime("%H:%M")))
             logger.info(f"contract_id: {contract_id}")

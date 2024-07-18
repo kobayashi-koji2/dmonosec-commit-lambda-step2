@@ -4,7 +4,7 @@ import ddb
 import json
 import ssm
 import traceback
-from datetime import datetime, timedelta
+import time
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 
@@ -31,9 +31,7 @@ def lambda_handler(event, context):
             return -1
 
         # 現在時刻取得
-        event_datetime = datetime.now()
-        if event_datetime.tzname != "JST":
-            event_datetime = event_datetime + timedelta(hours=+9)
+        event_datetime = int(time.time())
 
         # 契約ID取得
         contract_id_list = ddb.get_contract_id_list(contract_table)
