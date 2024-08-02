@@ -172,12 +172,19 @@ def update_group_info(
             "key2": "d-" + add_device_id,
         }
         group_relation_item_fmt = convert.dict_dynamo_format(group_relation_item)
-        add_device = {
-            "Put": {
-                "TableName": device_relation_table_name,
-                "Item": group_relation_item_fmt,
+        group_id_list_relation_device = db.get_device_relation_group_id_list(add_device_id,device_relation_table)
+
+        if len(group_id_list_relation_device) < 10:
+            add_device = {
+                "Put": {
+                    "TableName": device_relation_table_name,
+                    "Item": group_relation_item_fmt,
+                }
             }
-        }
+        else:
+            add_device = {}
+            logger.info("デバイスを登録できるグループの数は10グループまでです")
+            
         transact_items.append(add_device)
 
 
