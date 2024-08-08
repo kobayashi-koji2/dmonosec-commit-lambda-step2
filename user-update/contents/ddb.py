@@ -186,7 +186,18 @@ def create_user_info(
     #################################################
     # DB書き込みトランザクション実行
     #################################################
-    transact_result = db.execute_transact_write_item(transact_items)
+    if len(transact_items) > 100:
+        transact_items_list = [transact_items[i:i+100] for i in range(0, len(transact_items), 100)]
+    else:
+        transact_items_list = [transact_items]
+    logger.info("------------transact_items_list-----------")
+    logger.info(transact_items_list)
+    logger.info("------------------------------------------")
+
+    for transact_item in transact_items_list:
+        transact_result = db.execute_transact_write_item(transact_item)
+        if not transact_result:
+            break
 
     return transact_result, user_id
 
@@ -446,6 +457,17 @@ def update_user_info(
     #################################################
     # DB書き込みトランザクション実行
     #################################################
-    transact_result = db.execute_transact_write_item(transact_items)
+    if len(transact_items) > 100:
+        transact_items_list = [transact_items[i:i+100] for i in range(0, len(transact_items), 100)]
+    else:
+        transact_items_list = [transact_items]
+    logger.info("------------transact_items_list-----------")
+    logger.info(transact_items_list)
+    logger.info("------------------------------------------")
+
+    for transact_item in transact_items_list:
+        transact_result = db.execute_transact_write_item(transact_item)
+        if not transact_result:
+            break
 
     return transact_result, user_id
