@@ -312,6 +312,11 @@ def lambda_handler(event, context, user_info):
                 "headers": res_headers,
                 "body": json.dumps(body, ensure_ascii=False),
             }
+            
+        # 履歴保存期間取得
+        contract_id = user_info["contract_id"]
+        contract_info = ddb.get_contract_info(contract_id, contract_table)
+        history_storage_period = contract_info["history_storage_period"]
 
         validate_result = validate.validate(
             event,
@@ -331,7 +336,7 @@ def lambda_handler(event, context, user_info):
 
         try:
             # 履歴取得
-            hist_list = ddb.get_hist_list(hist_list_table, validate_result["request_params"])
+            hist_list = ddb.get_hist_list(hist_list_table, validate_result["request_params"], history_storage_period)
             response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:
             logger.info(e)

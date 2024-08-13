@@ -6,6 +6,7 @@ import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from operator import itemgetter
 from decimal import Decimal
+from dateutil.relativedelta import relativedelta
 
 
 logger = Logger()
@@ -59,20 +60,31 @@ def get_user_device_group_table(pk, table, **kwargs):
 
 
 # 履歴一覧取得
-def get_hist_list(hist_list_table_table, params):
+def get_hist_list(hist_list_table_table, params, history_storage_period):
     sortkeyExpression = None
-    if params["history_start_datetime"] and params["history_end_datetime"]:
+
+    unichange_hist_start = datetime.fromtimestamp(int(params["history_start_datetime"]))
+    unichange_hist_end = datetime.fromtimestamp(int(params["history_end_datetime"]))
+    
+    # 開始日と終了日-履歴保存期間を比較
+    if unichange_hist_start <= unichange_hist_end - relativedelta(years=history_storage_period):
+        unichange_hist_start = unichange_hist_end - relativedelta(years=history_storage_period)
+        
+    change_hist_start = unichange_hist_start.timestamp()
+    change_hist_end = unichange_hist_end.timestamp()
+    
+    if change_hist_start and change_hist_end:
         sortkeyExpression = Key("event_datetime").between(
-            Decimal(int(params["history_start_datetime"]) * 1000),
-            Decimal(int(params["history_end_datetime"]) * 1000 + 999),
+            Decimal(int(change_hist_start) * 1000),
+            Decimal(int(change_hist_end) * 1000 + 999),
         )
-    elif params["history_start_datetime"]:
+    elif change_hist_start:
         sortkeyExpression = Key("event_datetime").gte(
-            Decimal(int(params["history_start_datetime"]) * 1000)
+            Decimal(int(change_hist_start) * 1000)
         )
-    elif params["history_end_datetime"]:
+    elif change_hist_end:
         sortkeyExpression = Key("event_datetime").lte(
-            Decimal(int(params["history_end_datetime"]) * 1000 + 999)
+            Decimal(int(change_hist_end) * 1000 + 999)
         )
     reverse = params["sort"] != 0
     hist_list = []
