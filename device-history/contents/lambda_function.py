@@ -13,6 +13,7 @@ import auth
 import convert
 import ssm
 import ddb
+import db
 import validate
 
 patch_all()
@@ -313,9 +314,8 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
             
-        # 履歴保存期間取得
         contract_id = user_info["contract_id"]
-        contract_info = ddb.get_contract_info(contract_id, contract_table)
+        contract_info = db.get_contract_info(contract_id, contract_table)
         history_storage_period = contract_info["history_storage_period"]
 
         validate_result = validate.validate(
