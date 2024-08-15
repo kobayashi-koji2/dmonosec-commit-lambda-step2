@@ -200,11 +200,22 @@ resource "aws_dynamodb_table" "device" {
     type = "N"
   }
 
+  attribute {
+    name = "contract_id"
+    type = "S"
+  }
+
   billing_mode = "PAY_PER_REQUEST"
 
   global_secondary_index {
     hash_key        = "contract_state"
     name            = "contract_state_index"
+    projection_type = "ALL"
+  }
+
+  global_secondary_index {
+    hash_key        = "contract_id"
+    name            = "contract_id_index"
     projection_type = "ALL"
   }
 

@@ -35,3 +35,35 @@ def get_pre_reg_device_info(pk, table):
 
     # return sorted(pre_reg_device_list, key=itemgetter('dev_reg_datetime'))
     return pre_reg_device_list
+
+def get_device_info_by_contract_id(pk,table):
+
+    dev_info_list = []
+    start_key = None
+    done = True
+    
+    while done:
+        
+        if start_key:
+            response = table.query(
+                IndexName = "contract_id_index",
+                KeyConditionExpression=Key("contract_id").eq(pk),
+                Limit = 220,
+                ExclusiveStartKey = start_key
+            )
+        else:
+            response = table.query(
+                IndexName = "contract_id_index",
+                KeyConditionExpression=Key("contract_id").eq(pk),
+                Limit = 220
+            )
+
+        #logger.info(f"レスポンス:{response["Items"]}")
+            
+        dev_info_list.extend(response["Items"])
+        start_key = response.get('LastEvaluatedKey', None)
+            
+        if start_key == None:
+             break
+        
+    return dev_info_list

@@ -157,16 +157,24 @@ def lambda_handler(event, context, user_info):
         # 6 デバイス一覧生成
         ##################
         order = 1
-        device_list, device_info_list = [], []
-        for item1 in device_order:
+        device_list, device_info_list, device_info_list_order = [], [], []
+        device_info_list = ddb.get_device_info_by_contract_id(contract_id,tables["device_table"])
+
+        for device_item in device_order:
+            for device_info_item in device_info_list:
+                if device_info_item["device_id"] == device_item:
+                    device_info_list_order.append(device_info_item)
+                    break
+
+        for device_info in device_info_list_order:
             group_name_list = []
             # デバイス情報取得
-            device_info = ddb.get_device_info(item1, tables["device_table"])
-            logger.info({"device_info": device_info})
-            if len(device_info["Items"]) == 1:
-                device_info_list.append(device_info["Items"][0])
-            elif len(device_info["Items"]) == 0:
-                logger.info(f"device information does not exist:{item1}")
+            #device_info = ddb.get_device_info(item1, tables["device_table"])
+            #logger.info({"device_info": device_info})
+            if device_info:
+                pass
+            elif not device_info:
+                logger.info(f"device information does not exist:{device_info["device_id"]}")
                 continue
             else:
                 res_body = {
@@ -180,7 +188,7 @@ def lambda_handler(event, context, user_info):
 
             # グループID参照
             filtered_device_group_relation = next(
-                (group for group in device_group_relation if group["device_id"] == item1), {}
+                (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
             ).get("group_list", [])
             logger.info(f"グループID参照:{filtered_device_group_relation}")
             # グループ名参照
@@ -195,9 +203,10 @@ def lambda_handler(event, context, user_info):
                 group_name_list.sort()
             logger.info(f"グループ名:{group_name_list}")
             # デバイス現状態取得
-            device_state = db.get_device_state(item1, tables["device_state_table"])
+            logger.info(f"device_info_dev_id:{device_info["device_id"]}")
+            device_state = db.get_device_state(device_info["device_id"], tables["device_state_table"])
             if not device_state:
-                logger.info(f"device current status information does not exist:{item1}")
+                logger.info(f"device current status information does not exist:{device_info["device_id"]}")
 
             # 機器異常状態判定
             device_abnormality = 0
@@ -209,6 +218,8 @@ def lambda_handler(event, context, user_info):
             ):
                 device_abnormality = 1
 
+            logger.info(f"device_state:{device_state}")
+
             # 最終受信日時取得
             last_receiving_time = ""
             if device_state:
@@ -219,7 +230,7 @@ def lambda_handler(event, context, user_info):
 
             # 接点入力リスト
             di_list = []
-            for di in device_info["Items"][0]["device_data"]["config"]["terminal_settings"].get(
+            for di in device_info["device_data"]["config"]["terminal_settings"].get(
                 "di_list", []
             ):
                 di_no = di["di_no"]
@@ -240,7 +251,7 @@ def lambda_handler(event, context, user_info):
 
             # 接点出力リスト
             do_list = []
-            for do in device_info["Items"][0]["device_data"]["config"]["terminal_settings"].get(
+            for do in device_info["device_data"]["config"]["terminal_settings"].get(
                 "do_list", []
             ):
                 do_list.append(
@@ -255,14 +266,14 @@ def lambda_handler(event, context, user_info):
             # デバイス一覧生成
             device_list.append(
                 {
-                    "device_id": item1,
-                    "device_name": device_info["Items"][0]["device_data"]["config"].get(
+                    "device_id": device_info["device_id"],
+                    "device_name": device_info["device_data"]["config"].get(
                         "device_name"
                     ),
-                    "device_imei": device_info["Items"][0]["imei"],
-                    "device_type": device_info["Items"][0]["device_type"],
+                    "device_imei": device_info["imei"],
+                    "device_type": device_info["device_type"],
                     "group_name_list": group_name_list,
-                    "device_code": device_info["Items"][0]["device_data"]["param"].get(
+                    "device_code": device_info["device_data"]["param"].get(
                         "device_code"
                     ),
                     "last_receiving_time": last_receiving_time,
