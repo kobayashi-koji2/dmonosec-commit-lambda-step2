@@ -8,6 +8,7 @@ from botocore.exceptions import ClientError
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from boto3.dynamodb.conditions import Key
+from functools import reduce
 
 # layer
 import auth
@@ -166,7 +167,13 @@ def lambda_handler(event, context, user_info):
                     device_info_list_order.append(device_info_item)
                     break
 
-        for device_info in device_info_list_order:
+        query_params = event.get("queryStringParameters",{})
+        detect_condition = query_params.get("detect_condition")
+        keyword = query_params.get("keyword")
+
+        device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
+
+        for device_info in device_info_list_order_filtered:
             group_name_list = []
             # デバイス情報取得
             #device_info = ddb.get_device_info(item1, tables["device_table"])
@@ -335,3 +342,80 @@ def device_order_comparison(device_order, device_id_list):
         device_order = device_order + diff2
     logger.info(device_order)
     return device_order
+
+
+def keyword_detection_device_list(detect_condition,keyword,device_info_list):
+
+    if detect_condition == 0:
+        filtered_device_list = device_info_list
+    else:
+        filtered_device_list = device_detect(detect_condition,keyword,device_info_list)
+    
+    return filtered_device_list
+
+
+def device_detect(detect_condition,keyword,device_info_list):
+
+    # AND,OR区切りでリスト化
+    if "AND" in keyword or " " in keyword:
+        key_list = re.split("AND| ",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 1
+    elif "OR" in keyword:
+        key_list = re.split("OR",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 2
+    elif "-" == keyword[0]:
+        case = 3
+    else:
+        case = 0
+
+    return_list = []
+
+    for device_info in device_info_list:
+        
+        hit_list = []
+
+        if detect_condition == 1:
+            device_value = device_info["device_data"]["config"]["device_name"]
+        elif detect_condition == 2:
+            device_value = device_info["device_id"]
+        elif detect_condition == 3:
+            device_value = device_info["device_type"]
+        else :
+            pass
+
+        logger.info(f"device_name:{device_value}")
+        
+        if case == 1:
+            for key in key_list:
+                if key in device_value:
+                    hit_list.append(1)
+                else:
+                    hit_list.append(0)
+            logger.info(f"hit_list:{hit_list}")
+            if len(hit_list)!=0:
+                result = reduce(lambda x, y: x * y, hit_list)
+                if result == 1:
+                    return_list.append(device_info)
+        elif case == 2:
+            for key in key_list:
+                if key in device_value:
+                    hit_list.append(1)
+                else:
+                    hit_list.append(0)
+            logger.info(f"hit_list:{hit_list}")
+            if len(hit_list)!=0:
+                result = sum(hit_list)
+                if result != 0:
+                    return_list.append(device_info)
+        elif case == 3:
+            if keyword[1:] in device_value:
+                pass
+            else:
+                return_list.append(device_info)
+        else:
+            if keyword in device_value:
+                return_list.append(device_info)
+
+    return return_list
