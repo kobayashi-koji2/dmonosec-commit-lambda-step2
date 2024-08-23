@@ -25,7 +25,7 @@ def validate(event, user, contract_table, group_table):
     # グループ登録数チェック（登録の場合）
     if http_method == "POST":
         group_list = contract.get("contract_data", []).get("group_list", [])
-        if len(group_list) >= 100:
+        if len(group_list) >= 300:
             return {"message": "グループ登録可能数の上限に達しています。"}
 
     # グループIDの権限チェック（更新の場合）
