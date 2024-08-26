@@ -167,11 +167,9 @@ def lambda_handler(event, context, user_info):
                     device_info_list_order.append(device_info_item)
                     break
 
-        # query_params = event.get("queryStringParameters",{})
-        # detect_condition = query_params.get("detect_condition")
-        # keyword = query_params.get("keyword")
-        detect_condition = 0
-        keyword = "3b8642292dd3OR3b8642292dd8"
+        query_params = event.get("queryStringParameters",{})
+        detect_condition = query_params.get("detect_condition")
+        keyword = query_params.get("keyword")
 
         if detect_condition != None and keyword != None and keyword != "":
             device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
