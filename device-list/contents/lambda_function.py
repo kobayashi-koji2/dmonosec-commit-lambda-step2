@@ -168,10 +168,10 @@ def lambda_handler(event, context, user_info):
                     break
 
         query_params = event.get("queryStringParameters",{})
-        logger.info(f"query_params:{query_params}")
         if query_params:
             detect_condition = query_params.get("detect_condition")
             keyword = query_params.get("keyword")
+            logger.info(f"query_params:{query_params}")
         else:
             detect_condition = None
             keyword = None
