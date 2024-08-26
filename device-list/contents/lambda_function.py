@@ -171,7 +171,18 @@ def lambda_handler(event, context, user_info):
         detect_condition = query_params.get("detect_condition")
         keyword = query_params.get("keyword")
 
-        device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
+        if detect_condition != None and keyword != None and keyword != "":
+            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
+        elif detect_condition == None and (keyword == None or keyword == ""):
+            device_info_list_order_filtered = device_info_list_order
+        else:
+            res_body = {"message": "検索対象またはキーワードが設定されていません。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
+            
 
         for device_info in device_info_list_order_filtered:
             group_name_list = []
@@ -347,7 +358,7 @@ def device_order_comparison(device_order, device_id_list):
 def keyword_detection_device_list(detect_condition,keyword,device_info_list):
 
     if detect_condition == 0:
-        filtered_device_list = device_info_list
+        filtered_device_list = device_detect_all(keyword,device_info_list)
     else:
         filtered_device_list = device_detect(detect_condition,keyword,device_info_list)
     
@@ -416,6 +427,66 @@ def device_detect(detect_condition,keyword,device_info_list):
                 return_list.append(device_info)
         else:
             if keyword in device_value:
+                return_list.append(device_info)
+
+    return return_list
+
+
+def device_detect_all(keyword,device_info_list):
+
+    # AND,OR区切りでリスト化
+    if "AND" in keyword or " " in keyword:
+        key_list = re.split("AND| ",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 1
+    elif "OR" in keyword:
+        key_list = re.split("OR",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 2
+    elif "-" == keyword[0]:
+        case = 3
+    else:
+        case = 0
+
+    return_list = []
+
+    for device_info in device_info_list:
+        
+        hit_list = []
+
+        device_name = device_info["device_data"]["config"]["device_name"]
+        device_id = device_info["device_id"]
+        device_type = device_info["device_type"]
+        
+        if case == 1:
+            for key in key_list:
+                if (key in device_name) or (key in device_id) or (key in device_type):
+                    hit_list.append(1)
+                else:
+                    hit_list.append(0)
+            logger.info(f"hit_list:{hit_list}")
+            if len(hit_list)!=0:
+                result = reduce(lambda x, y: x * y, hit_list)
+                if result == 1:
+                    return_list.append(device_info)
+        elif case == 2:
+            for key in key_list:
+                if (key in device_name) or (key in device_id) or (key in device_type):
+                    hit_list.append(1)
+                else:
+                    hit_list.append(0)
+            logger.info(f"hit_list:{hit_list}")
+            if len(hit_list)!=0:
+                result = sum(hit_list)
+                if result != 0:
+                    return_list.append(device_info)
+        elif case == 3:
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_type):
+                pass
+            else:
+                return_list.append(device_info)
+        else:
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_type):
                 return_list.append(device_info)
 
     return return_list
