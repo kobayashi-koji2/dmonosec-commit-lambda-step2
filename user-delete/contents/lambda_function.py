@@ -239,13 +239,22 @@ def lambda_handler(event, context, login_user, user_id):
             )
 
         # DB更新
-        if not db.execute_transact_write_item(transact_items):
-            logger.error("ユーザー情報削除に失敗", exc_info=True)
-            return {
-                "statusCode": 500,
-                "headers": res_headers,
-                "body": json.dumps({"message": "ユーザー情報の削除に失敗しました。"}, ensure_ascii=False),
-            }
+        if len(transact_items) > 100:
+            transact_items_list = [transact_items[i:i+100] for i in range(0, len(transact_items), 100)]
+        else:
+            transact_items_list = [transact_items]
+        logger.info("------------transact_items_list-----------")
+        logger.info(transact_items_list)
+        logger.info("------------------------------------------")
+
+        for transact_item in transact_items_list:
+            if not db.execute_transact_write_item(transact_item):
+                logger.error("ユーザー情報削除に失敗", exc_info=True)
+                return {
+                    "statusCode": 500,
+                    "headers": res_headers,
+                    "body": json.dumps({"message": "ユーザー情報の削除に失敗しました。"}, ensure_ascii=False),
+                }
 
         return {"statusCode": 204, "headers": res_headers}
 
