@@ -380,8 +380,8 @@ def keyword_detection_device_list(detect_condition,keyword,device_info_list):
 def device_detect(detect_condition,keyword,device_info_list):
 
     # AND,OR区切りでリスト化
-    if "AND" in keyword or " " in keyword:
-        key_list = re.split("AND| ",keyword)
+    if "AND" in keyword or " " in keyword or "\u3000" in keyword:
+        key_list = re.split("AND| |\u3000",keyword)
         logger.info(f"key_list:{key_list}")
         case = 1
     elif "OR" in keyword:
@@ -402,9 +402,9 @@ def device_detect(detect_condition,keyword,device_info_list):
         if detect_condition == 1:
             device_value = device_info["device_data"]["config"]["device_name"]
         elif detect_condition == 2:
-            device_value = device_info["device_id"]
+            device_value = device_info["imei"]
         elif detect_condition == 3:
-            device_value = device_info["device_type"]
+            device_value = device_info["device_data"]["param"]["device_code"]
         else :
             pass
 
@@ -447,8 +447,8 @@ def device_detect(detect_condition,keyword,device_info_list):
 def device_detect_all(keyword,device_info_list):
 
     # AND,OR区切りでリスト化
-    if "AND" in keyword or " " in keyword:
-        key_list = re.split("AND| ",keyword)
+    if "AND" in keyword or " " in keyword or "\u3000" in keyword:
+        key_list = re.split("AND| |\u3000",keyword)
         logger.info(f"key_list:{key_list}")
         case = 1
     elif "OR" in keyword:
@@ -467,12 +467,12 @@ def device_detect_all(keyword,device_info_list):
         hit_list = []
 
         device_name = device_info["device_data"]["config"]["device_name"]
-        device_id = device_info["device_id"]
-        device_type = device_info["device_type"]
+        device_id = device_info["imei"]
+        device_code = device_info["device_data"]["param"]["device_code"]
         
         if case == 1:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_type):
+                if (key in device_name) or (key in device_id) or (key in device_code):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -483,7 +483,7 @@ def device_detect_all(keyword,device_info_list):
                     return_list.append(device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_type):
+                if (key in device_name) or (key in device_id) or (key in device_code):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -493,12 +493,12 @@ def device_detect_all(keyword,device_info_list):
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_type):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code):
                 pass
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_type):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code):
                 return_list.append(device_info)
 
     return return_list
