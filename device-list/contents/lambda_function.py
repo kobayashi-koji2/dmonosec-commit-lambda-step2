@@ -167,9 +167,16 @@ def lambda_handler(event, context, user_info):
                     device_info_list_order.append(device_info_item)
                     break
 
-        query_params = event.get("queryStringParameters",{})
+        query_params = event.get("queryStringParameters")
         if query_params:
-            detect_condition = query_params.get("detect_condition")
+            query_param_detect_condition = query_params.get("detect_condition")
+            if query_param_detect_condition:
+                if query_param_detect_condition.isdecimal():
+                    detect_condition = int(query_param_detect_condition)
+                else:
+                    detect_condition = None
+            else:
+                detect_condition = None
             keyword = query_params.get("keyword")
             logger.info(f"query_params:{query_params}")
         else:
