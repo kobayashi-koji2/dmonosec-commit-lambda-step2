@@ -31,6 +31,8 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
     )
 
     formatted_automation_list = automation_info_fmt(automation_info_list)
+    
+    formatted_customevent_list = customevent_info_fmt(device_info["device_data"]["config"]["custom_event_list"])
 
     # 機器異常状態判定
     device_abnormality = 0
@@ -60,6 +62,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         ),
         "signal_status": device_state.get("signal_state", 0),
         "automation_list": formatted_automation_list,
+        "custom_event_list": formatted_customevent_list,
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", ""),
         #'ai_list':terminal_info.get('ai_list','') #フェーズ2
@@ -140,5 +143,31 @@ def terminal_info_fmt(terminal_settings, device_state):
 
     logger.info(do_list)
     # アナログ入力(フェーズ2)
-
     return {"di_list": di_list, "do_list": do_list, "ai_list": ""}
+    
+def customevent_info_fmt(device_info):
+    send_customevent_list = []
+    di_event_list = []
+    for customevent_info_list in device_info:
+        for customevent_di_item in customevent_info_list.get("di_event_list", {}):
+            di_event_list.append(
+                {
+                    "di_no": customevent_di_item.get("di_no", {}),
+                    "di_state": customevent_di_item.get("di_state", {})
+                }
+            )
+        send_customevent_list.append(
+        {
+            "custom_event_id": customevent_info_list["custom_event_id"],
+            "custom_event_reg_datetime": customevent_info_list["custom_event_reg_datetime"],
+            "event_type": customevent_info_list["event_type"],
+            "custom_event_name": customevent_info_list["custom_event_name"],
+            "time": customevent_info_list["time"],
+            "weekday": customevent_info_list["weekday"],
+            "elapsed_time": customevent_info_list["elapsed_time"],
+            "di_event_list": di_event_list
+        }
+    )
+    return send_customevent_list
+
+    
