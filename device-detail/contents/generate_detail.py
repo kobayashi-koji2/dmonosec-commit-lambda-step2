@@ -32,7 +32,11 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
 
     formatted_automation_list = automation_info_fmt(automation_info_list)
     
-    formatted_customevent_list = customevent_info_fmt(device_info["device_data"]["config"]["custom_event_list"])
+    try:
+        if device_info["device_data"]["config"]["custom_event_list"]:
+            formatted_customevent_list = customevent_info_fmt(device_info["device_data"]["config"]["custom_event_list"])
+    except Exception as e:
+        formatted_customevent_list = []
 
     # 機器異常状態判定
     device_abnormality = 0
