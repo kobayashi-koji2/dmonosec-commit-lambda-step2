@@ -46,9 +46,9 @@ def create_history_message(hist):
                 healthy_period = str(hist["di_healthy_period"]) + "時間"
             elif hist["di_healthy_type"] == "day":
                 healthy_period = str(hist["di_healthy_period"]) + "日"
-            msg = f"【接点未入力変化検出（発生）】\n設定した期間（{healthy_period}）、{terminal_name}の変化信号を受信しませんでした。"
+            msg = f"【接点入力未変化検出（発生）】\n設定した期間（{healthy_period}）、{terminal_name}の変化信号を受信しませんでした。"
         elif hist["occurrence_flag"] == 0:
-            msg = f"【接点未入力変化検出（復旧）】\n{terminal_name}の変化信号を受信しました。"
+            msg = f"【接点入力未変化検出（復旧）】\n{terminal_name}の変化信号を受信しました。"
 
     # 接点出力変化
     elif hist["event_type"] == "do_change":
