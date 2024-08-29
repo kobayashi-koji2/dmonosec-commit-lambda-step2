@@ -167,21 +167,15 @@ def lambda_handler(event, context, user_info):
                     device_info_list_order.append(device_info_item)
                     break
 
+        detect_condition = None
+        keyword = None
         query_params = event.get("queryStringParameters")
         if query_params:
+            keyword = query_params.get("keyword")
             query_param_detect_condition = query_params.get("detect_condition")
             if query_param_detect_condition:
                 if query_param_detect_condition.isdecimal():
                     detect_condition = int(query_param_detect_condition)
-                else:
-                    detect_condition = None
-            else:
-                detect_condition = None
-            keyword = query_params.get("keyword")
-            logger.info(f"query_params:{query_params}")
-        else:
-            detect_condition = None
-            keyword = None
 
         if detect_condition != None and keyword != None and keyword != "":
             device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
@@ -371,8 +365,10 @@ def keyword_detection_device_list(detect_condition,keyword,device_info_list):
 
     if detect_condition == 0:
         filtered_device_list = device_detect_all(keyword,device_info_list)
-    else:
+    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3:
         filtered_device_list = device_detect(detect_condition,keyword,device_info_list)
+    else:
+        filtered_device_list = device_info_list
     
     return filtered_device_list
 
