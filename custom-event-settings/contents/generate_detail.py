@@ -14,11 +14,18 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
     device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
     # カスタムイベントIDの生成
     custom_event_id = str(uuid.uuid4())
+# イベントカスタム名チェック
+    if custom_event_info["custom_event_name"]:
+        custom_event_name = custom_event_info["custom_event_name"]
+    elif not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 0:
+        custom_event_name = "無題の日時カスタムイベント"
+    elif  not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 1:
+        custom_event_name = "無題の継続時間カスタムイベント"
     put_item = {
         "custom_event_id": custom_event_id,
         'custom_event_reg_datetime': custom_event_info["custom_event_reg_datetime"],
         "event_type": custom_event_info["event_type"],
-        "custom_event_name": custom_event_info["custom_event_name"],
+        "custom_event_name": custom_event_name,
         "time": custom_event_info["time"],
         "weekday": custom_event_info["weekday"],
         "elapsed_time": custom_event_info["elapsed_time"],
@@ -46,20 +53,26 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
     
     if db_update == True:
-        res_body = {"message": "カスタムイベントの登録に成功しました。"}
+        res_body = {"message": "データの登録に成功しました。"}
         return True, res_body
     else:
-        res_body = {"message": "カスタムイベントの登録に失敗しました。"}
+        res_body = {"message": "データの登録に失敗しました。"}
         return False, res_body
     
 # カスタムイベント設定更新         
 def update_custom_event_info(custom_event_info, device_table, device_id):
     device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
+    if custom_event_info["custom_event_name"]:
+        custom_event_name = custom_event_info["custom_event_name"]
+    elif not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 0:
+        custom_event_name = "無題の日時カスタムイベント"
+    elif  not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 1:
+        custom_event_name = "無題の継続時間カスタムイベント"
     put_item = {
         "custom_event_id": custom_event_info["custom_event_id"],
         'custom_event_reg_datetime': custom_event_info["custom_event_reg_datetime"],
         "event_type": custom_event_info["event_type"],
-        "custom_event_name": custom_event_info["custom_event_name"],
+        "custom_event_name": custom_event_name,
         "time": custom_event_info["time"],
         "weekday": custom_event_info["weekday"],
         "elapsed_time": custom_event_info["elapsed_time"],
@@ -76,10 +89,10 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
     
     if db_update == True:
-        res_body = {"message": "カスタムイベントの登録に成功しました。"}
+        res_body = {"message": "データの更新に成功しました。"}
         return True, res_body
     else:
-        res_body = {"message": "カスタムイベントの登録に失敗しました。"}
+        res_body = {"message": "データの更新に失敗しました。"}
         return False, res_body
             
 def update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei):
@@ -109,7 +122,7 @@ def update_ddb_custom_event_info(custom_event_list, device_table, device_id, ime
     transact_items.append(custom_event_create)
         
     logger.debug(f"put_custom_event_info: {transact_items}")
-    # 各データを登録・更新・削除
+    # 各データを登録・更新
     if not db.execute_transact_write_item(transact_items):
         return False
     else:
