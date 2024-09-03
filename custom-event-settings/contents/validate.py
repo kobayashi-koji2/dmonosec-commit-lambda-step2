@@ -32,7 +32,6 @@ def validate(event, user, device_table, contract_table):
     if device_id not in contract["contract_data"]["device_list"]:
         return {"message": "不正なデバイスIDが指定されています。"}
     # Bodyパラメータの中身チェック
-    custom_event_id_list = []
     for key in body_params["di_event_list"]:
         res_di_no = key["di_no"]
         res_di_state = key["di_state"]
