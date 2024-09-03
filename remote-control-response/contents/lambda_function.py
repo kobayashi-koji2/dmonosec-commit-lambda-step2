@@ -33,8 +33,13 @@ def lambda_handler(event, context, user_info):
         # DynamoDB操作オブジェクト生成
         try:
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
-            remote_controls_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
+            device_relation_table = dynamodb.Table(
+                ssm.table_names["DEVICE_RELATION_TABLE"]
+            )
+            remote_controls_table = dynamodb.Table(
+                ssm.table_names["REMOTE_CONTROL_TABLE"]
+            )
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -50,6 +55,7 @@ def lambda_handler(event, context, user_info):
             contract_table,
             device_relation_table,
             remote_controls_table,
+            device_table,
         )
         if validate_result.get("message"):
             return {
@@ -61,7 +67,10 @@ def lambda_handler(event, context, user_info):
         remote_control = validate_result["remote_control"]
         req_datetime = remote_control["req_datetime"]
         limit_datetime = req_datetime + 10000  # 10秒
-        while not remote_control.get("control_result") and time.time() <= limit_datetime / 1000:
+        while (
+            not remote_control.get("control_result")
+            and time.time() <= limit_datetime / 1000
+        ):
             time.sleep(1)
             logger.info(time.time())
             remote_control = ddb.get_remote_control_info(
@@ -80,7 +89,9 @@ def lambda_handler(event, context, user_info):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
+            "body": json.dumps(
+                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+            ),
         }
     except Exception as e:
         logger.info(e)
@@ -88,5 +99,7 @@ def lambda_handler(event, context, user_info):
         return {
             "statusCode": 500,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False, default=convert.decimal_default_proc),
+            "body": json.dumps(
+                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+            ),
         }

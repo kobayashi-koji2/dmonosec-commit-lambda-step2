@@ -24,14 +24,16 @@ def validate(event, user_info, tables):
     logger.info(f"body: {body}")
 
     # 1.3 ユーザー権限確認
-    contract_info = db.get_contract_info(user_info["contract_id"], tables["contract_table"])
+    contract_info = db.get_contract_info(
+        user_info["contract_id"], tables["contract_table"]
+    )
     if not contract_info:
         return {"message": "アカウント情報が存在しません。"}
 
-    ##################
-    # 2 デバイス操作権限チェック
-    ##################
-    device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+    # 1.4 デバイス種別取得
+    device_info = ddb.get_device_info(device_id, tables["device_table"]).get(
+        "Items", {}
+    )
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
     if len(device_info) == 0:
@@ -40,12 +42,20 @@ def validate(event, user_info, tables):
         return {
             "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
         }
+    device_type = device_info[0]["device_type"]
 
+    # 1.5 デバイス種別チェック
+    if device_type == "UnaTag":
+        return {"message": "UnaTagに接点入力設定を行うことはできません。"}
+
+    ##################
+    # 2 デバイス操作権限チェック
+    ##################
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
         return {"message": "不正なデバイスIDが指定されています。"}
     # 端子設定チェック
-    terminal = terminal_check(body, device_id, device_info[0]["device_type"], tables)
+    terminal = terminal_check(body, device_id, device_type, tables)
     if not terminal:
         return {"message": "デバイス種別と端子設定が一致しません。"}
 
@@ -113,10 +123,16 @@ def di_healthy_data_check_and_reset(body):
         if "di_healthy_type" in item and "di_healthy_period" in item:
             if item["di_healthy_type"] == "":
                 item["di_healthy_period"] = 0
-            elif item["di_healthy_type"] == "day" and 1 <= float(item["di_healthy_period"]) <= 100:
+            elif (
+                item["di_healthy_type"] == "day"
+                and 1 <= float(item["di_healthy_period"]) <= 100
+            ):
                 # 接点入力_未変化検出_単位が "day" の場合、接点入力_未変化検出_期間は 1-100 の範囲のみ許可
                 continue
-            elif item["di_healthy_type"] == "hour" and 1 <= float(item["di_healthy_period"]) <= 23:
+            elif (
+                item["di_healthy_type"] == "hour"
+                and 1 <= float(item["di_healthy_period"]) <= 23
+            ):
                 # 接点入力_未変化検出_単位が "hour" の場合、接点入力_未変化検出_期間は 1-23 の範囲のみ許可
                 continue
             else:
@@ -204,13 +220,17 @@ def input_check(param):
                             out_range_list.append(key)
                     # 文字列フォーマット
                     if key in str_format and value not in str_format[key]:
-                        logger.info(f"Key:{key}  value:{value} - reason:文字列の形式が不正です。")
+                        logger.info(
+                            f"Key:{key}  value:{value} - reason:文字列の形式が不正です。"
+                        )
                         invalid_format_list.append(key)
                 # 数値
                 elif isinstance(value, (int, float)):
                     # データ型
                     if key in str_value_limits:
-                        logger.info(f"Key:{key}  value:{value} - reason:データ型が不正です。")
+                        logger.info(
+                            f"Key:{key}  value:{value} - reason:データ型が不正です。"
+                        )
                         invalid_data_type_list.append(key)
                     # 桁数
                     if key in int_float_value_limits:

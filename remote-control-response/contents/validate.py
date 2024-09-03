@@ -9,7 +9,14 @@ logger = Logger()
 
 
 # パラメータチェック
-def validate(event, user, contract_table, device_relation_table, remote_controls_table):
+def validate(
+    event,
+    user,
+    contract_table,
+    device_relation_table,
+    remote_controls_table,
+    device_table,
+):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         return {"message": "グループの操作権限がありません。"}
@@ -24,11 +31,29 @@ def validate(event, user, contract_table, device_relation_table, remote_controls
     if "device_req_no" not in path_params:
         return {"message": "パラメータが不正です"}
 
+    # 遠隔制御情報取得
     remote_control = ddb.get_remote_control_info(
         path_params["device_req_no"], remote_controls_table
     )
     if not remote_control:
         return {"message": "端末要求番号が存在しません。"}
+
+    # デバイス種別取得
+    device_id = remote_control.get("device_id")
+    device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
+    logger.info(f"device_id: {device_id}")
+    logger.info(f"device_info: {device_info}")
+    if len(device_info) == 0:
+        return {"message": "デバイス情報が存在しません。"}
+    elif len(device_info) >= 2:
+        return {
+            "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
+        }
+    device_type = device_info[0]["device_type"]
+
+    # デバイス種別チェック
+    if device_type == "UnaTag":
+        return {"message": "UnaTagに接点入力設定を行うことはできません。"}
 
     # 権限チェック（共通）
     if remote_control.get("device_id") not in contract["contract_data"]["device_list"]:
@@ -39,7 +64,7 @@ def validate(event, user, contract_table, device_relation_table, remote_controls
         user_device_list = db.get_user_relation_device_id_list(
             user["user_id"], device_relation_table
         )
-        if remote_control.get("device_id") not in user_device_list:
+        if device_id not in user_device_list:
             return {"message": "不正なデバイスIDが指定されています。"}
 
     params = {

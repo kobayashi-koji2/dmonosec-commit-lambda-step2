@@ -30,8 +30,13 @@ def lambda_handler(event, context, user_info):
         # DynamoDB操作オブジェクト生成
         try:
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
-            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
-            remote_control_table = dynamodb.Table(ssm.table_names["REMOTE_CONTROL_TABLE"])
+            device_relation_table = dynamodb.Table(
+                ssm.table_names["DEVICE_RELATION_TABLE"]
+            )
+            remote_control_table = dynamodb.Table(
+                ssm.table_names["REMOTE_CONTROL_TABLE"]
+            )
+            device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -47,7 +52,9 @@ def lambda_handler(event, context, user_info):
             return {
                 "statusCode": 400,
                 "headers": response_headers,
-                "body": json.dumps({"message": "権限がありません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "権限がありません。"}, ensure_ascii=False
+                ),
             }
 
         # 通信制御情報取得
@@ -62,10 +69,25 @@ def lambda_handler(event, context, user_info):
             return {
                 "statusCode": 404,
                 "headers": response_headers,
-                "body": json.dumps({"message": "端末要求が存在しません。"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {"message": "端末要求が存在しません。"}, ensure_ascii=False
+                ),
             }
 
         device_id = remote_control["device_id"]
+
+        # デバイス情報取得
+        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+        logger.info(f"device_id: {device_id}")
+        logger.info(f"device_info: {device_info}")
+        if len(device_info) == 0:
+            return {"message": "デバイス情報が存在しません。"}
+
+        device_type = device_info["device_type"]
+
+        # デバイス種別チェック
+        if device_type == "UnaTag":
+            return {"message": "UnaTagに接点入力設定を行うことはできません。"}
 
         # デバイス操作権限チェック（共通）
         contract = db.get_contract_info(user_info["contract_id"], contract_table)
