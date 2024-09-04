@@ -376,14 +376,14 @@ def keyword_detection_device_list(detect_condition,keyword,device_info_list):
 def device_detect(detect_condition,keyword,device_info_list):
 
     # AND,OR区切りでリスト化
-    if "AND" in keyword or " " in keyword or "\u3000" in keyword:
-        key_list = re.split("AND| |\u3000",keyword)
-        logger.info(f"key_list:{key_list}")
-        case = 1
-    elif "OR" in keyword:
-        key_list = re.split("OR",keyword)
+    if " OR " in keyword:
+        key_list = re.split(" OR ",keyword)
         logger.info(f"key_list:{key_list}")
         case = 2
+    elif " AND " in keyword or " " in keyword or "\u3000" in keyword:
+        key_list = re.split(" AND | |\u3000",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 1
     elif "-" == keyword[0]:
         case = 3
     else:
@@ -443,14 +443,14 @@ def device_detect(detect_condition,keyword,device_info_list):
 def device_detect_all(keyword,device_info_list):
 
     # AND,OR区切りでリスト化
-    if "AND" in keyword or " " in keyword or "\u3000" in keyword:
-        key_list = re.split("AND| |\u3000",keyword)
-        logger.info(f"key_list:{key_list}")
-        case = 1
-    elif "OR" in keyword:
-        key_list = re.split("OR",keyword)
+    if " OR " in keyword:
+        key_list = re.split(" OR ",keyword)
         logger.info(f"key_list:{key_list}")
         case = 2
+    elif " AND " in keyword or " " in keyword or "\u3000" in keyword:
+        key_list = re.split(" AND | |\u3000",keyword)
+        logger.info(f"key_list:{key_list}")
+        case = 1
     elif "-" == keyword[0]:
         case = 3
     else:
