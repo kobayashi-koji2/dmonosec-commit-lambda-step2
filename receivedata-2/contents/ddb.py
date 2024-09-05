@@ -60,6 +60,7 @@ def get_remote_control_info_by_device_id(
     ).get("Items")
     if remote_control_info:
         for item in remote_control_info:
+            logger.debug(f"remote_control_info={item}")
             if item["link_di_no"] == di_trigger and "link_di_result" not in item:
                 return item
     return None
