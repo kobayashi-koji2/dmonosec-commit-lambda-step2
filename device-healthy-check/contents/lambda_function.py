@@ -114,17 +114,24 @@ def lambda_handler(event, context):
                 group_name = "、".join(group_name_list)
                 logger.debug(f"group_name={group_name}")
 
+                # 現状態更新タイプ
+                update_digit = 0b0000
+
                 # デバイスヘルシーチェック
                 if (event_trigger == "lambda-receivedata-2" and event_type == "device_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
                     device_current_state, hist_list_items = device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime, group_list)
+                    if hist_list_items:
+                        update_digit |= 0b0001
 
                 # DIヘルシーチェック
                 if (event_trigger == "lambda-receivedata-2" and event_type == "di_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
                     device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger, group_list)
+                    if hist_list_items:
+                        update_digit |= 0b0010
 
                 if hist_list_items:
                     # 現状態更新
-                    ddb.update_current_state(device_id, device_current_state, state_table)
+                    ddb.update_current_state(device_id, update_digit, device_current_state, state_table)
                     logger.debug("現状態更新")
 
                     # メール通知

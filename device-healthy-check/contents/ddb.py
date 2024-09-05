@@ -46,44 +46,100 @@ def put_cnt_hist_list(db_items, hist_list_table):
 
 
 # 現状態データ更新
-def update_current_state(device_id, db_item, state_table):
-    option = {
-        "Key": {
-            "device_id": device_id,
-        },
-        "UpdateExpression": "set #di1_healthy_state = :di1_healthy_state, \
-                            #di2_healthy_state = :di2_healthy_state, \
-                            #di3_healthy_state = :di3_healthy_state, \
-                            #di4_healthy_state = :di4_healthy_state, \
-                            #di5_healthy_state = :di5_healthy_state, \
-                            #di6_healthy_state = :di6_healthy_state, \
-                            #di7_healthy_state = :di7_healthy_state, \
-                            #di8_healthy_state = :di8_healthy_state, \
-                            #device_healthy_state = :device_healthy_state",
-        "ExpressionAttributeNames": {
-            "#di1_healthy_state": "di1_healthy_state",
-            "#di2_healthy_state": "di2_healthy_state",
-            "#di3_healthy_state": "di3_healthy_state",
-            "#di4_healthy_state": "di4_healthy_state",
-            "#di5_healthy_state": "di5_healthy_state",
-            "#di6_healthy_state": "di6_healthy_state",
-            "#di7_healthy_state": "di7_healthy_state",
-            "#di8_healthy_state": "di8_healthy_state",
-            "#device_healthy_state": "device_healthy_state",
-        },
-        "ExpressionAttributeValues": {
-            ":di1_healthy_state": db_item.get("di1_healthy_state", 0),
-            ":di2_healthy_state": db_item.get("di2_healthy_state", 0),
-            ":di3_healthy_state": db_item.get("di3_healthy_state", 0),
-            ":di4_healthy_state": db_item.get("di4_healthy_state", 0),
-            ":di5_healthy_state": db_item.get("di5_healthy_state", 0),
-            ":di6_healthy_state": db_item.get("di6_healthy_state", 0),
-            ":di7_healthy_state": db_item.get("di7_healthy_state", 0),
-            ":di8_healthy_state": db_item.get("di8_healthy_state", 0),
-            ":device_healthy_state": db_item.get("device_healthy_state", 0),
-        },
-    }
-    logger.debug(f"option={option}")
+def update_current_state(device_id, update_digit, db_item, state_table):
+
+    # デバイスヘルシー & 接点入力未変化
+    if (update_digit & 0b0011) == 0b0011:
+        option = {
+            "Key": {
+                "device_id": device_id,
+            },
+            "UpdateExpression": "set #di1_healthy_state = :di1_healthy_state, \
+                                #di2_healthy_state = :di2_healthy_state, \
+                                #di3_healthy_state = :di3_healthy_state, \
+                                #di4_healthy_state = :di4_healthy_state, \
+                                #di5_healthy_state = :di5_healthy_state, \
+                                #di6_healthy_state = :di6_healthy_state, \
+                                #di7_healthy_state = :di7_healthy_state, \
+                                #di8_healthy_state = :di8_healthy_state, \
+                                #device_healthy_state = :device_healthy_state",
+            "ExpressionAttributeNames": {
+                "#di1_healthy_state": "di1_healthy_state",
+                "#di2_healthy_state": "di2_healthy_state",
+                "#di3_healthy_state": "di3_healthy_state",
+                "#di4_healthy_state": "di4_healthy_state",
+                "#di5_healthy_state": "di5_healthy_state",
+                "#di6_healthy_state": "di6_healthy_state",
+                "#di7_healthy_state": "di7_healthy_state",
+                "#di8_healthy_state": "di8_healthy_state",
+                "#device_healthy_state": "device_healthy_state",
+            },
+            "ExpressionAttributeValues": {
+                ":di1_healthy_state": db_item.get("di1_healthy_state", 0),
+                ":di2_healthy_state": db_item.get("di2_healthy_state", 0),
+                ":di3_healthy_state": db_item.get("di3_healthy_state", 0),
+                ":di4_healthy_state": db_item.get("di4_healthy_state", 0),
+                ":di5_healthy_state": db_item.get("di5_healthy_state", 0),
+                ":di6_healthy_state": db_item.get("di6_healthy_state", 0),
+                ":di7_healthy_state": db_item.get("di7_healthy_state", 0),
+                ":di8_healthy_state": db_item.get("di8_healthy_state", 0),
+                ":device_healthy_state": db_item.get("device_healthy_state", 0),
+            },
+        }
+
+    # デバイスヘルシー
+    elif (update_digit & 0b0001) == 0b0001:
+        option = {
+            "Key": {
+                "device_id": device_id,
+            },
+            "UpdateExpression": "set #device_healthy_state = :device_healthy_state",
+            "ExpressionAttributeNames": {
+                "#device_healthy_state": "device_healthy_state",
+            },
+            "ExpressionAttributeValues": {
+                ":device_healthy_state": db_item.get("device_healthy_state", 0),
+            },
+        }
+
+    # 接点入力未変化
+    elif (update_digit & 0b0010) == 0b0010:
+        option = {
+            "Key": {
+                "device_id": device_id,
+            },
+            "UpdateExpression": "set #di1_healthy_state = :di1_healthy_state, \
+                                #di2_healthy_state = :di2_healthy_state, \
+                                #di3_healthy_state = :di3_healthy_state, \
+                                #di4_healthy_state = :di4_healthy_state, \
+                                #di5_healthy_state = :di5_healthy_state, \
+                                #di6_healthy_state = :di6_healthy_state, \
+                                #di7_healthy_state = :di7_healthy_state, \
+                                #di8_healthy_state = :di8_healthy_state",
+            "ExpressionAttributeNames": {
+                "#di1_healthy_state": "di1_healthy_state",
+                "#di2_healthy_state": "di2_healthy_state",
+                "#di3_healthy_state": "di3_healthy_state",
+                "#di4_healthy_state": "di4_healthy_state",
+                "#di5_healthy_state": "di5_healthy_state",
+                "#di6_healthy_state": "di6_healthy_state",
+                "#di7_healthy_state": "di7_healthy_state",
+                "#di8_healthy_state": "di8_healthy_state",
+            },
+            "ExpressionAttributeValues": {
+                ":di1_healthy_state": db_item.get("di1_healthy_state", 0),
+                ":di2_healthy_state": db_item.get("di2_healthy_state", 0),
+                ":di3_healthy_state": db_item.get("di3_healthy_state", 0),
+                ":di4_healthy_state": db_item.get("di4_healthy_state", 0),
+                ":di5_healthy_state": db_item.get("di5_healthy_state", 0),
+                ":di6_healthy_state": db_item.get("di6_healthy_state", 0),
+                ":di7_healthy_state": db_item.get("di7_healthy_state", 0),
+                ":di8_healthy_state": db_item.get("di8_healthy_state", 0),
+            },
+        }
+    else:
+        logger.debug(f"update_digitエラー update_digit={update_digit}")
+    logger.debug(f"option={option}, update_digit={update_digit}")
 
     try:
         state_table.update_item(**option)

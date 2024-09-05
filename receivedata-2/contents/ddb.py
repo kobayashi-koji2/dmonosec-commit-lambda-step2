@@ -317,6 +317,13 @@ def update_control_res(db_item, remote_control_table):
         # 制御結果記録済みの場合は未更新
         if "control_result" in cnt_state:
             return False
+        # 接点入力紐づけ有 かつ 接点入力状態変化通知結果未記録の場合は未更新
+        if (
+            "link_di_no" in cnt_state
+            and cnt_state["link_di_no"] != 0
+            and "link_di_result" not in cnt_state
+        ):
+            return True
 
     logger.debug(f"req_datetime={req_datetime}")
     option = {

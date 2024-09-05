@@ -635,13 +635,6 @@ def eventJudge(
         remote_control_info = ddb.get_remote_control_info(
             recv_data.get("device_req_no"), remote_control_table
         )
-        if (
-            remote_control_info is None
-            or "link_di_no" in remote_control_info
-            and remote_control_info["link_di_no"] != 0
-        ):
-            logger.debug("紐づけ接点有の為、履歴一覧未記録")
-            return hist_list, current_state_info
         if "control_result" in remote_control_info:
             logger.debug("制御結果記録済みの為、履歴一覧未記録")
             return hist_list, current_state_info
@@ -659,7 +652,14 @@ def eventJudge(
         event_info["event_type"] = remote_control_info.get("control_trigger")
         event_info["device_req_no"] = recv_data.get("device_req_no")
         if recv_data.get("control_result") == "0":
-            event_info["control_result"] = "success"
+            if (
+                remote_control_info is None
+                or "link_di_no" in remote_control_info
+                and remote_control_info["link_di_no"] != 0
+            ):
+                event_info["control_result"] = "not_excuted_link"
+            else:
+                event_info["control_result"] = "success"
         else:
             event_info["control_result"] = "failure"
 

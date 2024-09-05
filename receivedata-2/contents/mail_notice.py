@@ -364,14 +364,24 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         "on_timer_control",
                         "off_timer_control",
                     ]:
-                        terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
-                        timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
-                        event_detail = f"""
-                            　【タイマー設定による制御（成功）】
-                            　制御信号（{terminal_name}）がデバイスに届きました。
-                            　※タイマー設定「{timer_time}」により制御信号を送信しました。
-                        """
-                        mail_send_flg = True
+                        if hist_list_data.get("hist_data", {}).get("control_result") == "not_excuted_link":
+                            terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
+                            timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                            event_detail = f"""
+                                　【タイマー設定による制御（実施中）】
+                                　制御信号（{terminal_name}）がデバイスに届きました。
+                                　※タイマー設定「{timer_time}」により制御信号を送信しました。
+                            """
+                            mail_send_flg = True
+                        else:
+                            terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
+                            timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                            event_detail = f"""
+                                　【タイマー設定による制御（成功）】
+                                　制御信号（{terminal_name}）がデバイスに届きました。
+                                　※タイマー設定「{timer_time}」により制御信号を送信しました。
+                            """
+                            mail_send_flg = True
                     else:
                         terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                         automation_trigger_imei = hist_list_data.get("hist_data", {}).get(
