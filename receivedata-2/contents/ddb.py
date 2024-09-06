@@ -52,15 +52,17 @@ def get_remote_control_info_by_device_id(
     device_id, recv_datetime, remote_control_table, di_trigger
 ):
     start_recv_datetime = recv_datetime - 20000
+    logger.debug(f"device_id={device_id}, start_recv_datetime={start_recv_datetime}, recv_datetime={recv_datetime}, di_trigger={di_trigger}")
     remote_control_info = remote_control_table.query(
         IndexName="device_id_index",
         KeyConditionExpression=Key("device_id").eq(device_id)
         & Key("recv_datetime").between(start_recv_datetime, recv_datetime),
         ScanIndexForward=False,
     ).get("Items")
+    logger.debug(f"remote_control_info={remote_control_info}")
     if remote_control_info:
         for item in remote_control_info:
-            logger.debug(f"remote_control_info={item}")
+            logger.debug(f"item={item}")
             if item["link_di_no"] == di_trigger and "link_di_result" not in item:
                 return item
     return None
