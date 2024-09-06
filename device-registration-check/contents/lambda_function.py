@@ -229,6 +229,7 @@ def _register_device(pre_device, contract, device_announcements):
         "contract_id": pre_device["contract_id"],
         "announcement_create_datetime": announcement_create_datetime,
         "imei": pre_device["imei"],
+        "device_code": pre_device["device_code"],
         "device_announcement_type": "auto_regist_complete",
         "expire_datetime": expire_datetime,
     }

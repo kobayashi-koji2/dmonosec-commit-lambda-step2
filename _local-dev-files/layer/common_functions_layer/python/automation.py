@@ -503,13 +503,13 @@ def _send_not_exec_mail(
             trigger_device_name = (
                 trigger_device.get("device_data", {}).get("config", {}).get("device_name")
                 if trigger_device.get("device_data", {}).get("config", {}).get("device_name")
-                else f"{trigger_device.get("imei")}（IMEI）"
+                else f"【{trigger_device.get("device_data", {}).get("param", {}).get("device_code")}】{trigger_device.get("imei")}（IMEI）"
             )
 
             control_device_name = (
                 control_device.get("device_data", {}).get("config", {}).get("device_name")
                 if control_device.get("device_data", {}).get("config", {}).get("device_name")
-                else f"{control_device.get("imei")}（IMEI）"
+                else f"【{control_device.get("device_data", {}).get("param", {}).get("device_code")}】{control_device.get("imei")}（IMEI）"
             )
 
             group_name_list = []

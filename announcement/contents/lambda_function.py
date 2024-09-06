@@ -17,9 +17,9 @@ patch_all()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 DEVICE_ANNOUNCEMENT = {
-    "shipped":              "デバイス（IMEI：{IMEI}）が出荷されました。",
-    "regist_balance_days":  "デバイス（IMEI：{IMEI}）の利用登録を実施してください（残り{balance_day}日）。",
-    "auto_regist_complete": "デバイス（IMEI：{IMEI}）の利用登録されないまま７日間経過したので、利用を開始しました。",
+    "shipped": "デバイス（【{device_code}】{IMEI}（IMEI））が出荷されました。",
+    "regist_balance_days": "デバイス（【{device_code}】{IMEI}（IMEI））の利用登録を実施してください（残り{balance_day}日）。",
+    "auto_regist_complete": "デバイス（【{device_code}】{IMEI}（IMEI））の利用登録されないまま７日間経過したので、利用を開始しました。",
 }
 
 logger = Logger()
@@ -61,7 +61,7 @@ def lambda_handler(event, context, user):
         now = datetime.now()
         now_unixtime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
         logger.debug(f"now_unixtime: {now_unixtime}")
-        
+
         # システムメンテナンス情報取得
         announcement_type = "system_maintenance"
         system_maintenance_list = ddb.get_announcement_list(announcement_table, announcement_type, now_unixtime)
@@ -90,14 +90,16 @@ def lambda_handler(event, context, user):
                     balance_day = convert_to_full_width(7 - abs(datetime.fromtimestamp(now_unixtime / 1000) - datetime.fromtimestamp(dev_reg_datetime / 1000)).days)
                     device_related_list.append(
                         DEVICE_ANNOUNCEMENT[device_announcement_type].format(
-                        IMEI=device_announcement.get("imei", ""),
-                        balance_day=balance_day,
+                            IMEI=device_announcement.get("imei", ""),
+                            device_code=device_announcement.get("device_code", ""),
+                            balance_day=balance_day,
                         )
                     )
                 else:
                     device_related_list.append(
                         DEVICE_ANNOUNCEMENT[device_announcement_type].format(
-                        IMEI=device_announcement.get("imei", "")
+                            IMEI=device_announcement.get("imei", ""),
+                            device_code=device_announcement.get("device_code", ""),
                         )
                     )
             else:
