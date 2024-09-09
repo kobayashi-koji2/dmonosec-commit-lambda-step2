@@ -344,3 +344,18 @@ def get_remote_control(device_req_no, remote_control_table):
         ScanIndexForward=False,
     ).get("Items", [])
     return remote_control_list[0] if remote_control_list else None
+
+def get_group_relation_pre_register_device_id_list(group_id, device_relation_table):
+    group_relation_device_list = get_device_relation(
+        f"g-{group_id}", device_relation_table, sk_prefix="pd-"
+    )
+    device_id_list = [relation["key2"][3:] for relation in group_relation_device_list]
+    return device_id_list
+
+
+def get_device_info_by_imei(pre_register_device_id, pre_register_table):
+    device_list = pre_register_table.query(
+        KeyConditionExpression=Key("imei").eq(pre_register_device_id),
+        FilterExpression=Attr("contract_state").ne(2),
+    ).get("Items", [])
+    return device_list[0] if device_list else None

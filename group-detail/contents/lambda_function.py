@@ -36,6 +36,7 @@ def lambda_handler(event, context, user_info):
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
+            pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -54,6 +55,7 @@ def lambda_handler(event, context, user_info):
             }
 
         device_list = []
+        pre_register_device_list = []
         try:
             contract = validate_result["contract_info"]
             group_id = validate_result["request_params"]["group_id"]
@@ -73,6 +75,19 @@ def lambda_handler(event, context, user_info):
                         .get("device_name", {}),
                     }
                 )
+
+            pre_register_device_id_list = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
+            for pre_register_device_id in pre_register_device_id_list:
+                logger.info(f"pre_register_device_id:{pre_register_device_id}")
+                pre_register_device_info = db.get_device_info_by_imei(pre_register_device_id, pre_register_table)
+                if not pre_register_device_info:
+                    continue
+                pre_register_device_list.append(
+                    {
+                        "device_imei": pre_register_device_id,
+                        "device_code": pre_register_device_info.get("device_code", {})
+                    }
+                )
         except ClientError as e:
             logger.info(e)
             logger.info(traceback.format_exc())
@@ -87,6 +102,7 @@ def lambda_handler(event, context, user_info):
             "group_id": group_info.get("group_id", {}),
             "group_name": group_info.get("group_data", {}).get("config", {}).get("group_name", {}),
             "device_list": device_list,
+            "pre_register_device_list": pre_register_device_list
         }
         return {
             "statusCode": 200,
