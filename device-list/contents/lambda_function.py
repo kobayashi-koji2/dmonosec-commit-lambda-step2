@@ -178,7 +178,7 @@ def lambda_handler(event, context, user_info):
                     detect_condition = int(query_param_detect_condition)
 
         if detect_condition != None and keyword != None and keyword != "":
-            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order)
+            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order,device_group_relation)
         elif detect_condition == None and (keyword == None or keyword == ""):
             device_info_list_order_filtered = device_info_list_order
         else:
@@ -361,19 +361,19 @@ def device_order_comparison(device_order, device_id_list):
     return device_order
 
 
-def keyword_detection_device_list(detect_condition,keyword,device_info_list):
+def keyword_detection_device_list(detect_condition,keyword,device_info_list,device_group_relation):
 
     if detect_condition == 0:
         filtered_device_list = device_detect_all(keyword,device_info_list)
-    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3:
-        filtered_device_list = device_detect(detect_condition,keyword,device_info_list)
+    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4:
+        filtered_device_list = device_detect(detect_condition,keyword,device_info_list,device_group_relation)
     else:
         filtered_device_list = device_info_list
     
     return filtered_device_list
 
-
-def device_detect(detect_condition,keyword,device_info_list):
+# デバイス検索
+def device_detect(detect_condition,keyword,device_info_list,device_group_relation):
 
     # AND,OR区切りでリスト化
     if " OR " in keyword:
@@ -401,39 +401,85 @@ def device_detect(detect_condition,keyword,device_info_list):
             device_value = device_info["imei"]
         elif detect_condition == 3:
             device_value = device_info["device_data"]["param"]["device_code"]
+        elif detect_condition == 4:
+            device_id = device_info["device_id"]
+            device_value = next((item["group_list"] for item in device_group_relation if item["device_id"] == device_id), [])
+            if device_value == []:
+                continue
         else :
             pass
 
-        logger.info(f"device_name:{device_value}")
+        # device_valueは各デバイスの検索評価対象の値
+        logger.info(f"検索評価対象の値:{device_value}")
         
         if case == 1:
-            for key in key_list:
-                if key in device_value:
-                    hit_list.append(1)
-                else:
-                    hit_list.append(0)
+            # グループID検索の場合は、device_valueはリスト
+            if isinstance(device_value, list):
+                for value in device_value:
+                    for key in key_list:
+                        if key in value:
+                            hit_list.append(1)
+                        else:
+                            hit_list.append(0)
+                    logger.info(f"hit_list:{hit_list}")
+                    if len(hit_list)!=0:
+                        result = reduce(lambda x, y: x * y, hit_list)
+                        if result == 1:
+                            return_list.append(device_info)
+                            break
+            else:
+                for key in key_list:
+                    if key in device_value:
+                        hit_list.append(1)
+                    else:
+                        hit_list.append(0)
             logger.info(f"hit_list:{hit_list}")
             if len(hit_list)!=0:
                 result = reduce(lambda x, y: x * y, hit_list)
                 if result == 1:
                     return_list.append(device_info)
         elif case == 2:
-            for key in key_list:
-                if key in device_value:
-                    hit_list.append(1)
-                else:
-                    hit_list.append(0)
+            if isinstance(device_value, list):
+                for value in device_value:
+                    for key in key_list:
+                        if key in value:
+                            hit_list.append(1)
+                        else:
+                            hit_list.append(0)
+            else:
+                for key in key_list:
+                    if key in device_value:
+                        hit_list.append(1)
+                    else:
+                        hit_list.append(0)
             logger.info(f"hit_list:{hit_list}")
             if len(hit_list)!=0:
                 result = sum(hit_list)
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if keyword[1:] in device_value:
-                pass
+            if isinstance(device_value, list):
+                for value in device_value:
+                    if keyword[1:] in value:
+                        hit_list.append(0)
+                    else:
+                        hit_list.append(1)
+                    logger.info(f"hit_list:{hit_list}")
+                    if len(hit_list)!=0:
+                        result = reduce(lambda x, y: x * y, hit_list)
+                        if result == 1:
+                            return_list.append(device_info)
             else:
-                return_list.append(device_info)
+                if keyword[1:] in device_value:
+                    pass
+                else:
+                    return_list.append(device_info)
         else:
+            if isinstance(device_value, list):
+                for value in device_value:
+                    if keyword in value:
+                        return_list.append(device_info)
+                        break
             if keyword in device_value:
                 return_list.append(device_info)
 
