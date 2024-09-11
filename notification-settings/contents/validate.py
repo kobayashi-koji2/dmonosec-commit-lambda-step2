@@ -30,6 +30,9 @@ BODY_SCHEMA = {
                     "change_detail": {
                         "type": "integer",
                     },
+                    "custom_event_id": {
+                        "type": "string",
+                    },
                 },
             },
         },
@@ -79,13 +82,14 @@ def validate(event, body, device_table):
     if not device:
         return {"message": "デバイス情報が存在しません。"}
 
-    # 入力値チェック
+    # 入力値チェック    
     notification_list = body["notification_list"]
     for notification in notification_list:
         event_trigger = notification.get("event_trigger")
         terminal_no = notification.get("terminal_no")
         event_type = notification.get("event_type")
         change_detail = notification.get("change_detail")
+        custom_event_id = notification.get("custom_event_id")
 
         if event_trigger == "di_change":
             if event_type:
@@ -102,6 +106,9 @@ def validate(event, body, device_table):
 
             if change_detail not in [0, 1, 2]:
                 return {"message": "パラメータが不正です"}
+            
+            if custom_event_id:
+                return {"message": "パラメータが不正です"}
 
         elif event_trigger == "do_change":
             if event_type:
@@ -115,6 +122,9 @@ def validate(event, body, device_table):
 
             if change_detail != 1:
                 return {"message": "パラメータが不正です"}
+            
+            if custom_event_id:
+                return {"message": "パラメータが不正です"}
 
         elif event_trigger == "device_change":
             if event_type not in ["device_unhealthy", "battery_near", "device_abnormality",\
@@ -126,7 +136,23 @@ def validate(event, body, device_table):
 
             if change_detail != 1:
                 return {"message": "パラメータが不正です"}
+            
+            if not custom_event_id:
+                return {"message": "パラメータが不正です"}
 
-        else:
+        elif event_trigger == "custom_event":
+            if event_type:
+                return {"message": "パラメータが不正です"}
+
+            if terminal_no:
+                return {"message": "パラメータが不正です"}
+
+            if change_detail:
+                return {"message": "パラメータが不正です"}
+            
+            if not custom_event_id["custom_event_id"]:
+                return {"message": "パラメータが不正です"}
+            
+        else:   
             return {"message": "パラメータが不正です"}
     return {}

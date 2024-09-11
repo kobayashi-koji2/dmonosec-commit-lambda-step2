@@ -58,7 +58,7 @@ def lambda_handler(event, context, user, body):
 
         contract = db.get_contract_info(user["contract_id"], contract_table)
         notification_list = body["notification_list"]
-
+        
         # 権限チェック
         if device_id not in contract["contract_data"]["device_list"]:
             res_body = {"message": "不正なデバイスIDが指定されています。"}
@@ -97,6 +97,7 @@ def lambda_handler(event, context, user, body):
                     and notification_setting.get("terminal_no") == notification.get("terminal_no")
                     and notification_setting.get("event_type") == notification.get("event_type")
                     and notification_setting.get("change_detail") == notification.get("change_detail")
+                    and notification_setting.get("custom_event_id") == notification.get("custom_event_id")
                 ):
                     res_body = {"message": "同じ設定が重複しています。"}
                     return {
@@ -110,7 +111,8 @@ def lambda_handler(event, context, user, body):
                     "event_trigger": notification.get("event_trigger", ""),
                     "terminal_no": notification.get("terminal_no", ""),
                     "event_type": notification.get("event_type", ""),
-                    "change_detail": notification.get("change_detail", "")
+                    "change_detail": notification.get("change_detail", ""),
+                    "custom_event_id": notification.get("custom_event_id", ""),
                 }
             )
 
