@@ -135,7 +135,8 @@ def lambda_handler(event, context, user, body):
                     "event_trigger": notification_setting.get("event_trigger", ""),
                     "terminal_no": notification_setting.get("terminal_no", ""),
                     "event_type": notification_setting.get("event_type", ""),
-                    "change_detail": notification_setting.get("change_detail", "")
+                    "change_detail": notification_setting.get("change_detail", ""),
+                    "custom_event_id": notification_setting.get("custom_event_id", ""),
                 }
             )
 

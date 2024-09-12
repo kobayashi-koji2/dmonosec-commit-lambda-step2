@@ -137,7 +137,8 @@ def validate(event, body, device_table):
             if change_detail != 1:
                 return {"message": "パラメータが不正です"}
             
-            if not custom_event_id:
+            if custom_event_id:
+                logger.info("パラメータが不正です")
                 return {"message": "パラメータが不正です"}
 
         elif event_trigger == "custom_event":
@@ -150,7 +151,7 @@ def validate(event, body, device_table):
             if change_detail:
                 return {"message": "パラメータが不正です"}
             
-            if not custom_event_id["custom_event_id"]:
+            if not custom_event_id:
                 return {"message": "パラメータが不正です"}
             
         else:   
