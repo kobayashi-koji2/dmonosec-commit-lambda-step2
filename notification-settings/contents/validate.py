@@ -138,7 +138,6 @@ def validate(event, body, device_table):
                 return {"message": "パラメータが不正です"}
             
             if custom_event_id:
-                logger.info("パラメータが不正です")
                 return {"message": "パラメータが不正です"}
 
         elif event_trigger == "custom_event":
