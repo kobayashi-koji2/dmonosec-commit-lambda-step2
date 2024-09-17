@@ -226,8 +226,6 @@ def create_history_message(hist):
             no_unixtime = hist.get("custom_event_datetime") / 1000
             JST = timezone(timedelta(hours=+9), "JST")
             unix_datetime = datetime.fromtimestamp(int(no_unixtime)).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime("%Y/%m/%d %H:%M:%S")
-            logger.info(no_unixtime)
-            logger.info(unix_datetime)
             msg = f"【カスタムイベントによる日時指定】\n{unix_datetime}時点の{terminal_name}の状態は{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
         
         # カスタムイベント(継続時間指定)
