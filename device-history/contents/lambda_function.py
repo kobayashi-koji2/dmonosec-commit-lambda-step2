@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 import traceback
 from zoneinfo import ZoneInfo
 
@@ -15,6 +15,7 @@ import ssm
 import ddb
 import db
 import validate
+import time
 
 patch_all()
 
@@ -212,7 +213,31 @@ def create_history_message(hist):
                 msg = f"【連動設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。\nそのため、制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
             elif hist["control_result"] == "not_excuted":
                 msg = f"【連動設定による制御（不実施）】\n{link_terminal_name}が既に{link_terminal_state_name}のため、{terminal_name}の制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
-
+    
+    # カスタムイベント履歴取得
+    elif hist["event_type"] in ["custom_datetime", "custom_timer"]:
+        logger.info("カスタムイベント入っている")
+        terminal_name = hist.get("terminal_name")
+        # 接点名称のキー存在するが空文字の場合、接点名称を設定
+        if not terminal_name:
+            terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
+        # カスタムイベント(日時指定)
+        if hist["event_type"] == "custom_datetime":
+            logger.info("日時指定入っている")
+            custom_event_name = hist.get("custom_event_name")
+            logger.info(hist.get("custom_event_datetime") / 1000)
+            no_unixtime = hist.get("custom_event_datetime") / 1000
+            unix_datetime = datetime.fromtimestamp(int(no_unixtime)).time().strftime('%H:%M:%S')
+            logger.info(unix_datetime)
+            msg = f"【カスタムイベントによる日時指定】\n{unix_datetime}時点の{terminal_name}の状態は{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
+        
+        # カスタムイベント(継続時間指定)
+        if hist["event_type"] == "custom_timer":
+            logger.info("継続時間入っている")
+            custom_event_name = hist.get("custom_event_name")
+            custom_event_datetime = hist.get("custom_event_datetime")
+            msg = f"【カスタムイベントによる継続時間指定】\n{terminal_name}の状態は{custom_event_datetime}分間{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
+         
     return msg
 
 
