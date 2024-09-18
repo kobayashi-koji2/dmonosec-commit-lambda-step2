@@ -78,7 +78,7 @@ def lambda_handler(event, context, user_info):
         # デバイス情報取得
         try:
             # デバイス設定取得
-            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+            device_info = ddb.get_device_info(device_id, tables["device_table"])
             # デバイス現状態取得
             device_state = db.get_device_state(device_id, tables["device_state_table"])
             # グループ情報取得

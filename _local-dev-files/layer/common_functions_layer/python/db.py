@@ -269,7 +269,7 @@ def get_device_info(device_id, device_table, consistent_read=False):
         FilterExpression=Attr("contract_state").eq(1),
         ConsistentRead=consistent_read,
     ).get("Items", [])
-    return device_list[0] if device_list else None
+    return add_imei_in_device_info(device_list[0]) if device_list else None
 
 
 # デバイス情報取得(契約状態:使用不可以外)
@@ -278,7 +278,7 @@ def get_device_info_other_than_unavailable(device_id, table):
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return device_list[0] if device_list else None
+    return add_imei_in_device_info(device_list[0]) if device_list else None
 
 
 # 現状態取得
@@ -298,6 +298,7 @@ def get_pre_reg_device_info(contract_id_list, pre_register_table):
             IndexName="contract_id_index",
             KeyConditionExpression=Key("contract_id").eq(item),
         ).get("Items", [])
+        pre_register_table_res = add_imei_in_device_info_list(pre_register_table_res)
         for items in pre_register_table_res:
             # レスポンス生成(未登録デバイス)
             pre_reg_device_list.append(
@@ -355,7 +356,18 @@ def get_group_relation_pre_register_device_id_list(group_id, device_relation_tab
 
 def get_device_info_by_imei(pre_register_device_id, pre_register_table):
     device_list = pre_register_table.query(
-        KeyConditionExpression=Key("imei").eq(pre_register_device_id),
+        KeyConditionExpression=Key("identification_id").eq(pre_register_device_id),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return device_list[0] if device_list else None
+    return add_imei_in_device_info(device_list[0]) if device_list else None
+
+def add_imei_in_device_info(info):
+    info["imei"] = info.get("identification",[])
+    return info
+
+def add_imei_in_device_info_list(info_list):
+    device_info_list = []
+    for item in info_list:
+        item["imei"] = item.get("identification",[])
+        device_info_list.append(item)
+    return device_info_list

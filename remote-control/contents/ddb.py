@@ -3,6 +3,7 @@ import decimal
 import json
 import time
 import uuid
+import db
 
 from aws_lambda_powertools import Logger
 from boto3.dynamodb.conditions import Attr, Key
@@ -59,7 +60,7 @@ def get_device_info_other_than_unavailable(pk, table):
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return response
+    return db.add_imei_in_device_info_list(response)
 
 
 def increment_req_no_count_num(pk, table):

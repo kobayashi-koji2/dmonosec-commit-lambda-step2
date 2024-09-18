@@ -31,9 +31,7 @@ def validate(event, user_info, tables):
         return {"message": "アカウント情報が存在しません。"}
 
     # 1.4 デバイス種別取得
-    device_info = ddb.get_device_info(device_id, tables["device_table"]).get(
-        "Items", {}
-    )
+    device_info = ddb.get_device_info(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
     if len(device_info) == 0:

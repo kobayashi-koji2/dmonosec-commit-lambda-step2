@@ -14,12 +14,13 @@ def get_device_info(pk, table):
     response = table.query(
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
-    )
-    return response
+    ).get("Items", {})
+
+    return db.add_imei_in_device_info_list(response)
 
 def delete_custom_event(device_table, custom_event_id, device_id, imei):
     custom_event_list = list()
-    device_info = get_device_info(device_id, device_table).get("Items", {})
+    device_info = get_device_info(device_id, device_table)
     for item in device_info:
         imei = item["imei"]
         for custom_event in item["device_data"]["config"]["custom_event_list"]:

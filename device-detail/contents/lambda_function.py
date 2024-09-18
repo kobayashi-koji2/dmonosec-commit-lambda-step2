@@ -69,7 +69,7 @@ def lambda_handler(event, context, user_info):
         ##################
         try:
             # 4.1 デバイス設定取得
-            device_info = ddb.get_device_info(device_id, tables["device_table"]).get("Items", {})
+            device_info = ddb.get_device_info(device_id, tables["device_table"])
             if len(device_info) == 0:
                 res_body = {"message": "デバイス情報が存在しません。"}
                 return {

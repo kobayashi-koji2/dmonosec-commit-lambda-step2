@@ -6,7 +6,7 @@ logger = Logger()
 
 # 未登録デバイス取得(iemi)
 def get_pre_reg_device_info_by_imei(imei, table):
-    pre_register_device_info = table.get_item(Key={"imei": imei}).get("Item", {})
+    pre_register_device_info = table.get_item(Key={"identification_id": imei}).get("Item", {})
     return pre_register_device_info
 
 # デバイスお知らせ管理情報取得

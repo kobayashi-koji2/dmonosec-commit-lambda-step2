@@ -11,7 +11,7 @@ logger = Logger()
 
 # カスタムイベント設定登録
 def create_custom_event_info(custom_event_info, device_table, device_id):
-    device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
+    device_info = ddb.get_device_info(device_id, device_table)
     # カスタムイベントIDの生成
     custom_event_id = str(uuid.uuid4())
 # イベントカスタム名チェック
@@ -61,7 +61,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
     
 # カスタムイベント設定更新         
 def update_custom_event_info(custom_event_info, device_table, device_id):
-    device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
+    device_info = ddb.get_device_info(device_id, device_table)
     if custom_event_info["custom_event_name"]:
         custom_event_name = custom_event_info["custom_event_name"]
     elif not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 0:

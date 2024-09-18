@@ -1,4 +1,5 @@
 from decimal import Decimal
+import db
 
 from aws_lambda_powertools import Logger
 import boto3
@@ -15,8 +16,8 @@ def get_device_info(pk, table):
     response = table.query(
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
-    )
-    return response
+    ).get("Items", {})
+    return db.add_imei_in_device_info(response)
 
 
 # デバイス設定更新

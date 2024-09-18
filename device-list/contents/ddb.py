@@ -1,5 +1,6 @@
 import boto3
 import os
+import db
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 from operator import itemgetter
@@ -29,6 +30,7 @@ def get_pre_reg_device_info(pk, table):
     ).get("Items", [])
     for items in response:
         # レスポンス生成(未登録デバイス)
+        items = db.add_imei_in_device_info(items)
         pre_reg_device_list.append(
             {
                 "device_imei": items["imei"],
