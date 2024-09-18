@@ -18,8 +18,7 @@ def validate(event, user, device_table, contract_table):
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
     device_id = pathParam["device_id"]
-    device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
-    device_info = db.add_imei_in_device_info_list(device_info)
+    device_info = ddb.get_device_info(device_id, device_table)
     # パラメータの中身チェック
     if not http_method or not device_id:
         return {"message": "パラメータが不正です。"}

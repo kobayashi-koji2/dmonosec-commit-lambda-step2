@@ -362,12 +362,12 @@ def get_device_info_by_imei(pre_register_device_id, pre_register_table):
     return add_imei_in_device_info(device_list[0]) if device_list else None
 
 def add_imei_in_device_info(info):
-    info["imei"] = info.get("identification",[])
+    info["imei"] = info.get("identification_id")
     return info
 
 def add_imei_in_device_info_list(info_list):
     device_info_list = []
     for item in info_list:
-        item["imei"] = item.get("identification",[])
+        item["imei"] = item.get("identification_id")
         device_info_list.append(item)
     return device_info_list
