@@ -38,7 +38,7 @@ def update_init_recv(device_id, imei, device_table):
     option = {
         "Key": {
             "device_id": device_id,
-            "imei": imei,
+            "identification_id": imei,
         },
         "UpdateExpression": "set #contract_state = :contract_state,\
           #device_data.#param.#init_datetime = :init_datetime",
@@ -61,7 +61,7 @@ def update_sim_stop(device_id, imei, device_table):
     option = {
         "Key": {
             "device_id": device_id,
-            "imei": imei,
+            "identification_id": imei,
         },
         "UpdateExpression": "set #contract_state = :contract_state,\
           #device_data.#param.#del_datetime = :del_datetime",

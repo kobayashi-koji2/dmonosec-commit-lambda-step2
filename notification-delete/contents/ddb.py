@@ -21,7 +21,7 @@ def delete_device_notification_settings(device_id, device_table):
             "TableName": ssm.table_names["DEVICE_TABLE"],
             "Key": {
                 "device_id": {"S": device["device_id"]},
-                "imei": {"S": device["imei"]},
+                "identification_id": {"S": device["imei"]},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_n = :s, #map_d.#map_c.#map_t = :t",
             "ExpressionAttributeNames": {

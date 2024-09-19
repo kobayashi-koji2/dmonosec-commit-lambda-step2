@@ -86,7 +86,7 @@ def lambda_handler(event, context, req_body):
         now = datetime.now()
         now_unixtime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
         put_item = {
-            "imei": imei,
+            "identification_id": imei,
             "iccid": iccid,
             "imsi": imsi,
             "device_code": req_body["device_code"],

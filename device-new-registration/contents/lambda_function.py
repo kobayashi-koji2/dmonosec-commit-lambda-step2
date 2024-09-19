@@ -106,7 +106,7 @@ def lambda_handler(event, context, user_info, request_body):
         }
         put_item = {
             "device_id": device_id,
-            "imei": device_imei,
+            "identification_id": device_imei,
             "contract_state": 0,
             "device_data": device_data,
             "device_type": device_type,
@@ -174,7 +174,7 @@ def lambda_handler(event, context, user_info, request_body):
         delete_pre_register = {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"imei": {"S": device_imei}},
+                "Key": {"identification_id": {"S": device_imei}},
             }
         }
         transact_items.append(delete_pre_register)

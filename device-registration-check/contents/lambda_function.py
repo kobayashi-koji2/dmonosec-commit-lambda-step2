@@ -93,7 +93,7 @@ def _register_device(pre_device, contract, device_announcements):
     # デバイス情報登録
     device_item = {
         "device_id": device_id,
-        "imei": pre_device["imei"],
+        "identification_id": pre_device["imei"],
         "contract_state": 0,
         "device_type": device_type,
         "device_data": {
@@ -196,7 +196,7 @@ def _register_device(pre_device, contract, device_announcements):
         {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"imei": {"S": pre_device["imei"]}},
+                "Key": {"identification_id": {"S": pre_device["imei"]}},
             }
         }
     )
@@ -228,7 +228,7 @@ def _register_device(pre_device, contract, device_announcements):
         "device_announcement_id": str(uuid.uuid4()),
         "contract_id": pre_device["contract_id"],
         "announcement_create_datetime": announcement_create_datetime,
-        "imei": pre_device["imei"],
+        "identification_id": pre_device["imei"],
         "device_code": pre_device["device_code"],
         "device_announcement_type": "auto_regist_complete",
         "expire_datetime": expire_datetime,

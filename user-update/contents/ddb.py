@@ -402,7 +402,7 @@ def update_user_info(
                             "TableName": device_table_name,
                             "Key": {
                                 "device_id": {"S": device_info["device_id"]},
-                                "imei": {"S": device_info["imei"]}
+                                "identification_id": {"S": device_info["imei"]}
                             },
                             "UpdateExpression": device_update_expression,
                             "ExpressionAttributeValues": device_expression_attribute_values_fmt,
@@ -437,7 +437,7 @@ def update_user_info(
                         "TableName": device_table_name,
                         "Key": {
                             "device_id": {"S": device_info["device_id"]},
-                            "imei": {"S": device_info["imei"]}
+                            "identification_id": {"S": device_info["imei"]}
                         },
                         "UpdateExpression": device_update_expression,
                         "ExpressionAttributeValues": device_expression_attribute_values_fmt,

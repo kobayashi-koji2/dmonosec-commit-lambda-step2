@@ -97,7 +97,7 @@ def lambda_handler(event, context, user):
                 }
                 
         ### 7. カスタムイベント設定情報取得
-        device_info = ddb.get_device_info(device_id, device_table).get("Items", {})
+        device_info = ddb.get_device_info(device_id, device_table)
         custom_event_list = list()
         for item in device_info:
             for custom_event_a in item["device_data"]["config"]["custom_event_list"]:

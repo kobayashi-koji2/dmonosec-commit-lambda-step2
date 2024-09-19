@@ -121,7 +121,7 @@ def lambda_handler(event, context, login_user, user_id):
                             "Key": convert.dict_dynamo_format(
                                 {
                                     "device_id": device["device_id"],
-                                    "imei": device["imei"],
+                                    "identification_id": device["imei"],
                                 }
                             ),
                             "UpdateExpression": "SET #device_data.#config.#notification_target_list = :notification_target_list",

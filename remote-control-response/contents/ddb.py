@@ -16,7 +16,7 @@ def get_device_info(pk, table):
     response = table.query(
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
-    )
+    ).get("Items", [])
     return response
 
 

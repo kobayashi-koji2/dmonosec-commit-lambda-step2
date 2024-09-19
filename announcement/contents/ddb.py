@@ -1,6 +1,7 @@
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
 from aws_lambda_powertools import Logger
+import db
 
 logger = Logger()
 
@@ -31,7 +32,7 @@ def get_device_announcement_list(device_announcement_table, contract_id):
         KeyConditionExpression=Key("contract_id").eq(contract_id)
     ).get("Items",[])
 
-    return device_announcement_list
+    return db.add_imei_in_device_info_list(device_announcement_list)
 
 
 # ユーザー情報（お知らせ画面最終表示日時）更新

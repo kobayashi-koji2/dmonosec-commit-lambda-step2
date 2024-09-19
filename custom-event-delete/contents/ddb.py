@@ -35,7 +35,7 @@ def delete_custom_event(device_table, custom_event_id, device_id, imei):
             "TableName": device_table.table_name,
             "Key": {
                 "device_id": {"S": device_id},
-                "imei": {"S": imei},
+                "identification_id": {"S": imei},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_cel = :s",
             "ExpressionAttributeNames": {

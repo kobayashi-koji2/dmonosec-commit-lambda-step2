@@ -105,7 +105,7 @@ def update_ddb_custom_event_info(custom_event_list, device_table, device_id, ime
             "TableName": device_table.table_name,
             "Key": {
                 "device_id": {"S": device_id},
-                "imei": {"S": imei},
+                "identification_id": {"S": imei},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_cel = :s",
             "ExpressionAttributeNames": {

@@ -97,7 +97,7 @@ def lambda_handler(event, context, user_info, request_body):
         # 新デバイス情報登録
         put_item = {
             "device_id": device_id,
-            "imei": af_device_imei,
+            "identification_id": af_device_imei,
             "contract_state": 0,  # 「0:初期受信待ち」で値は固定
             "device_type": device_info["device_type"],
             "device_data": {
@@ -132,7 +132,7 @@ def lambda_handler(event, context, user_info, request_body):
         update_contract = {
             "Update": {
                 "TableName": ssm.table_names["DEVICE_TABLE"],
-                "Key": {"device_id": {"S": device_id}, "imei": {"S": bf_device_imei}},
+                "Key": {"device_id": {"S": device_id}, "identification_id": {"S": bf_device_imei}},
                 "UpdateExpression": "SET #name1 = :value1",
                 "ExpressionAttributeNames": {"#name1": "contract_state"},
                 "ExpressionAttributeValues": {":value1": {"N": "2"}},
@@ -178,7 +178,7 @@ def lambda_handler(event, context, user_info, request_body):
         delete_pre_register = {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"imei": {"S": af_device_imei}},
+                "Key": {"identification_id": {"S": af_device_imei}},
             }
         }
         transact_items.append(delete_pre_register)
