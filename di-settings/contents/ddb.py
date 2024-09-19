@@ -52,7 +52,7 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
         "#di_key": di_key,
     }
     device_table.update_item(
-        Key={"device_id": device_id, "imei": imei},
+        Key={"device_id": device_id, "identification_id": imei},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,
