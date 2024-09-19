@@ -12,7 +12,7 @@ def get_pre_reg_device_info_by_imei(imei, table):
 # デバイスお知らせ管理情報取得
 def get_device_announcement_list(device_announcement_table, imei):
     device_announcement_list = device_announcement_table.query(
-        IndexName="imei_announcement_type_index",
+        IndexName="identification_id_announcement_type_index",
         KeyConditionExpression=Key("identification_id").eq(imei) & Key("device_announcement_type").eq("regist_balance_days")
     ).get("Items",[])
 
