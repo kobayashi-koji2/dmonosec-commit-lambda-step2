@@ -12,6 +12,6 @@ def get_device_info(pk, table):
     response = table.query(
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
-    ).get("Items", {})
+    ).get("Items", [])
     return db.add_imei_in_device_info_list(response)
 
