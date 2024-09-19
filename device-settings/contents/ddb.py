@@ -45,7 +45,7 @@ def update_device_settings(device_id, imei, device_settings, table):
         "#device_healthy_period_key": device_healthy_period_key,
     }
     table.update_item(
-        Key={"device_id": device_id, "imei": imei},
+        Key={"device_id": device_id, "identification_id": imei},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,
