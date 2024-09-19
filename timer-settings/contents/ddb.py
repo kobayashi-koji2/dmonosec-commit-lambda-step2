@@ -98,7 +98,7 @@ def update_device_settings(device_id, timer_settings, table):
         "#sub3": "do_list",
     }
     table.update_item(
-        Key={"device_id": device_id, "imei": device_info.get("imei")},
+        Key={"device_id": device_id, "identification_id": device_info.get("imei")},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,

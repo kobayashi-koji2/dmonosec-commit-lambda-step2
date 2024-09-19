@@ -40,7 +40,7 @@ def delete_timer_settings(device_id, do_no, do_timer_id, device_table):
         "#sub3": "do_list",
     }
     device_table.update_item(
-        Key={"device_id": device_id, "imei": device.get("imei")},
+        Key={"device_id": device_id, "identification_id": device.get("imei")},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,

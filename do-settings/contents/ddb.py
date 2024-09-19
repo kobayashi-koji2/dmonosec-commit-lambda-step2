@@ -49,7 +49,7 @@ def update_device_settings(device_id, params, device_table, automation_table):
         "#do_key": do_key,
     }
     device_table.update_item(
-        Key={"device_id": device_id, "imei": device_info.get("imei")},
+        Key={"device_id": device_id, "identification_id": device_info.get("imei")},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,
