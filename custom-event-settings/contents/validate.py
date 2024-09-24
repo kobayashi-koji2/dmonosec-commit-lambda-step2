@@ -30,9 +30,6 @@ def validate(event, user, device_table, contract_table):
     
     # デバイスIDの権限チェック
     if device_id not in contract["contract_data"]["device_list"]:
-        logger.info(device_id)
-        logger.info(contract["contract_data"]["device_list"])
-        logger.info("不正なデバイスIDが指定されています。")
         return {"message": "不正なデバイスIDが指定されています。"}
     
     # デバイス種別、接点端子数チェック
@@ -47,7 +44,6 @@ def validate(event, user, device_table, contract_table):
             item["device_type"] == "PJ3"
             and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
         ):
-            logger.info("不正なデバイスIDが指定されています。")
             return {"message": "不正なデバイスIDが指定されています"}
         
     # Bodyパラメータの中身チェック
