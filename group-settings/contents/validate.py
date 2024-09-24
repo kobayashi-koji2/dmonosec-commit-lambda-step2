@@ -40,7 +40,7 @@ def validate(event, user, contract_table, group_table):
     for device_id in device_list:
         if device_id not in contract["contract_data"]["device_list"]:
             return {"message": "不正なデバイスIDが指定されています。"}
-
+        
     # グループ名の重複チェック
     group_name = body_params.get("group_name", "")
     for group_id in contract.get("contract_data", {}).get("group_list", {}):
@@ -54,6 +54,7 @@ def validate(event, user, contract_table, group_table):
         "group_id": path_params.get("group_id"),
         "group_name": group_name,
         "device_list": device_list,
+        "pre_device_list": body_params.get("pre_device_list", [])
     }
 
     return {
