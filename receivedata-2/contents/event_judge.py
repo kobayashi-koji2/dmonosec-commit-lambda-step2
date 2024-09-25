@@ -260,6 +260,7 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             "parameter_abnormality": 0,
             "fw_update_abnormality": 0,
             "di1_state": int(di_list[0]) if di_list else None,
+            "di1_custom_event_state": 0,
         }
 
         if recv_data.get("device_type") in ["PJ2", "PJ3"]:
@@ -272,6 +273,13 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             current_state_info["di8_state"] = int(di_list[7]) if di_list else None
             current_state_info["do1_state"] = int(do_list[0]) if do_list else None
             current_state_info["do2_state"] = int(do_list[1]) if do_list else None
+            current_state_info["di2_custom_event_state"] = 0
+            current_state_info["di3_custom_event_state"] = 0
+            current_state_info["di4_custom_event_state"] = 0
+            current_state_info["di5_custom_event_state"] = 0
+            current_state_info["di6_custom_event_state"] = 0
+            current_state_info["di7_custom_event_state"] = 0
+            current_state_info["di8_custom_event_state"] = 0
             current_state_info["di2_last_update_datetime"] = recv_data.get("recv_datetime")
             current_state_info["di3_last_update_datetime"] = recv_data.get("recv_datetime")
             current_state_info["di4_last_update_datetime"] = recv_data.get("recv_datetime")
@@ -345,6 +353,16 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
         "di7_last_change_datetime",
         "di8_last_change_datetime",
     ]
+    di_custom_event_state = [
+        "di1_custom_event_state",
+        "di2_custom_event_state",
+        "di3_custom_event_state",
+        "di4_custom_event_state",
+        "di5_custom_event_state",
+        "di6_custom_event_state",
+        "di7_custom_event_state",
+        "di8_custom_event_state",
+    ]
     do_state = ["do1_state", "do2_state"]
     do_change_datetime = ["do1_last_change_datetime", "do2_last_change_datetime"]
 
@@ -354,8 +372,10 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
         list_num = int(event_info.get("terminal_no")) - 1
         state_key = di_state[list_num]
         change_datetime_key = di_change_datetime[list_num]
+        custom_event_state_key = di_custom_event_state[list_num]
         current_state_info[state_key] = event_info.get("di_state")
         current_state_info[change_datetime_key] = event_datetime
+        current_state_info[custom_event_state_key] = 0
 
     # 接点出力部
     elif event_info.get("event_type") == "do_change":
