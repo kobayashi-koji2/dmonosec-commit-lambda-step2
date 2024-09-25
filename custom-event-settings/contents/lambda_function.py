@@ -102,16 +102,26 @@ def lambda_handler(event, context, user):
         for item in device_info:
             for custom_event_a in item["device_data"]["config"]["custom_event_list"]:
                 ### 8. メッセージ応答
-                custom_event_item = {
-                    "custom_event_id": custom_event_a["custom_event_id"],
-                    "custom_event_reg_datetime": custom_event_a["custom_event_reg_datetime"],
-                    "event_type": custom_event_a["event_type"],
-                    "custom_event_name": custom_event_a["custom_event_name"],
-                    "time": custom_event_a["time"],
-                    "weekday": custom_event_a["weekday"],
-                    "elapsed_time": custom_event_a["elapsed_time"],
-                    "di_event_list": custom_event_a["di_event_list"],
-                }
+                logger.info(custom_event_a)
+                if custom_event_a["event_type"] == 0:
+                    custom_event_item = {
+                        "custom_event_id": custom_event_a["custom_event_id"],
+                        'custom_event_reg_datetime': custom_event_a["custom_event_reg_datetime"],
+                        "event_type": custom_event_a["event_type"],
+                        "custom_event_name": custom_event_a["custom_event_name"],
+                        "time": custom_event_a["time"],
+                        "weekday": custom_event_a["weekday"],
+                        "di_event_list": custom_event_a["di_event_list"],
+                    }
+                if custom_event_a["event_type"] == 1:
+                    custom_event_item = {
+                        "custom_event_id": custom_event_a["custom_event_id"],
+                        'custom_event_reg_datetime': custom_event_a["custom_event_reg_datetime"],
+                        "event_type": custom_event_a["event_type"],
+                        "custom_event_name": custom_event_a["custom_event_name"],
+                        "elapsed_time": custom_event_a["elapsed_time"],
+                        "di_event_list": custom_event_a["di_event_list"],
+                    }
                 custom_event_list.append(custom_event_item)
 
         res_body = {"message": "", "custom_event_list": custom_event_list}

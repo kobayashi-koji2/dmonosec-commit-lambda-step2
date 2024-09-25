@@ -51,13 +51,16 @@ def validate(event, user, device_table, contract_table):
         res_di_no = key["di_no"]
         res_di_state = key["di_state"]
     if body_params["event_type"] == 0:
-        if not body_params["time"] or not body_params["weekday"] or not res_di_no or not res_di_state:
+        if not body_params["time"] or not body_params["weekday"] or not res_di_no:
+            if res_di_state in [0, 1, 2]:
+                return {"message": "時間が指定されていません"}
             return {"message": "時間、曜日、接点入力端子、状態が指定されていません"}
     elif body_params["event_type"] == 1:
-        if not body_params["elapsed_time"] or not key["di_no"] or not res_di_no or not res_di_state:
-            return {"message": "継続時間、接点入力端子、状態が指定されていません"}
+        if not body_params["elapsed_time"] or not res_di_no:
+            if res_di_state in [0, 1, 2]:
+                return {"message": "継続時間、接点入力端子、状態が指定されていません"}
     else:
-        return {"message": "イベントタイプが不正です"}
+        return {"message": "イベント種別が不正です"}
         
     # 登録カスタムイベント数チェック（登録の場合、各デバイス10個まで）
     if http_method == "POST":
@@ -71,8 +74,8 @@ def validate(event, user, device_table, contract_table):
         for item in device_info:
             for custom_event_id in item["device_data"]["config"]["custom_event_list"]:
                 custom_event_id_list.append(custom_event_id["custom_event_id"])
-        if body_params["custom_event_id"] not in custom_event_id_list:
-            return {"message": "イベントカスタムIDが存在しません"}
+            if body_params["custom_event_id"] not in custom_event_id_list:
+                return {"message": "イベントカスタムIDが存在しません"}
             
     return {"custom_info": body_params, "device_id": device_id, "message": ""}
 

@@ -5,6 +5,8 @@ from aws_lambda_powertools import Logger
 import db
 import ddb
 import convert
+import time
+import math
 
 
 logger = Logger()
@@ -14,40 +16,80 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
     device_info = ddb.get_device_info(device_id, device_table)
     # カスタムイベントIDの生成
     custom_event_id = str(uuid.uuid4())
-# イベントカスタム名チェック
-    if custom_event_info["custom_event_name"]:
-        custom_event_name = custom_event_info["custom_event_name"]
-    elif not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 0:
-        custom_event_name = "無題の日時カスタムイベント"
-    elif  not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 1:
-        custom_event_name = "無題の継続時間カスタムイベント"
-    put_item = {
-        "custom_event_id": custom_event_id,
-        'custom_event_reg_datetime': custom_event_info["custom_event_reg_datetime"],
-        "event_type": custom_event_info["event_type"],
-        "custom_event_name": custom_event_name,
-        "time": custom_event_info["time"],
-        "weekday": custom_event_info["weekday"],
-        "elapsed_time": custom_event_info["elapsed_time"],
-        "di_event_list": custom_event_info["di_event_list"],
-    }
+    # カスタムイベント登録日時の生成
+    custom_event_reg_datetime = math.floor(time.time())
+    put_item = dict()
+    # イベントカスタム名チェック
+    if custom_event_info["event_type"] == 0:
+        if not custom_event_info["custom_event_name"]:
+            custom_event_name = "無題の日時カスタムイベント"
+            put_item = {
+                "custom_event_id": custom_event_id,
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "time": custom_event_info["time"],
+                "weekday": custom_event_info["weekday"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+        else:
+            custom_event_name = custom_event_info["custom_event_name"]
+            put_item = {
+                "custom_event_id": custom_event_id,
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "time": custom_event_info["time"],
+                "weekday": custom_event_info["weekday"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+    elif custom_event_info["event_type"] == 1:
+        if not custom_event_info["custom_event_name"]:
+            custom_event_name = "無題の継続時間カスタムイベント"
+            put_item = {
+                "custom_event_id": custom_event_id,
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "elapsed_time": custom_event_info["elapsed_time"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+        else:
+            custom_event_name = custom_event_info["custom_event_name"]
+            put_item = {
+                "custom_event_id": custom_event_id,
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "elapsed_time": custom_event_info["elapsed_time"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
     custom_event_list = list()
     for item in device_info:
         imei = item["imei"]
         for custom_event in item["device_data"]["config"]["custom_event_list"]:
-            custom_event_item = {
-                "custom_event_id": custom_event["custom_event_id"],
-                "custom_event_reg_datetime": custom_event["custom_event_reg_datetime"],
-                "event_type": custom_event["event_type"],
-                "custom_event_name": custom_event["custom_event_name"],
-                "time": custom_event["time"],
-                "weekday": custom_event["weekday"],
-                "elapsed_time": custom_event["elapsed_time"],
-                "di_event_list": custom_event["di_event_list"],
-            }
-            logger.info(custom_event_item)
+            if custom_event["event_type"] == 0:
+                custom_event_item = {
+                    "custom_event_id": custom_event["custom_event_id"],
+                    'custom_event_reg_datetime': custom_event["custom_event_reg_datetime"],
+                    "event_type": custom_event["event_type"],
+                    "custom_event_name": custom_event["custom_event_name"],
+                    "time": custom_event["time"],
+                    "weekday": custom_event["weekday"],
+                    "di_event_list": custom_event["di_event_list"],
+                }
+            if custom_event["event_type"] == 1:
+                custom_event_item = {
+                    "custom_event_id": custom_event["custom_event_id"],
+                    'custom_event_reg_datetime': custom_event["custom_event_reg_datetime"],
+                    "event_type": custom_event["event_type"],
+                    "custom_event_name": custom_event["custom_event_name"],
+                    "elapsed_time": custom_event["elapsed_time"],
+                    "di_event_list": custom_event["di_event_list"],
+                }
             custom_event_list.append(custom_event_item)
-            
+    
+    logger.info(put_item)
     custom_event_list.append(put_item) 
     
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
@@ -62,22 +104,57 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
 # カスタムイベント設定更新         
 def update_custom_event_info(custom_event_info, device_table, device_id):
     device_info = ddb.get_device_info(device_id, device_table)
-    if custom_event_info["custom_event_name"]:
-        custom_event_name = custom_event_info["custom_event_name"]
-    elif not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 0:
-        custom_event_name = "無題の日時カスタムイベント"
-    elif  not custom_event_info["custom_event_name"] and custom_event_info["event_type"] == 1:
-        custom_event_name = "無題の継続時間カスタムイベント"
-    put_item = {
-        "custom_event_id": custom_event_info["custom_event_id"],
-        'custom_event_reg_datetime': custom_event_info["custom_event_reg_datetime"],
-        "event_type": custom_event_info["event_type"],
-        "custom_event_name": custom_event_name,
-        "time": custom_event_info["time"],
-        "weekday": custom_event_info["weekday"],
-        "elapsed_time": custom_event_info["elapsed_time"],
-        "di_event_list": custom_event_info["di_event_list"],
-    }
+    put_item = dict()
+    
+    for item in device_info:
+        for custom_event in item["device_data"]["config"]["custom_event_list"]:
+            if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
+                custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
+            
+    if custom_event_info["event_type"] == 0:
+        if not custom_event_info["custom_event_name"]:
+            custom_event_name = "無題の日時カスタムイベント"
+            put_item = {
+                "custom_event_id": custom_event_info["custom_event_id"],
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "time": custom_event_info["time"],
+                "weekday": custom_event_info["weekday"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+        else:
+            custom_event_name = custom_event_info["custom_event_name"]
+            put_item = {
+                "custom_event_id": custom_event_info["custom_event_id"],
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "time": custom_event_info["time"],
+                "weekday": custom_event_info["weekday"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+    elif custom_event_info["event_type"] == 1:
+        if not custom_event_info["custom_event_name"]:
+            custom_event_name = "無題の継続時間カスタムイベント"
+            put_item = {
+                "custom_event_id": custom_event_info["custom_event_id"],
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "elapsed_time": custom_event_info["elapsed_time"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
+        else:
+            custom_event_name = custom_event_info["custom_event_name"]
+            put_item = {
+                "custom_event_id": custom_event_info["custom_event_id"],
+                'custom_event_reg_datetime': custom_event_reg_datetime,
+                "event_type": custom_event_info["event_type"],
+                "custom_event_name": custom_event_name,
+                "elapsed_time": custom_event_info["elapsed_time"],
+                "di_event_list": custom_event_info["di_event_list"],
+            }
     custom_event_list = list()
     for item in device_info:
         imei = item["imei"]
@@ -85,7 +162,8 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event = put_item
             custom_event_list.append(custom_event)    
-            
+    logger.info(put_item)
+    logger.info(custom_event_list)
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
     
     if db_update == True:
