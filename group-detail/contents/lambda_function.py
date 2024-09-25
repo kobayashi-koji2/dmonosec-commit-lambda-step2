@@ -55,7 +55,7 @@ def lambda_handler(event, context, user_info):
             }
 
         device_list = []
-        pre_register_device_list = []
+        unregistered_device_list = []
         try:
             contract = validate_result["contract_info"]
             group_id = validate_result["request_params"]["group_id"]
@@ -76,16 +76,16 @@ def lambda_handler(event, context, user_info):
                     }
                 )
 
-            pre_register_device_id_list = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
-            for pre_register_device_id in pre_register_device_id_list:
-                logger.info(f"pre_register_device_id:{pre_register_device_id}")
-                pre_register_device_info = db.get_device_info_by_imei(pre_register_device_id, pre_register_table)
-                if not pre_register_device_info:
+            unregistered_device_id_list = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
+            for unregistered_device_id in unregistered_device_id_list:
+                logger.info(f"unregistered_device_id:{unregistered_device_id}")
+                unregistered_device_info = db.get_device_info_by_imei(unregistered_device_id, pre_register_table)
+                if not unregistered_device_info:
                     continue
-                pre_register_device_list.append(
+                unregistered_device_list.append(
                     {
-                        "device_imei": pre_register_device_id,
-                        "device_code": pre_register_device_info.get("device_code", {})
+                        "device_imei": unregistered_device_id,
+                        "device_code": unregistered_device_info.get("device_code", {})
                     }
                 )
         except ClientError as e:
@@ -102,7 +102,7 @@ def lambda_handler(event, context, user_info):
             "group_id": group_info.get("group_id", {}),
             "group_name": group_info.get("group_data", {}).get("config", {}).get("group_name", {}),
             "device_list": device_list,
-            "pre_register_device_list": pre_register_device_list
+            "unregistered_device_list": unregistered_device_list
         }
         return {
             "statusCode": 200,
