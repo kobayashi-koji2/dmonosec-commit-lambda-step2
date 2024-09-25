@@ -28,7 +28,7 @@ def create_group_info(
     # グループに登録するデバイス
     device_list = group_info.get("device_list", {})
     # グループに登録する登録前デバイス
-    pre_device_list = group_info.get("pre_device_list", {})
+    unregistered_device_list = group_info.get("unregistered_device_list", {})
 
     #################################################
     # グループ管理テーブル新規登録用オブジェクト作成
@@ -94,19 +94,19 @@ def create_group_info(
         }
         transact_items.append(put_device_relation)
         
-    for pre_device_id in pre_device_list:
-        pre_device_relation_item = {
+    for unregistered_device_id in unregistered_device_list:
+        unregistered_device_relation_item = {
             "key1": "g-" + group_id,
-            "key2": "pd-" + pre_device_id,
+            "key2": "pd-" + unregistered_device_id,
         }
-        pre_device_relation_item_fmt = convert.dict_dynamo_format(pre_device_relation_item)
-        put_pre_device_relation = {
+        unregistered_device_relation_item_fmt = convert.dict_dynamo_format(unregistered_device_relation_item)
+        put_unregistered_device_relation = {
             "Put": {
                 "TableName": device_relation_table_name,
-                "Item": pre_device_relation_item_fmt,
+                "Item": unregistered_device_relation_item_fmt,
             }
         }
-        transact_items.append(put_pre_device_relation)
+        transact_items.append(put_unregistered_device_relation)
 
     #################################################
     # DB書き込みトランザクション実行
@@ -133,7 +133,7 @@ def update_group_info(
     group_name_attr = "group_name"
     group_name = group_info.get("group_name", "")
     device_list = group_info.get("device_list", {})
-    pre_device_list = group_info.get("pre_device_list", {})
+    unregistered_device_list = group_info.get("unregistered_device_list", {})
 
     #################################################
     # グループ管理テーブル更新用オブジェクト作成
@@ -166,7 +166,7 @@ def update_group_info(
     # グループ更新前のデバイス一覧
     device_list_old = db.get_group_relation_device_id_list(group_id, device_relation_table)
     # グループ更新前の登録前デバイス一覧
-    pre_register_device_list_old = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
+    unregistered_device_list_old = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
 
     # グループから削除されたデバイス
     removed_devices = set(device_list_old) - set(device_list)
@@ -183,18 +183,18 @@ def update_group_info(
         transact_items.append(remove_device)
         
     # グループから削除された登録前デバイス
-    removed_pre_devices = set(pre_register_device_list_old) - set(pre_device_list)
-    for remove_pre_device_id in removed_pre_devices:
-        remove_pre_device = {
+    removed_unregistered_devices = set(unregistered_device_list_old) - set(unregistered_device_list)
+    for remove_unregistered_device_id in removed_unregistered_devices:
+        remove_unregistered_device = {
             "Delete": {
                 "TableName": device_relation_table_name,
                 "Key": {
                     "key1": {"S": "g-" + group_id},
-                    "key2": {"S": "pd-" + remove_pre_device_id},
+                    "key2": {"S": "pd-" + remove_unregistered_device_id},
                 },
             }
         }
-        transact_items.append(remove_pre_device)
+        transact_items.append(remove_unregistered_device)
 
     # グループに追加されたデバイス
     added_devices = set(device_list) - set(device_list_old)
@@ -220,14 +220,14 @@ def update_group_info(
         transact_items.append(add_device)
         
     # グループに追加された登録前デバイス
-    added_pre_devices = set(pre_device_list) - set(pre_register_device_list_old)
-    for add_pre_device_id in added_pre_devices:
+    added_unregistered_devices = set(unregistered_device_list) - set(unregistered_device_list_old)
+    for add_unregistered_device_id in added_unregistered_devices:
         group_relation_item = {
             "key1": "g-" + group_id,
-            "key2": "pd-" + add_pre_device_id,
+            "key2": "pd-" + add_unregistered_device_id,
         }
         group_relation_item_fmt = convert.dict_dynamo_format(group_relation_item)
-        group_id_list_relation_device = db.get_device_relation_group_id_list(add_pre_device_id,device_relation_table)
+        group_id_list_relation_device = db.get_device_relation_group_id_list(add_unregistered_device_id,device_relation_table)
 
         if len(group_id_list_relation_device) < 10:
             add_device = {

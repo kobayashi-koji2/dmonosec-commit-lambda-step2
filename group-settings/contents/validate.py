@@ -54,7 +54,7 @@ def validate(event, user, contract_table, group_table):
         "group_id": path_params.get("group_id"),
         "group_name": group_name,
         "device_list": device_list,
-        "pre_device_list": body_params.get("pre_device_list", [])
+        "unregistered_device_list": body_params.get("unregistered_device_list", [])
     }
 
     return {
