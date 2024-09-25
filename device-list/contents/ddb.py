@@ -54,6 +54,7 @@ def get_device_info_by_contract_id(pk,table):
             response = table.query(
                 IndexName = "contract_id_index",
                 KeyConditionExpression=Key("contract_id").eq(pk),
+                FilterExpression=Attr("contract_state").ne(2),
                 Limit = 220,
                 ExclusiveStartKey = start_key
             )
@@ -61,6 +62,7 @@ def get_device_info_by_contract_id(pk,table):
             response = table.query(
                 IndexName = "contract_id_index",
                 KeyConditionExpression=Key("contract_id").eq(pk),
+                FilterExpression=Attr("contract_state").ne(2),
                 Limit = 220
             )
 
