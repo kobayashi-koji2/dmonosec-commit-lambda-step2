@@ -101,7 +101,8 @@ def create_custom_event_info(custom_event_info, device_table, device_id, device_
         return False, res_body
     
 # カスタムイベント設定更新         
-def update_custom_event_info(custom_event_info, device_table, device_id, device_info):
+def update_custom_event_info(custom_event_info, device_table, device_id):
+    device_info = ddb.get_device_info(device_id, device_table)
     put_item = dict()
     
     for item in device_info:

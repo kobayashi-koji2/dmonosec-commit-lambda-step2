@@ -86,7 +86,6 @@ def lambda_handler(event, context, user):
                 custom_event_info,
                 device_table,
                 device_id,
-                device_info,
             )
             logger.info(result)
 
