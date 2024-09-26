@@ -47,7 +47,7 @@ def lambda_handler(event, context, user_info):
                 "body": json.dumps(body, ensure_ascii=False),
             }
 
-        # パラメータチェックおよびimei取得
+        # パラメータチェックおよびidentificaion_id(IMEI,sigfox_id)取得
         validate_result = validate.validate(event, user_info, tables)
         if validate_result.get("message"):
             return {
@@ -59,11 +59,14 @@ def lambda_handler(event, context, user_info):
         body = validate_result["body"]
         device_id = validate_result["device_id"]
         imei = validate_result["imei"]
+        sigfox_id = validate_result["sigfox_id"]
         convert_param = convert.float_to_decimal(body)
         logger.info(f"デバイスID:{device_id}")
         logger.info(f"IMEI:{imei}")
+        logger.info(f"sigfox_id:{sigfox_id}")
+        identification_id = imei if imei else sigfox_id
         try:
-            ddb.update_device_settings(device_id, imei, convert_param, tables["device_table"])
+            ddb.update_device_settings(device_id, identification_id, convert_param, tables["device_table"])
         except ClientError as e:
             logger.info(f"デバイス設定更新エラー e={e}")
             res_body = {"message": "デバイス設定の更新に失敗しました。"}

@@ -21,7 +21,7 @@ def get_device_info(pk, table):
 
 
 # デバイス設定更新
-def update_device_settings(device_id, imei, device_settings, table):
+def update_device_settings(device_id, identification_id, device_settings, table):
     map_attribute_name = "device_data"
     sub_attribute_name1 = "config"
     # sub_attribute_name2 = "terminal_settings"
@@ -45,7 +45,7 @@ def update_device_settings(device_id, imei, device_settings, table):
         "#device_healthy_period_key": device_healthy_period_key,
     }
     table.update_item(
-        Key={"device_id": device_id, "identification_id": imei},
+        Key={"device_id": device_id, "identification_id": identification_id},
         UpdateExpression=update_expression,
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,

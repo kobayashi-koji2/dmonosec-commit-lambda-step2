@@ -49,7 +49,7 @@ def validate(event, user_info, tables):
     if not input:
         return {"message": "入力パラメータが不正です。"}
 
-    return {"device_id": device_id, "imei": device_info[0]["imei"], "body": body}
+    return {"device_id": device_id, "imei": device_info[0].get("imei"), "sigfox_id": device_info[0].get("sigfox_id"), "body": body}
 
 
 # 操作権限チェック

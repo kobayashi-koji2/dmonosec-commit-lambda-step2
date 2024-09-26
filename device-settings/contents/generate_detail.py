@@ -39,7 +39,6 @@ def get_device_detail(device_info, device_state, group_info_list):
         "device_name": device_info["device_data"]["config"]["device_name"],
         "device_code": device_info["device_data"]["param"]["device_code"],
         "device_iccid": device_info["device_data"]["param"]["iccid"],
-        "device_imei": device_info["imei"],
         "device_type": device_info["device_type"],
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,
@@ -50,5 +49,11 @@ def get_device_detail(device_info, device_state, group_info_list):
             "device_healthy_period", 0
         ),
     }
+
+    # デバイス種別によりIMEI,sigfox_idを追加
+    if device_info["device_type"] in ["PJ1", "PJ2", "PJ3"]:
+        device_detail["device_imei"] = device_info["imei"]
+    else:
+        device_detail["sigfox_id"] = device_info["sigfox_id"]
 
     return device_detail
