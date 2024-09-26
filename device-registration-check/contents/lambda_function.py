@@ -80,6 +80,8 @@ def _register_device(pre_device, contract, device_announcements):
         device_type = "PJ2"
     elif pre_device["device_code"] == "MS-C0120":
         device_type = "PJ3"
+    elif pre_device["device_code"] == "MS-C0130":
+        device_type = "UnaTag"
 
     di_num = 0
     do_num = 0
@@ -93,11 +95,36 @@ def _register_device(pre_device, contract, device_announcements):
     # デバイス情報登録
     device_item = {
         "device_id": device_id,
-        "identification_id": pre_device["imei"],
+        "identification_id": pre_device["identification_id"],
         "contract_state": 0,
         "device_type": device_type,
         "contract_id": pre_device["contract_id"],
-        "device_data": {
+    }
+
+    if device_type == "UnaTag":
+        device_item["device_data"] = {
+            "param": {
+                "contract_id": pre_device["contract_id"],
+                "iccid": "",
+                "imsi": "",
+                "device_code": pre_device["device_code"],
+                "dev_reg_datetime": pre_device["dev_reg_datetime"],
+                "dev_use_reg_datetime": int(time.time() * 1000),
+                "service": "monosc",
+                "use_type": "0",
+                "coverage_url": pre_device["coverage_url"],
+            },
+            "config": {
+                "device_name": None,
+                "device_healthy_period": 3,
+                "terminal_settings": {
+                    "di_list": [],
+                    "do_list": [],
+                },
+            },
+        }
+    else:        
+        device_item["device_data"] = {
             "param": {
                 "contract_id": pre_device["contract_id"],
                 "iccid": pre_device["iccid"],
@@ -138,7 +165,6 @@ def _register_device(pre_device, contract, device_announcements):
                 },
             },
         },
-    }
     logger.info({"device_item": device_item})
     transact_items.append(
         {
@@ -162,42 +188,57 @@ def _register_device(pre_device, contract, device_announcements):
             }
         }
     )
-
-    # IMEI,ICCID登録
-    imei_item = {
-        "imei": pre_device["imei"],
-        "contract_id": pre_device["contract_id"],
-        "device_id": device_id,
-    }
-    transact_items.append(
-        {
-            "Put": {
-                "TableName": ssm.table_names["IMEI_TABLE"],
-                "Item": convert.dict_dynamo_format(imei_item),
-            }
+    if device_type == "UnaTag":
+        #sigfox_id登録
+        sigfox_id_item = {
+            "sigfox_id": pre_device["sigfox_id"],
+            "contract_id": pre_device["contract_id"],
+            "device_id": device_id,
         }
-    )
-
-    iccid_item = {
-        "iccid": pre_device["iccid"],
-        "contract_id": pre_device["contract_id"],
-        "device_id": device_id,
-    }
-    transact_items.append(
-        {
-            "Put": {
-                "TableName": ssm.table_names["ICCID_TABLE"],
-                "Item": convert.dict_dynamo_format(iccid_item),
+        transact_items.append(
+            {
+                "Put": {
+                    "TableName": ssm.table_names["SIGFOX_ID_TABLE"],
+                    "Item": convert.dict_dynamo_format(sigfox_id_item),
+                }
             }
+        )
+    else:
+        # IMEI,ICCID登録
+        imei_item = {
+            "imei": pre_device["imei"],
+            "contract_id": pre_device["contract_id"],
+            "device_id": device_id,
         }
-    )
+        transact_items.append(
+            {
+                "Put": {
+                    "TableName": ssm.table_names["IMEI_TABLE"],
+                    "Item": convert.dict_dynamo_format(imei_item),
+                }
+            }
+        )
+
+        iccid_item = {
+            "iccid": pre_device["iccid"],
+            "contract_id": pre_device["contract_id"],
+            "device_id": device_id,
+        }
+        transact_items.append(
+            {
+                "Put": {
+                    "TableName": ssm.table_names["ICCID_TABLE"],
+                    "Item": convert.dict_dynamo_format(iccid_item),
+                }
+            }
+        )
 
     # 登録前デバイス削除
     transact_items.append(
         {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"identification_id": {"S": pre_device["imei"]}},
+                "Key": {"identification_id": {"S": pre_device["identification_id"]}},
             }
         }
     )
@@ -229,7 +270,7 @@ def _register_device(pre_device, contract, device_announcements):
         "device_announcement_id": str(uuid.uuid4()),
         "contract_id": pre_device["contract_id"],
         "announcement_create_datetime": announcement_create_datetime,
-        "identification_id": pre_device["imei"],
+        "identification_id": pre_device["identification_id"],
         "device_code": pre_device["device_code"],
         "device_announcement_type": "auto_regist_complete",
         "expire_datetime": expire_datetime,
