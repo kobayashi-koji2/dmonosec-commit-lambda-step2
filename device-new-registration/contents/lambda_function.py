@@ -110,6 +110,7 @@ def lambda_handler(event, context, user_info, request_body):
             "contract_state": 0,
             "device_data": device_data,
             "device_type": device_type,
+            "contract_id": contract_id,
         }
         put_item_fmt = convert.dict_dynamo_format(put_item)
         put_device = {

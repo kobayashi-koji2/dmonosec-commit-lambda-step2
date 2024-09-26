@@ -96,6 +96,7 @@ def _register_device(pre_device, contract, device_announcements):
         "identification_id": pre_device["imei"],
         "contract_state": 0,
         "device_type": device_type,
+        "contract_id": pre_device["contract_id"],
         "device_data": {
             "param": {
                 "contract_id": pre_device["contract_id"],

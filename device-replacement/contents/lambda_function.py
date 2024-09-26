@@ -100,6 +100,7 @@ def lambda_handler(event, context, user_info, request_body):
             "identification_id": af_device_imei,
             "contract_state": 0,  # 「0:初期受信待ち」で値は固定
             "device_type": device_info["device_type"],
+            "contract_id": pre_device_info["contract_id"],
             "device_data": {
                 "param": {
                     "iccid": pre_device_info["iccid"],
