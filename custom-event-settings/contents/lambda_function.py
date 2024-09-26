@@ -58,6 +58,7 @@ def lambda_handler(event, context, user):
         logger.info(user)
         custom_event_info = validate_result["custom_info"]
         device_id = validate_result["device_id"]
+        device_info = validate_result["device_info"]
         
         # カスタムイベント新規登録
         if event.get("httpMethod") == "POST":
@@ -66,6 +67,7 @@ def lambda_handler(event, context, user):
                 custom_event_info,
                 device_table,
                 device_id,
+                device_info,
             )
             logger.info(result)
 
@@ -84,6 +86,7 @@ def lambda_handler(event, context, user):
                 custom_event_info,
                 device_table,
                 device_id,
+                device_info,
             )
             logger.info(result)
 

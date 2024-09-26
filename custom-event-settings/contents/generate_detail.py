@@ -12,8 +12,7 @@ import math
 logger = Logger()
 
 # カスタムイベント設定登録
-def create_custom_event_info(custom_event_info, device_table, device_id):
-    device_info = ddb.get_device_info(device_id, device_table)
+def create_custom_event_info(custom_event_info, device_table, device_id, device_info):
     # カスタムイベントIDの生成
     custom_event_id = str(uuid.uuid4())
     # カスタムイベント登録日時の生成
@@ -102,8 +101,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
         return False, res_body
     
 # カスタムイベント設定更新         
-def update_custom_event_info(custom_event_info, device_table, device_id):
-    device_info = ddb.get_device_info(device_id, device_table)
+def update_custom_event_info(custom_event_info, device_table, device_id, device_info):
     put_item = dict()
     
     for item in device_info:
