@@ -12,7 +12,8 @@ import math
 logger = Logger()
 
 # カスタムイベント設定登録
-def create_custom_event_info(custom_event_info, device_table, device_id, device_info):
+def create_custom_event_info(custom_event_info, device_table, device_id):
+    device_info = ddb.get_device_info(device_id, device_table)
     # カスタムイベントIDの生成
     custom_event_id = str(uuid.uuid4())
     # カスタムイベント登録日時の生成
@@ -66,7 +67,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id, device_
     custom_event_list = list()
     for item in device_info:
         imei = item["imei"]
-        for custom_event in item["device_data"]["config"]["custom_event_list"]:
+        for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["event_type"] == 0:
                 custom_event_item = {
                     "custom_event_id": custom_event["custom_event_id"],
@@ -106,7 +107,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
     put_item = dict()
     
     for item in device_info:
-        for custom_event in item["device_data"]["config"]["custom_event_list"]:
+        for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
             
@@ -157,7 +158,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
     custom_event_list = list()
     for item in device_info:
         imei = item["imei"]
-        for custom_event in item["device_data"]["config"]["custom_event_list"]:
+        for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event = put_item
             custom_event_list.append(custom_event)    

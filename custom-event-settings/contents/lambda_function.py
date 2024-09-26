@@ -67,7 +67,6 @@ def lambda_handler(event, context, user):
                 custom_event_info,
                 device_table,
                 device_id,
-                device_info,
             )
             logger.info(result)
 
@@ -102,7 +101,7 @@ def lambda_handler(event, context, user):
         device_info = ddb.get_device_info(device_id, device_table)
         custom_event_list = list()
         for item in device_info:
-            for custom_event_a in item["device_data"]["config"]["custom_event_list"]:
+            for custom_event_a in item.get("device_data").get("config").get("custom_event_list", []):
                 ### 8. メッセージ応答
                 logger.info(custom_event_a)
                 if custom_event_a["event_type"] == 0:

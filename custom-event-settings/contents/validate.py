@@ -66,17 +66,14 @@ def validate(event, user, device_table, contract_table):
     # 登録カスタムイベント数チェック（登録の場合、各デバイス10個まで）
     if http_method == "POST":
         for item in device_info:
-            if item.get("device_data").get("config").get("custom_event_list"):
-                if len(item["device_data"]["config"]["custom_event_list"]) >= 10:
-                    return {"message": "イベントカスタム上限10件に達しています"}
-            else:
-                item.get("device_data").get("config")["custom_event_list"]=[]
+            if len(item.get("device_data").get("config").get("custom_event_list", [])) >= 10:
+                return {"message": "イベントカスタム上限10件に達しています"}
                 
     # イベントカスタムID存在チェック 
     if http_method == "PUT":
         custom_event_id_list = list()
         for item in device_info:
-            for custom_event_id in item["device_data"]["config"]["custom_event_list"]:
+            for custom_event_id in item.get("device_data").get("config").get("custom_event_list", []):
                 custom_event_id_list.append(custom_event_id["custom_event_id"])
             if body_params["custom_event_id"] not in custom_event_id_list:
                 return {"message": "イベントカスタムIDが存在しません"}
