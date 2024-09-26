@@ -56,6 +56,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         "device_code": device_info["device_data"]["param"]["device_code"],
         "device_iccid": device_info["device_data"]["param"]["iccid"],
         "device_imei": device_info["imei"],
+        "sigfox_id": device_info["sigfox_id"],
         "device_type": device_info["device_type"],
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,
@@ -70,6 +71,10 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", ""),
         #'ai_list':terminal_info.get('ai_list','') #フェーズ2
+        "latitude_state": device_state.get("latitude_state",""),
+        "longitude_state": device_state.get("longitude_state",""),
+        "precision_state": device_state.get("precision_state",""),
+        "battery_voltage": device_state.get("battery_voltage",""),
     }
 
     return device_detail
