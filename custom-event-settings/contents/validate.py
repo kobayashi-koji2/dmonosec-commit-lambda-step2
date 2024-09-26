@@ -78,5 +78,5 @@ def validate(event, user, device_table, contract_table):
             if body_params["custom_event_id"] not in custom_event_id_list:
                 return {"message": "イベントカスタムIDが存在しません"}
             
-    return {"custom_info": body_params, "device_id": device_id, "message": "", "device_info": device_info}
+    return {"custom_info": body_params, "device_id": device_id, "message": ""}
 
