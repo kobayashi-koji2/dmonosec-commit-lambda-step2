@@ -60,7 +60,7 @@ def get_device_info_other_than_unavailable(pk, table):
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return db.add_imei_in_device_info_list(response)
+    return db.insert_id_key_in_device_info_list(response)
 
 
 def increment_req_no_count_num(pk, table):

@@ -16,7 +16,7 @@ def get_pre_register_device_list(
         params["FilterExpression"] = Attr("dev_reg_datetime").lte(high_dev_reg_datetime)
 
     scan_response = pre_register_device_table.scan(**params)
-    return db.add_imei_in_device_info_list(scan_response["Items"])
+    return db.insert_id_key_in_device_info_list(scan_response["Items"])
 
 # デバイスお知らせ管理情報取得
 def get_device_announcement_list(device_announcement_table, imei):

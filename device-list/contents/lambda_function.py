@@ -160,7 +160,7 @@ def lambda_handler(event, context, user_info):
         order = 1
         device_list, device_info_list, device_info_list_order = [], [], []
         device_info_list = ddb.get_device_info_by_contract_id(contract_id,tables["device_table"])
-        device_info_list = db.add_imei_in_device_info_list(device_info_list)
+        device_info_list = db.insert_id_key_in_device_info_list(device_info_list)
 
         for device_item in device_order:
             for device_info_item in device_info_list:
@@ -296,6 +296,7 @@ def lambda_handler(event, context, user_info):
                         "device_name"
                     ),
                     "device_imei": device_info["imei"],
+                    "sigfox_id": device_info["sigfox_id"],
                     "device_type": device_info["device_type"],
                     "group_name_list": group_name_list,
                     "device_code": device_info["device_data"]["param"].get(

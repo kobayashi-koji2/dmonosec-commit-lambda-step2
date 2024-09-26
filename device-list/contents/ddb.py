@@ -30,10 +30,11 @@ def get_pre_reg_device_info(pk, table):
     ).get("Items", [])
     for items in response:
         # レスポンス生成(未登録デバイス)
-        items = db.add_imei_in_device_info(items)
+        items = db.insert_id_key_in_device_info(items)
         pre_reg_device_list.append(
             {
                 "device_imei": items["imei"],
+                "sigfox_id": items["sigfox_id"],
                 "device_registration_datetime": items["dev_reg_datetime"],
                 "device_code": items["device_code"],
             }

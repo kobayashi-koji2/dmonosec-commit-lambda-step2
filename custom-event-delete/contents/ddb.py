@@ -16,7 +16,7 @@ def get_device_info(pk, table):
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
 
-    return db.add_imei_in_device_info_list(response)
+    return db.insert_id_key_in_device_info_list(response)
 
 def delete_custom_event(device_table, custom_event_id, device_id, imei):
     custom_event_list = list()

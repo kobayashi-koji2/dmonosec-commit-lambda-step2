@@ -269,7 +269,7 @@ def get_device_info(device_id, device_table, consistent_read=False):
         FilterExpression=Attr("contract_state").eq(1),
         ConsistentRead=consistent_read,
     ).get("Items", [])
-    return add_imei_in_device_info(device_list[0]) if device_list else None
+    return insert_id_key_in_device_info(device_list[0]) if device_list else None
 
 
 # デバイス情報取得(契約状態:使用不可以外)
@@ -278,7 +278,7 @@ def get_device_info_other_than_unavailable(device_id, table):
         KeyConditionExpression=Key("device_id").eq(device_id),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return add_imei_in_device_info(device_list[0]) if device_list else None
+    return insert_id_key_in_device_info(device_list[0]) if device_list else None
 
 
 # 現状態取得
@@ -298,7 +298,7 @@ def get_pre_reg_device_info(contract_id_list, pre_register_table):
             IndexName="contract_id_index",
             KeyConditionExpression=Key("contract_id").eq(item),
         ).get("Items", [])
-        pre_register_table_res = add_imei_in_device_info_list(pre_register_table_res)
+        pre_register_table_res = insert_id_key_in_device_info_list(pre_register_table_res)
         for items in pre_register_table_res:
             # レスポンス生成(未登録デバイス)
             pre_reg_device_list.append(
@@ -359,15 +359,25 @@ def get_device_info_by_imei(pre_register_device_id, pre_register_table):
         KeyConditionExpression=Key("identification_id").eq(pre_register_device_id),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return add_imei_in_device_info(device_list[0]) if device_list else None
+    return insert_id_key_in_device_info(device_list[0]) if device_list else None
 
-def add_imei_in_device_info(info):
-    info["imei"] = info.get("identification_id")
+def insert_id_key_in_device_info(info):
+    if info.get("device_type") == "UnaTag":
+        info["sigfox_id"] = info.get("identification_id")
+        info["imei"] = ""
+    else:
+        info["sigfox_id"] = ""
+        info["imei"] = info.get("identification_id")
     return info
 
-def add_imei_in_device_info_list(info_list):
+def insert_id_key_in_device_info_list(info_list):
     device_info_list = []
     for item in info_list:
-        item["imei"] = item.get("identification_id")
+        if item.get("device_type") == "UnaTag":
+            item["sigfox_id"] = item.get("identification_id")
+            item["imei"] = ""
+        else:
+            item["sigfox_id"] = ""
+            item["imei"] = item.get("identification_id")
         device_info_list.append(item)
     return device_info_list

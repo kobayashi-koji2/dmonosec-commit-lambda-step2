@@ -28,7 +28,7 @@ def get_device_info(device_id, device_table):
     device_list = device_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id)
     ).get("Items")
-    return db.add_imei_in_device_info(device_list[0]) if device_list else None
+    return db.insert_id_key_in_device_info(device_list[0]) if device_list else None
 
 
 # 現状態取得

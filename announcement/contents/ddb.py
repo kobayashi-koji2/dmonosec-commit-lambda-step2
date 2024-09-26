@@ -32,7 +32,7 @@ def get_device_announcement_list(device_announcement_table, contract_id):
         KeyConditionExpression=Key("contract_id").eq(contract_id)
     ).get("Items",[])
 
-    return db.add_imei_in_device_info_list(device_announcement_list)
+    return db.insert_id_key_in_device_info_list(device_announcement_list)
 
 
 # ユーザー情報（お知らせ画面最終表示日時）更新

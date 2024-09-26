@@ -10,4 +10,4 @@ def get_device_info_only_pj2(pk, table):
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2) & Attr("device_type").eq("PJ2"),
     ).get("Items", [])
-    return db.add_imei_in_device_info(response[0]) if response else None
+    return db.insert_id_key_in_device_info(response[0]) if response else None
