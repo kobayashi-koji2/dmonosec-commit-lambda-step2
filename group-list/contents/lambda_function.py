@@ -152,6 +152,10 @@ def group_detect(detect_condition,keyword,group_info):
         logger.info(f"group_name:{device_value}")
     else :
         pass
+
+    #グループ名がNoneの場合は取得しない
+    if device_value is None:
+        return False
         
     if case == 1:
         for key in key_list:

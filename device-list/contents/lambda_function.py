@@ -398,14 +398,14 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
         hit_list = []
 
         if detect_condition == 1:
-            device_value = device_info["device_data"]["config"]["device_name"]
+            device_value = device_info.get("device_data").get("config").get("device_name")
         elif detect_condition == 2:
-            device_value = device_info["imei"]
+            device_value = device_info.get("imei")
         elif detect_condition == 3:
-            device_value = device_info["device_data"]["param"]["device_code"]
+            device_value = device_info.get("device_data").get("param").get("device_code")
         elif detect_condition == 4:
             device_id = device_info["device_id"]
-            device_value = next((item["group_list"] for item in device_group_relation if item["device_id"] == device_id), [])
+            device_value = next((item["group_list"] for item in device_group_relation if item.get("device_id") == device_id), [])
             if device_value == []:
                 continue
         else :
@@ -413,6 +413,10 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
 
         # device_valueは各デバイスの検索評価対象の値
         logger.info(f"検索評価対象の値:{device_value}")
+
+        #検索対象がNoneの場合は次のデバイスの処理に移行
+        if device_value is None:
+            continue
         
         if case == 1:
             # グループID検索の場合は、device_valueはリスト
@@ -510,10 +514,18 @@ def device_detect_all(keyword,device_info_list):
         
         hit_list = []
 
-        device_name = device_info["device_data"]["config"]["device_name"]
-        device_id = device_info["imei"]
-        device_code = device_info["device_data"]["param"]["device_code"]
-        
+        device_name = device_info.get("device_data").get("config").get("device_name")
+        device_id = device_info.get("imei")
+        device_code = device_info.get("device_data").get("param").get("device_code")
+
+        #Noneの場合にエラーが起きることの回避のため
+        if device_name is None:
+            device_name = ""
+        if device_id is None:
+            device_id = ""
+        if device_code is None:
+            device_code = ""
+
         if case == 1:
             for key in key_list:
                 if (key in device_name) or (key in device_id) or (key in device_code):
