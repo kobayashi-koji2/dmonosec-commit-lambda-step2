@@ -55,7 +55,7 @@ def lambda_handler(event, context):
         try:
             contract = db.get_contract_info(pre_device["contract_id"], contract_table)
             device_announcements = ddb.get_device_announcement_list(
-                device_announcement_table, pre_device["imei"]
+                device_announcement_table, pre_device["identification_id"]
             )
             _register_device(pre_device, contract, device_announcements)
         except Exception:
