@@ -33,6 +33,8 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
     formatted_automation_list = automation_info_fmt(automation_info_list)
     
     formatted_customevent_list = customevent_info_fmt(device_info.get("device_data").get("config").get("custom_event_list", []))
+    if formatted_customevent_list["message"]:
+        return {"message": "イベント種別が不正です"}
 
     # 機器異常状態判定
     device_abnormality = 0
@@ -152,6 +154,7 @@ def terminal_info_fmt(terminal_settings, device_state):
     
 def customevent_info_fmt(device_info):
     custom_event_list = list()
+    msg = ""
     for item in device_info:
             ### 8. メッセージ応答
         logger.info(item)
@@ -165,7 +168,8 @@ def customevent_info_fmt(device_info):
                 "weekday": item["weekday"],
                 "di_event_list": item["di_event_list"],
             }
-        if item["event_type"] == 1:
+            custom_event_list.append(custom_event_item)
+        elif item["event_type"] == 1:
             custom_event_item = {
                 "custom_event_id": item["custom_event_id"],
                 'custom_event_reg_datetime': item["custom_event_reg_datetime"],
@@ -174,7 +178,9 @@ def customevent_info_fmt(device_info):
                 "elapsed_time": item["elapsed_time"],
                 "di_event_list": item["di_event_list"],
             }
-        custom_event_list.append(custom_event_item)
-    return custom_event_list
+            custom_event_list.append(custom_event_item)
+        else:
+            msg = "イベント種別が不正です"
+    return {"custom_event_list": custom_event_list, "message": msg}
 
     
