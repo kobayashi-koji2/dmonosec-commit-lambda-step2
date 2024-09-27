@@ -178,12 +178,12 @@ def lambda_handler(event, context, user_info):
                 if query_param_detect_condition.isdecimal():
                     detect_condition = int(query_param_detect_condition)
 
-        if detect_condition != None and keyword != None and keyword != "":
-            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order,device_group_relation)
-        elif detect_condition == None and (keyword == None or keyword == ""):
+        if keyword == None or keyword == "":
             device_info_list_order_filtered = device_info_list_order
+        elif detect_condition != None:
+            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order,device_group_relation)
         else:
-            res_body = {"message": "検索対象またはキーワードが設定されていません。"}
+            res_body = {"message": "検索条件が設定されていません。"}
             return {
                 "statusCode": 400,
                 "headers": res_headers,

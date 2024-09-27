@@ -67,12 +67,12 @@ def lambda_handler(event, context, user):
             contract_info = db.get_contract_info(user["contract_id"], contract_table)
             for group_id in contract_info.get("contract_data", {}).get("group_list", {}):
                 group_info = db.get_group_info(group_id, group_table)
-                if detect_condition != None and keyword != None and keyword != "":
-                    get_flag = keyword_detection_group(detect_condition,keyword,group_info)
-                elif detect_condition == None and (keyword == None or keyword == ""):
+                if keyword == None or keyword == "":
                     get_flag = True
+                elif detect_condition != None:
+                    get_flag = keyword_detection_group(detect_condition,keyword,group_info)
                 else:
-                    res_body = {"message": "検索対象またはキーワードが設定されていません。"}
+                    res_body = {"message": "検索条件が設定されていません。"}
                     return {
                         "statusCode": 400,
                         "headers": res_headers,
