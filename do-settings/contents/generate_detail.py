@@ -37,6 +37,7 @@ def terminal_info_fmt(terminal_settings, device_state):
                 "do_control": item.get("do_control"),
                 "do_specified_time": item.get("do_specified_time"),
                 "do_di_return": item.get("do_di_return"),
+                "do_flag": item.get("do_flag","")
             }
         )
 

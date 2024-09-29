@@ -261,6 +261,7 @@ def __generate_device_data_config(device_type):
         do_item = {
             "do_no": do_no,
             "do_name": "接点出力" + str(do_no),
+            "do_flag": 1,
             "do_control": None,
             "do_specified_time": None,
             "do_di_return": 0,
