@@ -93,78 +93,84 @@ def _register_device(pre_device, contract, device_announcements):
         do_num = 2
 
     # デバイス情報登録
-    device_item = {
-        "device_id": device_id,
-        "identification_id": pre_device["identification_id"],
-        "contract_state": 0,
-        "device_type": device_type,
-        "contract_id": pre_device["contract_id"],
-    }
-
     if device_type == "UnaTag":
-        device_item["device_data"] = {
-            "param": {
-                "contract_id": pre_device["contract_id"],
-                "iccid": "",
-                "imsi": "",
-                "device_code": pre_device["device_code"],
-                "dev_reg_datetime": pre_device["dev_reg_datetime"],
-                "dev_use_reg_datetime": int(time.time() * 1000),
-                "service": "monosc",
-                "use_type": "0",
-                "coverage_url": pre_device["coverage_url"],
-            },
-            "config": {
-                "device_name": None,
-                "device_healthy_period": 3,
-                "terminal_settings": {
-                    "di_list": [],
-                    "do_list": [],
+        device_item = {
+            "device_id": device_id,
+            "identification_id": pre_device["identification_id"],
+            "contract_state": 0,
+            "device_type": device_type,
+            "contract_id": pre_device["contract_id"],
+            "device_data": {
+                "param": {
+                    "contract_id": pre_device["contract_id"],
+                    "iccid": "",
+                    "imsi": "",
+                    "device_code": pre_device["device_code"],
+                    "dev_reg_datetime": pre_device["dev_reg_datetime"],
+                    "dev_use_reg_datetime": int(time.time() * 1000),
+                    "service": "monosc",
+                    "use_type": "0",
+                    "coverage_url": pre_device["coverage_url"],
+                },
+                "config": {
+                    "device_name": None,
+                    "device_healthy_period": 3,
+                    "terminal_settings": {
+                        "di_list": [],
+                        "do_list": [],
+                    },
                 },
             },
         }
-    else:        
-        device_item["device_data"] = {
-            "param": {
-                "contract_id": pre_device["contract_id"],
-                "iccid": pre_device["iccid"],
-                "imsi": pre_device["imsi"],
-                "device_code": pre_device["device_code"],
-                "dev_reg_datetime": pre_device["dev_reg_datetime"],
-                "dev_use_reg_datetime": int(time.time() * 1000),
-                "service": "monosc",
-                "use_type": "0",
-                "coverage_url": pre_device["coverage_url"],
-            },
-            "config": {
-                "device_name": None,
-                "device_healthy_period": 3,
-                "terminal_settings": {
-                    "di_list": [
-                        {
-                            "di_no": di_no,
-                            "di_name": f"接点入力{di_no}",
-                            "di_on_name": "Close",
-                            "di_on_icon": "on",
-                            "di_off_name": "Open",
-                            "di_off_icon": "off",
-                        }
-                        for di_no in range(1, di_num + 1)
-                    ],
-                    "do_list": [
-                        {
-                            "do_no": do_no,
-                            "do_name": f"接点出力{do_no}",
-                            "do_control": None,
-                            "do_specified_time": None,
-                            "do_di_return": 0,
-                            "do_timer_list": [],
-                        }
-                        for do_no in range(1, do_num + 1)
-                    ],
+    else:
+        device_item = {
+            "device_id": device_id,
+            "identification_id": pre_device["identification_id"],
+            "contract_state": 0,
+            "device_type": device_type,
+            "contract_id": pre_device["contract_id"],
+            "device_data": {
+                "param": {
+                    "contract_id": pre_device["contract_id"],
+                    "iccid": pre_device["iccid"],
+                    "imsi": pre_device["imsi"],
+                    "device_code": pre_device["device_code"],
+                    "dev_reg_datetime": pre_device["dev_reg_datetime"],
+                    "dev_use_reg_datetime": int(time.time() * 1000),
+                    "service": "monosc",
+                    "use_type": "0",
+                    "coverage_url": pre_device["coverage_url"],
+                },
+                "config": {
+                    "device_name": None,
+                    "device_healthy_period": 3,
+                    "terminal_settings": {
+                        "di_list": [
+                            {
+                                "di_no": di_no,
+                                "di_name": f"接点入力{di_no}",
+                                "di_on_name": "Close",
+                                "di_on_icon": "on",
+                                "di_off_name": "Open",
+                                "di_off_icon": "off",
+                            }
+                            for di_no in range(1, di_num + 1)
+                        ],
+                        "do_list": [
+                            {
+                                "do_no": do_no,
+                                "do_name": f"接点出力{do_no}",
+                                "do_control": None,
+                                "do_specified_time": None,
+                                "do_di_return": 0,
+                                "do_timer_list": [],
+                            }
+                            for do_no in range(1, do_num + 1)
+                        ],
+                    },
                 },
             },
-        },
+        }
     logger.info({"device_item": device_item})
     transact_items.append(
         {
