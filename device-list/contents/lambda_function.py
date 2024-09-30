@@ -486,8 +486,9 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
                     if keyword in value:
                         return_list.append(device_info)
                         break
-            if keyword in device_value:
-                return_list.append(device_info)
+            else:
+                if keyword in device_value:
+                    return_list.append(device_info)
 
     return return_list
 
