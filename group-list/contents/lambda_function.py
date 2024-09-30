@@ -35,6 +35,7 @@ def lambda_handler(event, context, user):
         try:
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
+            device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -67,6 +68,12 @@ def lambda_handler(event, context, user):
             contract_info = db.get_contract_info(user["contract_id"], contract_table)
             for group_id in contract_info.get("contract_data", {}).get("group_list", {}):
                 group_info = db.get_group_info(group_id, group_table)
+                unregistered_device_id_list = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
+                if len(unregistered_device_id_list) >= 1:
+                    unregistered_device_flag = 1
+                else:
+                    unregistered_device_flag = 0
+
                 if keyword == None or keyword == "":
                     get_flag = True
                 elif detect_condition != None:
@@ -86,6 +93,7 @@ def lambda_handler(event, context, user):
                             "group_name": group_info.get("group_data", {})
                             .get("config", {})
                             .get("group_name", {}),
+                            "unregistered_device_flag": unregistered_device_flag
                         }
                     )
                 logger.info(group_list)
