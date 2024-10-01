@@ -197,7 +197,7 @@ def _register_device(pre_device, contract, device_announcements):
     if device_type == "UnaTag":
         #sigfox_id登録
         sigfox_id_item = {
-            "sigfox_id": pre_device["sigfox_id"],
+            "sigfox_id": pre_device["identification_id"],
             "contract_id": pre_device["contract_id"],
             "device_id": device_id,
         }
@@ -212,7 +212,7 @@ def _register_device(pre_device, contract, device_announcements):
     else:
         # IMEI,ICCID登録
         imei_item = {
-            "imei": pre_device["imei"],
+            "imei": pre_device["identification_id"],
             "contract_id": pre_device["contract_id"],
             "device_id": device_id,
         }
