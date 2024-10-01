@@ -130,6 +130,15 @@ def lambda_handler(event, context, user_info):
 
         ### 4. 制御情報取得
         device_info = ddb.get_device_info_other_than_unavailable(device_id, device_table)
+        for do_item in device_info[0].get("device_data").get("config").get("terminal_settings").get("do_list"):
+            if do_item.get("do_no") == do_no:
+                if do_item.get("do_flag") == 0:
+                    res_body = {"message": "制御不可の端子に対する操作はできません"}
+                    return {
+                        "statusCode": 400,
+                        "headers": res_headers,
+                        "body": json.dumps(res_body, ensure_ascii=False),
+                    }
         if len(device_info) == 0:
             res_body = {"message": "デバイス情報が存在しません。"}
             return {
