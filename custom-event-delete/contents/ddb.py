@@ -18,11 +18,10 @@ def get_device_info(pk, table):
 
     return db.insert_id_key_in_device_info_list(response)
 
-def delete_custom_event(device_table, custom_event_id, device_id, imei):
+def delete_custom_event(device_table, custom_event_id, device_id, identification_id):
     custom_event_list = list()
     device_info = get_device_info(device_id, device_table)
     for item in device_info:
-        imei = item["imei"]
         for custom_event in item["device_data"]["config"]["custom_event_list"]:
             if custom_event["custom_event_id"] != custom_event_id:
                 custom_event_list.append(custom_event)
@@ -35,7 +34,7 @@ def delete_custom_event(device_table, custom_event_id, device_id, imei):
             "TableName": device_table.table_name,
             "Key": {
                 "device_id": {"S": device_id},
-                "identification_id": {"S": imei},
+                "identification_id": {"S": identification_id},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_cel = :s",
             "ExpressionAttributeNames": {

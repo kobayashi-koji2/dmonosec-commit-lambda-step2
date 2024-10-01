@@ -44,9 +44,6 @@ def lambda_handler(event, context, user):
                 "body": json.dumps(body, ensure_ascii=False),
             }
                 
-        body_params = json.loads(event.get("body", "{}"))
-        logger.info(body_params)
-                
         # パラメータチェック
         validate_result = validate.validate(event, user, device_table, contract_table)
         if validate_result.get("message"):
@@ -61,7 +58,6 @@ def lambda_handler(event, context, user):
         
         # カスタムイベント新規登録
         if event.get("httpMethod") == "POST":
-            logger.info("カスタムイベント新規登録")
             result = generate_detail.create_custom_event_info(
                 custom_event_info,
                 device_table,
@@ -79,7 +75,6 @@ def lambda_handler(event, context, user):
                 }
         # カスタムイベント設定更新
         if event.get("httpMethod") == "PUT":
-            logger.info("カスタムイベント設定更新")
             result = generate_detail.update_custom_event_info(
                 custom_event_info,
                 device_table,
@@ -102,7 +97,6 @@ def lambda_handler(event, context, user):
         for item in device_info:
             for custom_event_a in item.get("device_data").get("config").get("custom_event_list", []):
                 ### 8. メッセージ応答
-                logger.info(custom_event_a)
                 if custom_event_a["event_type"] == 0:
                     custom_event_item = {
                         "custom_event_id": custom_event_a["custom_event_id"],

@@ -35,11 +35,11 @@ def validate(event, user, device_table, contract_table):
     # イベントカスタムID存在チェック
     custom_event_id_list = list()
     for item in device_info:
-        imei = item["imei"]
+        identification_id = item["identification_id"]
         for custom_event_id in item["device_data"]["config"]["custom_event_list"]:
             custom_event_id_list.append(custom_event_id["custom_event_id"])
     if body_params["custom_event_id"] not in custom_event_id_list:
         return {"message": "イベントカスタムIDが存在しません"}
             
-    return {"custom_event_id": body_params["custom_event_id"], "device_id": device_id, "imei": imei, "message": ""}
+    return {"custom_event_id": body_params["custom_event_id"], "device_id": device_id, "identification_id": identification_id, "message": ""}
 

@@ -35,6 +35,7 @@ def validate(event, user, device_table, contract_table):
     
     # デバイス種別、接点端子数チェック
     for item in device_info:
+        logger.info(item["device_type"])
         if (
             item["device_type"] == "PJ1"
             and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) != 1
@@ -43,6 +44,9 @@ def validate(event, user, device_table, contract_table):
             and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
         ) or (
             item["device_type"] == "PJ3"
+            and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
+        ) or (
+            item["device_type"] == "UnaTag"
             and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
         ):
             return {"message": "不正なデバイスIDが指定されています"}

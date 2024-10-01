@@ -66,7 +66,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
             }
     custom_event_list = list()
     for item in device_info:
-        imei = item["imei"]
+        imei = item["identification_id"]
         for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["event_type"] == 0:
                 custom_event_item = {
@@ -89,7 +89,6 @@ def create_custom_event_info(custom_event_info, device_table, device_id):
                 }
             custom_event_list.append(custom_event_item)
     
-    logger.info(put_item)
     custom_event_list.append(put_item) 
     
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
@@ -157,13 +156,12 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
             }
     custom_event_list = list()
     for item in device_info:
-        imei = item["imei"]
+        imei = item["identification_id"]
         for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event = put_item
-            custom_event_list.append(custom_event)    
-    logger.info(put_item)
-    logger.info(custom_event_list)
+            custom_event_list.append(custom_event)
+            
     db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
     
     if db_update == True:
@@ -173,9 +171,8 @@ def update_custom_event_info(custom_event_info, device_table, device_id):
         res_body = {"message": "データの更新に失敗しました。"}
         return False, res_body
             
-def update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei):
+def update_ddb_custom_event_info(custom_event_list, device_table, device_id, identification_id):
     put_item_fmt = convert.to_dynamo_format(custom_event_list)
-    logger.info(put_item_fmt)
     transact_items = []
     
     custom_event_create = {
@@ -183,7 +180,7 @@ def update_ddb_custom_event_info(custom_event_list, device_table, device_id, ime
             "TableName": device_table.table_name,
             "Key": {
                 "device_id": {"S": device_id},
-                "identification_id": {"S": imei},
+                "identification_id": {"S": identification_id},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_cel = :s",
             "ExpressionAttributeNames": {

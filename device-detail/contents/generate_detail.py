@@ -65,7 +65,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         ),
         "signal_status": device_state.get("signal_state", 0),
         "automation_list": formatted_automation_list,
-        "custom_event_list": formatted_customevent_list,
+        "custom_event_list": formatted_customevent_list["custom_event_list"],
         "di_list": terminal_info.get("di_list", ""),
         "do_list": terminal_info.get("do_list", ""),
         #'ai_list':terminal_info.get('ai_list','') #フェーズ2

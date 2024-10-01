@@ -43,8 +43,6 @@ def lambda_handler(event, context, user):
                 "body": json.dumps(body, ensure_ascii=False),
             }
                 
-        body_params = json.loads(event.get("body", "{}"))
-                
         # パラメータチェック
         validate_result = validate.validate(event, user, device_table, contract_table)
         if validate_result.get("message"):
@@ -56,10 +54,12 @@ def lambda_handler(event, context, user):
         logger.info(user)
         custom_event_id = validate_result["custom_event_id"]
         device_id = validate_result["device_id"]
-        imei = validate_result["imei"]
+        identification_id = validate_result["identification_id"]
         
         # カスタムイベント設定削除
-        a = ddb.delete_custom_event(device_table, custom_event_id, device_id, imei)
+        custom_event_delete = ddb.delete_custom_event(device_table, custom_event_id, device_id, identification_id)
+        logger.info(custom_event_delete)
+        
         ### 7. メッセージ応答
         res_body = {"message": ""}
         return {
