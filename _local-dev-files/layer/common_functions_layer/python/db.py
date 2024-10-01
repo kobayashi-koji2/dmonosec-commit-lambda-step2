@@ -70,6 +70,17 @@ def get_device_relation_group_id_list(device_id, device_relation_table):
     group_id_list = [relation["key1"][2:] for relation in device_relation_group_list]
     return group_id_list
 
+# 登録前デバイスに紐づくグループID一覧を取得
+def get_pre_device_relation_group_id_list(pre_device_id, device_relation_table):
+    device_relation_group_list = get_device_relation(
+        f"pd-{pre_device_id}",
+        device_relation_table,
+        sk_prefix="g-",
+        gsi_name="key2_index",
+    )
+    group_id_list = [relation["key1"][2:] for relation in device_relation_group_list]
+    return group_id_list
+
 
 # グループに紐づくデバイスID一覧を取得
 def get_group_relation_device_id_list(group_id, device_relation_table):

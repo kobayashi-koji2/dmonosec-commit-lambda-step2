@@ -4,6 +4,7 @@ resource "aws_ssm_parameter" "dynamodb_table_name"{
         ACCOUNT_TABLE    = "${var.account_table_name}"
         IMEI_TABLE       = "${var.imei_table_name}"
         ICCID_TABLE      = "${var.iccid_table_name}"
+        SIGFOX_ID_TABLE  = "${var.sigfox_id_table_name}"
         CONTRACT_TABLE   = "${var.contract_table_name}"
         OPERATOR_TABLE   = "${var.operator_table_name}"
         USER_TABLE       = "${var.user_table_name}"

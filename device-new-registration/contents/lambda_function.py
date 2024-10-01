@@ -46,6 +46,7 @@ def lambda_handler(event, context, user_info, request_body):
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
         device_announcement_table = dynamodb.Table(ssm.table_names["DEVICE_ANNOUNCEMENT_TABLE"])
+        device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
 
         ### 1. 入力情報チェック
         # ユーザー権限確認
@@ -57,12 +58,17 @@ def lambda_handler(event, context, user_info, request_body):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        device_imei = request_body["device_imei"]
+            
+        if request_body["device_imei"]:
+            identification_id = request_body["device_imei"]
+        elif request_body["device_sigfox_id"]:
+            identification_id = request_body["device_sigfox_id"]
+        logger.debug(f"identification_id: {identification_id}")
         contract_id = user_info["contract_id"]
 
         ### 2. デバイス情報登録
         transact_items = list()
-        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, contract_id, pre_register_table)
+        pre_device_info = ddb.get_pre_reg_device_info_by_imei(identification_id, contract_id, pre_register_table)
         if not pre_device_info:
             res_body = {"message": "登録前デバイス情報が存在しません。"}
             return {
@@ -82,6 +88,8 @@ def lambda_handler(event, context, user_info, request_body):
             device_type = "PJ2"
         elif pre_device_info["device_code"] == "MS-C0120":
             device_type = "PJ3"
+        elif pre_device_info["device_code"] == "MS-C0130":
+            device_type = "UnaTag"
         else:
             res_body = {"message": "機器コードの値が不正です。"}
             return {
@@ -89,38 +97,80 @@ def lambda_handler(event, context, user_info, request_body):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-
-        device_data = {
-            "param": {
-                "iccid": pre_device_info["iccid"],
-                "imsi": pre_device_info["imsi"],
-                "device_code": pre_device_info["device_code"],
-                "contract_id": contract_id,
-                "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
-                "coverage_url": pre_device_info["coverage_url"],
-                "use_type": 0,
-                "dev_user_reg_datetime": int(time.time() * 1000),
-                "service": "monosc",
-            },
-            "config": __generate_device_data_config(device_type),
-        }
-        put_item = {
-            "device_id": device_id,
-            "identification_id": device_imei,
-            "contract_state": 0,
-            "device_data": device_data,
-            "device_type": device_type,
-            "contract_id": contract_id,
-        }
-        put_item_fmt = convert.dict_dynamo_format(put_item)
-        put_device = {
-            "Put": {
-                "TableName": ssm.table_names["DEVICE_TABLE"],
-                "Item": put_item_fmt,
+            
+        logger.debug(f"device_type: {device_type}")
+            
+        if device_type in ["PJ1","PJ2","PJ3"]:
+            device_data = {
+                "param": {
+                    "iccid": pre_device_info["iccid"],
+                    "imsi": pre_device_info["imsi"],
+                    "device_code": pre_device_info["device_code"],
+                    "contract_id": contract_id,
+                    "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
+                    "coverage_url": pre_device_info["coverage_url"],
+                    "use_type": 0,
+                    "dev_user_reg_datetime": int(time.time() * 1000),
+                    "service": "monosc",
+                },
+                "config": __generate_device_data_config(device_type),
             }
-        }
-        transact_items.append(put_device)
-        logger.debug(f"put_device_info: {put_device}")
+            put_item = {
+                "device_id": device_id,
+                "identification_id": identification_id,
+                "contract_state": 0,
+                "device_data": device_data,
+                "device_type": device_type,
+                "contract_id": contract_id,
+            }
+            put_item_fmt = convert.dict_dynamo_format(put_item)
+            put_device = {
+                "Put": {
+                    "TableName": ssm.table_names["DEVICE_TABLE"],
+                    "Item": put_item_fmt,
+                }
+            }
+            transact_items.append(put_device)
+            logger.debug(f"put_device_info: {put_device}")
+            
+        elif device_type == "UnaTag":
+            device_data = {
+                "param": {
+                    "device_code": pre_device_info["device_code"],
+                    "contract_id": contract_id,
+                    "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
+                    "coverage_url": pre_device_info["coverage_url"],
+                    "use_type": 0,
+                    "dev_user_reg_datetime": int(time.time() * 1000),
+                    "service": "monosc",
+                },
+                "config": __generate_device_data_config(device_type),
+            }
+            put_item = {
+                "device_id": device_id,
+                "identification_id": identification_id,
+                "contract_state": 0,
+                "device_data": device_data,
+                "device_type": device_type,
+                "contract_id": contract_id,
+            }
+            put_item_fmt = convert.dict_dynamo_format(put_item)
+            put_device = {
+                "Put": {
+                    "TableName": ssm.table_names["DEVICE_TABLE"],
+                    "Item": put_item_fmt,
+                }
+            }
+            transact_items.append(put_device)
+            logger.debug(f"put_device_info: {put_device}")
+            
+        else:
+            res_body = {"message": "デバイス種別の値が不正です。"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         ### 3. 契約情報更新
         contract_info = db.get_contract_info(contract_id, contract_table)
@@ -141,20 +191,21 @@ def lambda_handler(event, context, user_info, request_body):
         logger.debug(f"update_contract_info: {update_contract}")
 
         ### 4. デバイス関連情報追加
-        put_item = {
-            "imei": device_imei,
-            "contract_id": contract_id,
-            "device_id": device_id,
-        }
-        put_item_fmt = convert.dict_dynamo_format(put_item)
-        put_imei = {
-            "Put": {
-                "TableName": ssm.table_names["IMEI_TABLE"],
-                "Item": put_item_fmt,
+        if device_type in ["PJ1","PJ2","PJ3"]:
+            put_item = {
+                "imei": identification_id,
+                "contract_id": contract_id,
+                "device_id": device_id,
             }
-        }
-        transact_items.append(put_imei)
-        logger.debug(f"put_imei: {put_imei}")
+            put_item_fmt = convert.dict_dynamo_format(put_item)
+            put_imei = {
+                "Put": {
+                    "TableName": ssm.table_names["IMEI_TABLE"],
+                    "Item": put_item_fmt,
+                }
+            }
+            transact_items.append(put_imei)
+            logger.debug(f"put_imei: {put_imei}")
 
         put_item = {
             "iccid": pre_device_info["iccid"],
@@ -170,21 +221,73 @@ def lambda_handler(event, context, user_info, request_body):
         }
         transact_items.append(put_iccid)
         logger.debug(f"put_iccid: {put_iccid}")
+        
+        if device_type == "UnaTag":
+            put_item = {
+                "sigfox_id": identification_id,
+                "contract_id": contract_id,
+                "device_id": device_id,
+            }
+            put_item_fmt = convert.dict_dynamo_format(put_item)
+            put_sigfox = {
+                "Put": {
+                    "TableName": ssm.table_names["SIGFOX_ID_TABLE"],
+                    "Item": put_item_fmt,
+                }
+            }
+            transact_items.append(put_sigfox)
+            logger.debug(f"put_sigfox: {put_sigfox}")
 
         ### 5. 登録前デバイス削除
         delete_pre_register = {
             "Delete": {
                 "TableName": ssm.table_names["PRE_REGISTER_DEVICE_TABLE"],
-                "Key": {"identification_id": {"S": device_imei}},
+                "Key": {"identification_id": {"S": identification_id}},
             }
         }
         transact_items.append(delete_pre_register)
         logger.debug(f"delete_pre_register: {delete_pre_register}")
+        
+        ### 6. デバイス関連テーブル更新
+        pre_device_relation_list = db.get_pre_device_relation_group_id_list(identification_id, device_relation_table)
+        logger.info(pre_device_relation_list)
+        pd_identification_id = "pd-" + identification_id
+        for group_id in pre_device_relation_list:
+            device_relation_list = db.get_device_relation(
+            "g-" + group_id, device_relation_table, sk_prefix="pd-"
+            )
+            logger.info(device_relation_list)
+            for device_relation in device_relation_list:
+                if pd_identification_id == device_relation["key2"]:
+                    remove_relation = {
+                        "Delete": {
+                            "TableName": ssm.table_names["DEVICE_RELATION_TABLE"],
+                            "Key": {
+                                "key1": {"S": device_relation["key1"]},
+                                "key2": {"S": device_relation["key2"]},
+                            },
+                        }
+                    }
+                    transact_items.append(remove_relation)
+                
+            device_relation_item = {
+                "key1": "g-" + group_id,
+                "key2": "d-" + device_id,
+            }
+            device_relation_item_fmt = convert.dict_dynamo_format(device_relation_item)
+            put_device_relation = {
+                "Put": {
+                    "TableName": ssm.table_names["DEVICE_RELATION_TABLE"],
+                    "Item": device_relation_item_fmt,
+                }
+            }
+            transact_items.append(put_device_relation)
 
-        ### 6. デバイス関連お知らせ情報削除
+        ### 7. デバイス関連お知らせ情報削除
         device_announcements = ddb.get_device_announcement_list(
-            device_announcement_table, device_imei
+            device_announcement_table, identification_id
         )
+        logger.debug(f"device_announcements: {device_announcements}")
         if device_announcements:
             delete_device_announcements = {
                 "Delete": {

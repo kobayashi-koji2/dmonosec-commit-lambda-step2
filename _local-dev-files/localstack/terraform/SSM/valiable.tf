@@ -4,6 +4,7 @@ variable "tags" {}
 variable account_table_name {}
 variable imei_table_name {}
 variable iccid_table_name {}
+variable sigfox_id_table_name {}
 variable contract_table_name {} 
 variable operator_table_name {}
 variable user_table_name {}

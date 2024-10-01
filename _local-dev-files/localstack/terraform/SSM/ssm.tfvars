@@ -8,6 +8,7 @@ tags = {
 account_table_name = "lmonosc-ddb-m-office-accounts"
 imei_table_name = "lmonosc-ddb-m-office-imei"
 iccid_table_name = "lmonosc-ddb-m-office-iccid"
+sigfox_id_table_name = "lmonosc-ddb-m-office-sigfox-id"
 contract_table_name = "lmonosc-ddb-m-office-contracts"
 operator_table_name = "lmonosc-ddb-m-operator-2"
 user_table_name = "lmonosc-ddb-t-monosec-users"
