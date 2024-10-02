@@ -277,7 +277,6 @@ def lambda_handler(event, context, user_info, request_body):
                         }
                     }
                     transact_items.append(remove_relation)
-                
             device_relation_item = {
                 "key1": "g-" + group_id,
                 "key2": "d-" + device_id,
