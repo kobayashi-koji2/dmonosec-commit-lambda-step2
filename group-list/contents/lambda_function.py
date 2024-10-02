@@ -96,7 +96,7 @@ def lambda_handler(event, context, user):
                             "unregistered_device_flag": unregistered_device_flag
                         }
                     )
-                logger.info(group_list)
+                # logger.info(group_list)
             if group_list:
                 group_list = sorted(group_list, key=lambda x:x['group_name'])
         except ClientError as e:
