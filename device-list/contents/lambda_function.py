@@ -609,7 +609,7 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,device_info_
             if device_info.get("device_code") == "MS-C0130":
                 device_value = device_info.get("sigfox_id")
             else:
-                device_value = device_info.get("imei")
+                device_value = device_info.get("device_imei")
         elif detect_condition == 3:
             device_value = device_info.get("device_code")
         elif detect_condition == 4:
@@ -726,7 +726,7 @@ def device_detect_all_for_unregistrated_device(keyword,device_info_list):
         if device_info.get("device_code") == "MS-C0130":
             device_id = device_info.get("sigfox_id")
         else:
-            device_id = device_info.get("imei")
+            device_id = device_info.get("device_imei")
         device_code = device_info.get("device_code")
 
         #Noneの場合にエラーが起きることの回避のため
