@@ -227,8 +227,7 @@ def create_history_message(hist):
         # カスタムイベント(継続時間指定)
         elif hist["event_type"] == "custom_timer":
             custom_event_name = hist.get("custom_event_name")
-            custom_event_datetime = hist.get("elapsed_time")
-            msg = f"【カスタムイベントによる継続時間指定】\n{terminal_name}の状態は{custom_event_datetime}分間{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
+            msg = f"【カスタムイベントによる継続時間指定】\n{terminal_name}の状態は{hist.get("elapsed_time")}分間{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
          
     return msg
 
