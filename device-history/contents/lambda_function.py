@@ -223,15 +223,11 @@ def create_history_message(hist):
         # カスタムイベント(日時指定)
         if hist["event_type"] == "custom_datetime":
             custom_event_name = hist.get("custom_event_name")
-            no_unixtime = hist.get("custom_event_datetime") / 1000
-            JST = timezone(timedelta(hours=+9), "JST")
-            unix_datetime = datetime.fromtimestamp(int(no_unixtime)).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime("%Y/%m/%d %H:%M:%S")
-            msg = f"【カスタムイベントによる日時指定】\n{unix_datetime}時点の{terminal_name}の状態は{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
-        
+            msg = f"【カスタムイベントによる日時指定】\n{hist.get("time")}時点の{terminal_name}の状態は{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
         # カスタムイベント(継続時間指定)
-        if hist["event_type"] == "custom_timer":
+        elif hist["event_type"] == "custom_timer":
             custom_event_name = hist.get("custom_event_name")
-            custom_event_datetime = hist.get("custom_event_datetime")
+            custom_event_datetime = hist.get("elapsed_time")
             msg = f"【カスタムイベントによる継続時間指定】\n{terminal_name}の状態は{custom_event_datetime}分間{hist["terminal_state_name"]}でした。\nこの通知は{custom_event_name}による通知です"
          
     return msg
