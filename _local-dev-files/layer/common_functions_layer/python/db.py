@@ -373,22 +373,40 @@ def get_device_info_by_imei(pre_register_device_id, pre_register_table):
     return insert_id_key_in_device_info(device_list[0]) if device_list else None
 
 def insert_id_key_in_device_info(info):
-    if info.get("device_type") == "UnaTag":
-        info["sigfox_id"] = info.get("identification_id")
-        info["imei"] = ""
+    if info.get("device_type") and info.get("device_type") != "":
+        if info.get("device_type") == "UnaTag":
+            info["sigfox_id"] = info.get("identification_id")
+            info["imei"] = ""
+        else:
+            info["sigfox_id"] = ""
+            info["imei"] = info.get("identification_id")
     else:
-        info["sigfox_id"] = ""
-        info["imei"] = info.get("identification_id")
+        if info.get("device_code") == "MS-C0130":
+            info["sigfox_id"] = info.get("identification_id")
+            info["imei"] = ""
+        else:
+            info["sigfox_id"] = ""
+            info["imei"] = info.get("identification_id")
+
     return info
 
 def insert_id_key_in_device_info_list(info_list):
     device_info_list = []
     for item in info_list:
-        if item.get("device_type") == "UnaTag":
-            item["sigfox_id"] = item.get("identification_id")
-            item["imei"] = ""
+        if item.get("device_type") and item.get("device_type") != "":
+            if item.get("device_type") == "UnaTag":
+                item["sigfox_id"] = item.get("identification_id")
+                item["imei"] = ""
+            else:
+                item["sigfox_id"] = ""
+                item["imei"] = item.get("identification_id")
         else:
-            item["sigfox_id"] = ""
-            item["imei"] = item.get("identification_id")
+            if item.get("device_code") == "MS-C0130":
+                item["sigfox_id"] = item.get("identification_id")
+                item["imei"] = ""
+            else:
+                item["sigfox_id"] = ""
+                item["imei"] = item.get("identification_id")
+
         device_info_list.append(item)
     return device_info_list
