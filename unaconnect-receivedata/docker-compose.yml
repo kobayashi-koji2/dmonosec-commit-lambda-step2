@@ -1,0 +1,67 @@
+version: '3'
+services:
+  app:
+    container_name: unaconnect-receivedata
+    build:
+      context: ../
+      dockerfile: ./unaconnect-receivedata/Dockerfile
+    environment:
+      - AWS_DEFAULT_REGION=ap-northeast-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_SESSION_TOKEN=dummy
+      - endpoint_url=http://localstack:4566
+      - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
+      - POWERTOOLS_LOG_LEVEL=DEBUG
+      - INITIAL_LAMBDA_NAME=lmonosc-lambda-initialreceive-2
+      - DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME=lmonosc-sqs-q-monosec-device-healthy-check
+      - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
+      - RECV_FUTURE_TIME=86400000
+      - RECV_PAST_TIME=31536000000
+      - RSSI_HIGH_MIN=-72
+      - RSSI_HIGH_MAX=-51
+      - RSSI_MID_MIN=-84
+      - RSSI_MID_MAX=-73
+      - RSSI_LOW_MIN=-102
+      - RSSI_LOW_MAX=-85
+      - SINR_HIGH_MIN=20
+      - SINR_HIGH_MAX=30
+      - SINR_MID_MIN=10
+      - SINR_MID_MAX=19
+      - SINR_LOW_MIN=0
+      - SINR_LOW_MAX=9
+      - SIGNAL_HIGH=0
+      - SIGNAL_MID=1
+      - SIGNAL_LOW=2
+      - NO_SIGNAL=3
+      - NOTIFICATION_HIST_TTL=3
+      - HIST_LIST_TTL=3
+      - CNT_HIST_TTL=3
+      - REMOTE_CONTROLS_TTL=3
+      - LAMBDA_TIMEOUT_CHECK=lmonosc-lambda-remote-control-timeout-check
+    volumes:
+      - ./contents:/var/task
+    ports:
+      - 9000:8080
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - 4510-4559:4510-4559
+      - 4566:4566
+    environment:
+      - DEBUG=1
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - ../_local-dev-files/docker/docker.sock:/var/run/docker.sock
+      - ../_local-dev-files/localstack/ready.d:/etc/localstack/init/ready.d
+      - ../_local-dev-files/localstack/terraform:/usr/local/terraform
+  dynamodb-admin:
+    container_name: dynamodb-admin
+    image: aaronshaf/dynamodb-admin:latest
+    ports:
+      - 8081:8001
+    environment:
+      - DYNAMO_ENDPOINT=localstack:4566
+      - AWS_REGION=ap-northeast-1
+    depends_on:
+      - localstack
