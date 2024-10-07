@@ -206,7 +206,7 @@ def __generate_response_items(device_id, device_name, device_imei, do_info, di_l
 
     # グループ名を設定
     results_item["group_name_list"] = group_name_list
-    results_item["do_flag"] = do_info.get("do_flag","")
+    results_item["do_flag"] = do_info.get("do_flag")
 
     return results_item
 

@@ -25,7 +25,7 @@ def update_device_settings(device_id, params, device_table, automation_table):
                 # コントロール設定が変更されている場合はスケジュール設定をクリア
                 if (
                     do["do_control"] != param_do.get("do_control")
-                    or do["do_flag"] != param_do.get("do_flag")
+                    or do.get("do_flag") != param_do.get("do_flag")
                     or do["do_specified_time"] != param_do.get("do_specified_time")
                     or do["do_di_return"] != param_do.get("do_di_return")
                 ):
