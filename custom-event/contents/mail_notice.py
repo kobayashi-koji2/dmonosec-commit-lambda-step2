@@ -57,17 +57,17 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                 if notification_settings.get('event_type') == "custom_datetime":
                     custom_time = hist_list_item.get('hist_data', {}).get('time')
                     event_detail = f"""
-                        　【カスタムイベントによる日時指定】
+                        　【日時状態お知らせイベント】
                         　{custom_time}時点の{terminal_name}の状態は{terminal_state_name}でした。
-                        　この通知は{custom_event_name}による通知です。
+                        　※カスタムイベント「{custom_event_name}」
                     """
                 # 経過時間
                 else:
                     elapsed_time = hist_list_item.get('hist_data', {}).get('elapsed_time')
                     event_detail = f"""
-                        　【カスタムイベントによる経過時間指定】
-                        　{terminal_name}の状態は{elapsed_time}分間{terminal_state_name}でした。
-                        　この通知は{custom_event_name}による通知です。
+                        　【状態継続お知らせイベント】
+                        　{terminal_name}が{terminal_state_name}に変化し、{elapsed_time}分間が経過しました。
+                        　※カスタムイベント「{custom_event_name}」
                     """
                 mail_send_flg = True
 
