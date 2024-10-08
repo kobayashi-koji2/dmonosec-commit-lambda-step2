@@ -321,10 +321,19 @@ def lambda_handler(event, context, user_info):
                 contract_id, tables["pre_register_table"]
             )
 
+            pre_register_device_group_relation = []
+            for pre_register_item in pre_reg_device_info:
+                if pre_register_item.get("imei") != "":
+                    pre_device_id = pre_register_item.get("imei")
+                else:
+                    pre_device_id = pre_register_item.get("sigfox_id")
+                pre_device_group_id_list = db.get_pre_device_relation_group_id_list(pre_device_id, tables["device_relation_table"])
+                pre_register_device_group_relation.append({"device_id": pre_device_id, "group_list": pre_device_group_id_list})
+
             if keyword == None or keyword == "":
                 pass
             elif detect_condition != None:
-                pre_reg_device_info = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info,device_group_relation)
+                pre_reg_device_info = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info,pre_register_device_group_relation)
             
             ##################
             # 8 応答メッセージ生成
@@ -613,7 +622,10 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,device_info_
         elif detect_condition == 3:
             device_value = device_info.get("device_code")
         elif detect_condition == 4:
-            device_id = device_info["device_id"]
+            if device_info.get("imei") != "":
+                device_id = device_info.get("imei")
+            else:
+                device_id = device_info.get("sigfox_id")
             device_value = next((item["group_list"] for item in device_group_relation if item.get("device_id") == device_id), [])
             if device_value == []:
                 continue
