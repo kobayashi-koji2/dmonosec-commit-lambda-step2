@@ -415,7 +415,7 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
         if detect_condition == 1:
             device_value = device_info.get("device_data").get("config").get("device_name")
         elif detect_condition == 2:
-            device_value = device_info.get("imei")
+            device_value = device_info.get("identification_id")
         elif detect_condition == 3:
             device_value = device_info.get("device_data").get("param").get("device_code")
         elif detect_condition == 4:
@@ -454,11 +454,11 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
                         hit_list.append(1)
                     else:
                         hit_list.append(0)
-            logger.info(f"hit_list:{hit_list}")
-            if len(hit_list)!=0:
-                result = reduce(lambda x, y: x * y, hit_list)
-                if result == 1:
-                    return_list.append(device_info)
+                logger.info(f"hit_list:{hit_list}")
+                if len(hit_list)!=0:
+                    result = reduce(lambda x, y: x * y, hit_list)
+                    if result == 1:
+                        return_list.append(device_info)
         elif case == 2:
             if isinstance(device_value, list):
                 for value in device_value:
@@ -467,17 +467,23 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
                             hit_list.append(1)
                         else:
                             hit_list.append(0)
+                    logger.info(f"hit_list:{hit_list}")
+                    if len(hit_list)!=0:
+                        result = sum(hit_list)
+                        if result != 0:
+                            return_list.append(device_info)
+                            break
             else:
                 for key in key_list:
                     if key in device_value:
                         hit_list.append(1)
                     else:
                         hit_list.append(0)
-            logger.info(f"hit_list:{hit_list}")
-            if len(hit_list)!=0:
-                result = sum(hit_list)
-                if result != 0:
-                    return_list.append(device_info)
+                logger.info(f"hit_list:{hit_list}")
+                if len(hit_list)!=0:
+                    result = sum(hit_list)
+                    if result != 0:
+                        return_list.append(device_info)
         elif case == 3:
             if isinstance(device_value, list):
                 for value in device_value:
@@ -486,10 +492,10 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
                     else:
                         hit_list.append(1)
                     logger.info(f"hit_list:{hit_list}")
-                    if len(hit_list)!=0:
-                        result = reduce(lambda x, y: x * y, hit_list)
-                        if result == 1:
-                            return_list.append(device_info)
+                if len(hit_list)!=0:
+                    result = reduce(lambda x, y: x * y, hit_list)
+                    if result == 1:
+                        return_list.append(device_info)
             else:
                 if keyword[1:] in device_value:
                     pass
@@ -531,7 +537,7 @@ def device_detect_all(keyword,device_info_list):
         hit_list = []
 
         device_name = device_info.get("device_data").get("config").get("device_name")
-        device_id = device_info.get("imei")
+        device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
 
         #Noneの場合にエラーが起きることの回避のため
@@ -660,11 +666,11 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
                         hit_list.append(1)
                     else:
                         hit_list.append(0)
-            logger.info(f"hit_list:{hit_list}")
-            if len(hit_list)!=0:
-                result = reduce(lambda x, y: x * y, hit_list)
-                if result == 1:
-                    return_list.append(pre_reg_device_info)
+                logger.info(f"hit_list:{hit_list}")
+                if len(hit_list)!=0:
+                    result = reduce(lambda x, y: x * y, hit_list)
+                    if result == 1:
+                        return_list.append(pre_reg_device_info)
         elif case == 2:
             if isinstance(device_value, list):
                 for value in device_value:
@@ -673,17 +679,22 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
                             hit_list.append(1)
                         else:
                             hit_list.append(0)
+                    if len(hit_list)!=0:
+                        result = sum(hit_list)
+                        if result != 0:
+                            return_list.append(pre_reg_device_info)
+                            break
             else:
                 for key in key_list:
                     if key in device_value:
                         hit_list.append(1)
                     else:
                         hit_list.append(0)
-            logger.info(f"hit_list:{hit_list}")
-            if len(hit_list)!=0:
-                result = sum(hit_list)
-                if result != 0:
-                    return_list.append(pre_reg_device_info)
+                logger.info(f"hit_list:{hit_list}")
+                if len(hit_list)!=0:
+                    result = sum(hit_list)
+                    if result != 0:
+                        return_list.append(pre_reg_device_info)
         elif case == 3:
             if isinstance(device_value, list):
                 for value in device_value:
@@ -691,11 +702,11 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
                         hit_list.append(0)
                     else:
                         hit_list.append(1)
-                    logger.info(f"hit_list:{hit_list}")
-                    if len(hit_list)!=0:
-                        result = reduce(lambda x, y: x * y, hit_list)
-                        if result == 1:
-                            return_list.append(pre_reg_device_info)
+                logger.info(f"hit_list:{hit_list}")
+                if len(hit_list)!=0:
+                    result = reduce(lambda x, y: x * y, hit_list)
+                    if result == 1:
+                        return_list.append(pre_reg_device_info)
             else:
                 if keyword[1:] in device_value:
                     pass
