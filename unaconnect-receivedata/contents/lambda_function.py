@@ -54,9 +54,14 @@ def lambda_handler(event, context):
             } 
 
         #受信日時を取得
-        now = datetime.now()
-        recv_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
-        expire_datetime = int((recv_datetime + relativedelta.relativedelta(years=CNT_HIST_TTL)).timestamp())
+        recv_datetime = int(time.time() * 1000)
+        expire_datetime = int(
+            (
+                datetime.fromtimestamp(recv_datetime / 1000)
+                + relativedelta.relativedelta(years=CNT_HIST_TTL)
+            ).timestamp()
+        )
+
         # 入力データチェック
         vali_result = validate.validate(event)
         if vali_result.get("message"):
@@ -93,7 +98,12 @@ def lambda_handler(event, context):
 
         device_id = ddb.get_device_id_by_sigfox_id_info(event.get("deviceId"),sigfox_id_table)
         group_list =  ddb.get_device_group_list(device_id, device_relation_table, group_table)
-        expire_datetime = int((recv_datetime + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
+        expire_datetime = int(
+            (
+                datetime.fromtimestamp(recv_datetime / 1000)
+                + relativedelta.relativedelta(years=HIST_LIST_TTL)
+            ).timestamp()
+        )
         #履歴一覧テーブル更新
         if event.get("dataType") == "GEOLOC":
             db_item = {
