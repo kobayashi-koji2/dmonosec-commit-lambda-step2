@@ -56,14 +56,13 @@ def validate(event, user, device_table, contract_table):
         res_di_no = key["di_no"]
         res_di_state = key["di_state"]
     if body_params["event_type"] == 0:
-        if not body_params["time"] or not body_params["weekday"] or not res_di_no:
-            if res_di_state in [0, 1, 2]:
-                return {"message": "時間が指定されていません"}
-            return {"message": "時間、曜日、接点入力端子、状態が指定されていません"}
+        week = body_params["weekday"].split(',')
+        for item in week:
+            if not "0:00" < body_params["time"] < "23:59" or item not in ["","0","1","2","3","4","5","6","7"] or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
+                    return {"message": "時間、接点入力端子、状態の値が不正です"}
     elif body_params["event_type"] == 1:
-        if not body_params["elapsed_time"] or not res_di_no:
-            if res_di_state in [0, 1, 2]:
-                return {"message": "継続時間、接点入力端子、状態が指定されていません"}
+        if  not 0 < body_params["elapsed_time"] < 301 or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
+            return {"message": "継続時間、接点入力端子、状態がの値が不正です"}     
     else:
         return {"message": "イベント種別が不正です"}
         
