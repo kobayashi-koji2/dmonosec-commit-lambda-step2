@@ -14,7 +14,6 @@ services:
       - SSM_KEY_TABLE_NAME=lmonosc-ssm-dynamodb-table-names
       - POWERTOOLS_LOG_LEVEL=DEBUG
       - DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME=lmonosc-sqs-q-monosec-device-healthy-check
-      - MAIL_FROM_ADDRESS=yuma-tsurumi@secom.co.jp
       - HIST_LIST_TTL=3
       - CNT_HIST_TTL=3
     volumes:
