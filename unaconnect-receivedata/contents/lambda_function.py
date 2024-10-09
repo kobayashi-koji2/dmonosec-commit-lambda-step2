@@ -98,6 +98,13 @@ def lambda_handler(event, context):
         ddb.put_db_item(db_item,hist_table)
 
         device_id = ddb.get_device_id_by_sigfox_id_info(req_body.get("deviceId"),sigfox_id_table)
+        if (not device_id) or (device_id == ""):
+            res_body = {"message": ""}
+            return {
+                "statusCode": 200,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         group_list =  ddb.get_device_group_list(device_id, device_relation_table, group_table)
         expire_datetime = int(
             (
