@@ -32,6 +32,7 @@ CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
 def lambda_handler(event, context):
     logger.debug(f"lambda_handler開始 event={event}")
+    rec_body = json.loads(event.get("body", {}))
 
     try:
         # DynamoDB操作オブジェクト生成
@@ -63,7 +64,7 @@ def lambda_handler(event, context):
         )
 
         # 入力データチェック
-        vali_result = validate.validate(event)
+        vali_result = validate.validate(rec_body)
         if vali_result.get("message"):
             logger.info("Error in validation check of input information.")
             return {
@@ -76,27 +77,27 @@ def lambda_handler(event, context):
         # 履歴情報テーブルへデータ格納
         db_item = {
             "cnt_hist_id": hist_info_id,
-            "sigfox_id": event.get("deviceId"),
-            "event_datetime": event.get("timestamp") * 1000,
+            "sigfox_id": rec_body.get("deviceId"),
+            "event_datetime": rec_body.get("timestamp") * 1000,
             "recv_datetime": recv_datetime,
-            "datetime": event.get("dateTime"),
-            "device_name": event.get("deviceName"),
+            "datetime": rec_body.get("dateTime"),
+            "device_name": rec_body.get("deviceName"),
             "expire_datetime":expire_datetime,
-            "unaconnect_group_id": event.get("groupID"),
-            "source_label":event.get("sourceLabel"),
-            "signal_score":event.get("signalScore"),
-            "num_bs":event.get("numBS"),
-            "sigfox_rc":event.get("rc"),
-            "rssi":event.get("rssi"),
-            "duplicates":event.get("duplicates"),
-            "data_type":event.get("dataType"),
-            "battery_voltage":event.get("batteryVoltage"),
-            "data":event.get("data"),
-            "device_type":event.get("deviceType"),
+            "unaconnect_group_id": rec_body.get("groupID"),
+            "source_label":rec_body.get("sourceLabel"),
+            "signal_score":rec_body.get("signalScore"),
+            "num_bs":rec_body.get("numBS"),
+            "sigfox_rc":rec_body.get("rc"),
+            "rssi":rec_body.get("rssi"),
+            "duplicates":rec_body.get("duplicates"),
+            "data_type":rec_body.get("dataType"),
+            "battery_voltage":rec_body.get("batteryVoltage"),
+            "data":rec_body.get("data"),
+            "device_type":rec_body.get("deviceType"),
         }
         ddb.put_db_item(db_item,hist_table)
 
-        device_id = ddb.get_device_id_by_sigfox_id_info(event.get("deviceId"),sigfox_id_table)
+        device_id = ddb.get_device_id_by_sigfox_id_info(rec_body.get("deviceId"),sigfox_id_table)
         group_list =  ddb.get_device_group_list(device_id, device_relation_table, group_table)
         expire_datetime = int(
             (
@@ -105,22 +106,22 @@ def lambda_handler(event, context):
             ).timestamp()
         )
         #履歴一覧テーブル更新
-        if event.get("dataType") == "GEOLOC":
+        if rec_body.get("dataType") == "GEOLOC":
             db_item = {
                 "device_id": device_id,
                 "hist_id": str(uuid.uuid4()),
-                "event_datetime": event.get("timestamp") * 1000,
+                "event_datetime": rec_body.get("timestamp") * 1000,
                 "recv_datetime": recv_datetime,
                 "expire_datetime": expire_datetime,
                 "hist_data": {
-                    "device_name":event.get("deviceName"),
-                    "sigfox_id":event.get("deviceId"),
+                    "device_name":rec_body.get("deviceName"),
+                    "sigfox_id":rec_body.get("deviceId"),
                     "event_type":"location_notice",
                     "cnt_hist_id":hist_info_id,
                     "group_list":group_list,
-                    "latitude_state":event("data").get("lat"),
-                    "longitude_state":event("data").get("lng"),
-                    "precision_state":event("data").get("radius")
+                    "latitude_state":rec_body.get("data").get("lat"),
+                    "longitude_state":rec_body.get("data").get("lng"),
+                    "precision_state":rec_body.get("data").get("radius")
                 }
             }
             ddb.put_db_item(db_item,hist_list_table)
@@ -129,7 +130,7 @@ def lambda_handler(event, context):
         device_current_state = ddb.get_device_state(device_id, state_table)
         logger.debug(f"device_current_state={device_current_state}")
         #現状態と受信した状態を比較、更新。
-        current_state_info = eventJudge(event,device_current_state,device_id)
+        current_state_info = eventJudge(rec_body,device_current_state,device_id)
         logger.debug(f"current_state_info={current_state_info}")
         ddb.put_db_item(current_state_info,state_table)
 
@@ -145,7 +146,7 @@ def lambda_handler(event, context):
             body = {
                 "event_trigger": "lambda-unaconnect-receivedata",
                 "event_type": "device_unhealthy",
-                "event_datetime": event.get("timestamp",""),
+                "event_datetime": rec_body.get("timestamp",""),
                 "device_id": device_id,
             }
             queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
