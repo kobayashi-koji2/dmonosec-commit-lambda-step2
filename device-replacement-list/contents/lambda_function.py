@@ -89,7 +89,7 @@ def lambda_handler(event, context, user_info, identification_id):
                 result = {
                     "device_id": device_info["device_id"],
                     "device_name": device_info["device_data"]["config"]["device_name"],
-                    "sigfox_id": device_info["sigfox_id"],
+                    "device_sigfox_id": device_info["sigfox_id"],
                 }
             else:
                 result = {

@@ -15,8 +15,10 @@ PATH_PARAMETERS_SCHEMA = {
 REQUEST_BODY_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
-    "required": ["device_imei"],
-    "properties": {"device_imei": {"type": "string"}},
+    "properties": {
+        "device_imei": {"type": "string"},
+        "device_sigfox_id": {"type": "string"},
+    },
 }
 
 

@@ -296,7 +296,7 @@ def lambda_handler(event, context, user_info):
                         "device_name"
                     ),
                     "device_imei": device_info["imei"],
-                    "sigfox_id": device_info["sigfox_id"],
+                    "device_sigfox_id": device_info["sigfox_id"],
                     "device_type": device_info["device_type"],
                     "group_name_list": group_name_list,
                     "device_code": device_info["device_data"]["param"].get(

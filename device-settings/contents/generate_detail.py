@@ -54,6 +54,6 @@ def get_device_detail(device_info, device_state, group_info_list):
     if device_info["device_type"] in ["PJ1", "PJ2", "PJ3"]:
         device_detail["device_imei"] = device_info["imei"]
     else:
-        device_detail["sigfox_id"] = device_info["sigfox_id"]
+        device_detail["device_sigfox_id"] = device_info["sigfox_id"]
 
     return device_detail

@@ -249,7 +249,7 @@ def create_response(request_params, hist_list):
                 "device_name": hist["hist_data"].get("device_name"),
                 "group_list": group_list,
                 "device_imei": hist.get("hist_data").get("imei"),
-                "sigfox_id": hist.get("hist_data").get("sigfox_id"),
+                "device_sigfox_id": hist.get("hist_data").get("sigfox_id"),
                 "event_type": hist["hist_data"].get("event_type"),
                 "history_message": create_history_message(hist["hist_data"]),
                 "email_notification": (

@@ -54,7 +54,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         "device_code": device_info["device_data"]["param"]["device_code"],
         "device_iccid": device_info.get("device_data").get("param").get("iccid"),
         "device_imei": device_info["imei"],
-        "sigfox_id": device_info["sigfox_id"],
+        "device_sigfox_id": device_info["sigfox_id"],
         "device_type": device_info["device_type"],
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,

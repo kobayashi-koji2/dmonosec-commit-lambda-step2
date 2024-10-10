@@ -34,7 +34,7 @@ def get_pre_reg_device_info(pk, table):
         pre_reg_device_list.append(
             {
                 "device_imei": items["imei"],
-                "sigfox_id": items["sigfox_id"],
+                "device_sigfox_id": items["sigfox_id"],
                 "device_registration_datetime": items["dev_reg_datetime"],
                 "device_code": items["device_code"],
             }
