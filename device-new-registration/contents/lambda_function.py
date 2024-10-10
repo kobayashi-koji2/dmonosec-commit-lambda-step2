@@ -59,10 +59,17 @@ def lambda_handler(event, context, user_info, request_body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
             
-        if request_body["device_imei"]:
+        if "device_imei" in request_body:
             identification_id = request_body["device_imei"]
-        elif request_body["device_sigfox_id"]:
+        elif "device_sigfox_id" in request_body:
             identification_id = request_body["device_sigfox_id"]
+        else:
+            res_body = {"message": "imeiとsigfox_idのいずれかが未指定です。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         logger.debug(f"identification_id: {identification_id}")
         contract_id = user_info["contract_id"]
 
@@ -207,22 +214,24 @@ def lambda_handler(event, context, user_info, request_body):
             transact_items.append(put_imei)
             logger.debug(f"put_imei: {put_imei}")
 
-        put_item = {
-            "iccid": pre_device_info.get("iccid"),
-            "contract_id": contract_id,
-            "device_id": device_id,
-        }
-        put_item_fmt = convert.dict_dynamo_format(put_item)
-        put_iccid = {
-            "Put": {
-                "TableName": ssm.table_names["ICCID_TABLE"],
-                "Item": put_item_fmt,
+            # ICCID管理テーブル
+            put_item = {
+                "iccid": pre_device_info.get("iccid"),
+                "contract_id": contract_id,
+                "device_id": device_id,
             }
-        }
-        transact_items.append(put_iccid)
-        logger.debug(f"put_iccid: {put_iccid}")
+            put_item_fmt = convert.dict_dynamo_format(put_item)
+            put_iccid = {
+                "Put": {
+                    "TableName": ssm.table_names["ICCID_TABLE"],
+                    "Item": put_item_fmt,
+                }
+            }
+            transact_items.append(put_iccid)
+            logger.debug(f"put_iccid: {put_iccid}")
         
         if device_type == "UnaTag":
+            # UnaTag管理テーブル
             put_item = {
                 "sigfox_id": identification_id,
                 "contract_id": contract_id,
@@ -340,7 +349,6 @@ def __operation_auth_check(user_info):
 
 def __generate_device_data_config(device_type):
     di_list, do_list = list(), list()
-    # 現状はdevice_typeは PJ2 のみ来る想定
     di_count, do_count = 0, 0
     if device_type == "PJ1":
         di_count, do_count = 1, 0
