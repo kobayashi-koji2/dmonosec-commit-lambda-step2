@@ -8,9 +8,9 @@ logger = Logger()
 PATH_PARAMETERS_SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema",
     "type": "object",
-    "required": ["device_imei"],
+    "required": ["identification_id"],
     "properties": {
-        "device_imei": {"type": "string"},
+        "identification_id": {"type": "string"},
     },
 }
 
@@ -30,7 +30,7 @@ def validate_parameter(func):
                 "body": json.dumps({"message": e.message}, ensure_ascii=False),
             }
 
-        result = func(event, context, *args, validated_path_parameters["device_imei"], **kwargs)
+        result = func(event, context, *args, validated_path_parameters["identification_id"], **kwargs)
         return result
 
     return wrapper

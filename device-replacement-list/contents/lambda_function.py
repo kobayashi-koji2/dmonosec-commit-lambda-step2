@@ -37,7 +37,7 @@ dynamodb = boto3.resource(
 
 @auth.verify_login_user()
 @validate.validate_parameter
-def lambda_handler(event, context, user_info, device_imei):
+def lambda_handler(event, context, user_info, identification_id):
     try:
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
@@ -53,12 +53,14 @@ def lambda_handler(event, context, user_info, device_imei):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-        pre_device_info = ddb.get_pre_reg_device_info_by_imei(device_imei, pre_register_table)
+        pre_device_info = ddb.get_pre_reg_device_info_by_imei(identification_id, pre_register_table)
         device_type = ""
         if pre_device_info.get("device_code") == "MS-C0100":
             device_type = "PJ1"
         elif pre_device_info.get("device_code") == "MS-C0110":
             device_type = "PJ2"
+        elif pre_device_info.get("device_code") == "MS-C0130":
+            device_type = "UnaTag"
 
         ### 2. 保守交換対象デバイス一覧取得
         # デバイス一覧取得
@@ -83,11 +85,18 @@ def lambda_handler(event, context, user_info, device_imei):
                 continue
 
             # 保守交換対象デバイス一覧生成
-            result = {
-                "device_id": device_info["device_id"],
-                "device_name": device_info["device_data"]["config"]["device_name"],
-                "device_imei": device_info["imei"],
-            }
+            if device_type == "UnaTag":
+                result = {
+                    "device_id": device_info["device_id"],
+                    "device_name": device_info["device_data"]["config"]["device_name"],
+                    "sigfox_id": device_info["sigfox_id"],
+                }
+            else:
+                result = {
+                    "device_id": device_info["device_id"],
+                    "device_name": device_info["device_data"]["config"]["device_name"],
+                    "device_imei": device_info["imei"],
+                }
             device_list.append(result)
 
         ### 3. メッセージ応答
