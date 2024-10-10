@@ -248,12 +248,17 @@ def create_response(request_params, hist_list):
                 "device_id": hist["device_id"],
                 "device_name": hist["hist_data"].get("device_name"),
                 "group_list": group_list,
-                "device_imei": hist["hist_data"].get("imei"),
+                "device_imei": hist.get("hist_data").get("imei"),
+                "sigfox_id": hist.get("hist_data").get("sigfox_id"),
                 "event_type": hist["hist_data"].get("event_type"),
                 "history_message": create_history_message(hist["hist_data"]),
                 "email_notification": (
                     "1" if hist["hist_data"].get("notification_hist_id") else "0"
                 ),
+                "latitude_state":hist.get("data").get("lat"),
+                "longitude_state":hist.get("data").get("lng"),
+                "precision_state":hist.get("data").get("radius")
+
             }
         )
         device_last_hist_id_pair[hist["device_id"]] = hist["hist_id"]
