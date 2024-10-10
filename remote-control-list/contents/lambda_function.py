@@ -101,7 +101,7 @@ def lambda_handler(event, context, user_info):
             device_info = ddb.get_device_info_only_pj2(device_id, device_table)
             logger.debug({"device_info": device_info})
 
-            if device_info is not None:
+            if device_info is not None and device_info.get("device_type") in ["PJ1", "PJ2", "PJ3"]:
                 # 現状態情報取得
                 state_info = db.get_device_state(device_id, device_state_table)
                 # 現状態情報がない場合は次のデバイスへ
@@ -109,6 +109,7 @@ def lambda_handler(event, context, user_info):
                     continue
                 logger.debug(f"state_info: {state_info}")
                 device_imei = device_info["imei"]
+                device_code = device_info.get("device_data", {}).get("param", {}).get("device_code", ""),
                 device_name = (
                     device_info.get("device_data", {}).get("config", {}).get("device_name", "")
                 )
@@ -140,7 +141,7 @@ def lambda_handler(event, context, user_info):
                     if not do_info["do_control"]:
                         continue
                     res_item = __generate_response_items(
-                        device_id, device_name, device_imei, do_info, di_list, state_info, group_name_list
+                        device_id, device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list
                     )
                     results.append(res_item)
                 
@@ -164,11 +165,12 @@ def lambda_handler(event, context, user_info):
         }
 
 
-def __generate_response_items(device_id, device_name, device_imei, do_info, di_list, state_info, group_name_list):
+def __generate_response_items(device_id, device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list):
     results_item = dict()
     results_item["device_id"] = device_id
     results_item["device_name"] = device_name
     results_item["device_imei"] = device_imei
+    results_item["device_code"] = device_code
     # 接点出力情報を設定
     results_item["do_no"] = do_info["do_no"]
     results_item["do_name"] = do_info["do_name"]

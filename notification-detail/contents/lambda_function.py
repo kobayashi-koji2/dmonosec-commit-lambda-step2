@@ -98,6 +98,8 @@ def lambda_handler(event, context, user):
             "device_name": device.get("device_data", {}).get("config", {}).get("device_name", ""),
             "group_name_list": group_name_list,
             "device_imei": device.get("imei", ""),
+            "sigfox_id": device.get("sigfox_id", ""),
+            "device_code": device.get("device_data", {}).get("param", {}).get("device_code", ""),
             "notification_list": notification_list,
             "notification_target_list": notification_target_list,
         }
