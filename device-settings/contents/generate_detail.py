@@ -38,7 +38,7 @@ def get_device_detail(device_info, device_state, group_info_list):
         "device_id": device_info["device_id"],
         "device_name": device_info["device_data"]["config"]["device_name"],
         "device_code": device_info["device_data"]["param"]["device_code"],
-        "device_iccid": device_info["device_data"]["param"]["iccid"],
+        "device_iccid": device_info.get("device_data").get("param").get("iccid"),
         "device_type": device_info["device_type"],
         "group_list": group_list,
         "last_receiving_time": last_receiving_time,

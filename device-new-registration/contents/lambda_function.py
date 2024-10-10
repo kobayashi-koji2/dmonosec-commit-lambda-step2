@@ -208,7 +208,7 @@ def lambda_handler(event, context, user_info, request_body):
             logger.debug(f"put_imei: {put_imei}")
 
         put_item = {
-            "iccid": pre_device_info["iccid"],
+            "iccid": pre_device_info.get("iccid"),
             "contract_id": contract_id,
             "device_id": device_id,
         }

@@ -52,7 +52,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         "device_id": device_info["device_id"],
         "device_name": device_info["device_data"]["config"]["device_name"],
         "device_code": device_info["device_data"]["param"]["device_code"],
-        "device_iccid": device_info["device_data"]["param"]["iccid"],
+        "device_iccid": device_info.get("device_data").get("param").get("iccid"),
         "device_imei": device_info["imei"],
         "sigfox_id": device_info["sigfox_id"],
         "device_type": device_info["device_type"],

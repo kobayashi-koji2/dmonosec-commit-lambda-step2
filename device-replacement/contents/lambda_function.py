@@ -215,7 +215,7 @@ def lambda_handler(event, context, user_info, request_body):
 
         # ICCID情報更新
         put_item = {
-            "iccid": pre_device_info["iccid"],
+            "iccid": pre_device_info.get("iccid"),
             "contract_id": pre_device_info["contract_id"],
             "device_id": device_id,
         }

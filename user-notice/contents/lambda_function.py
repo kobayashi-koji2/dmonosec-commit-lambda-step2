@@ -102,7 +102,7 @@ def lambda_handler(event, context, login_user, user_id):
             device_name = device["device_data"].get("config", {}).get("device_name")
             if not device_name:
                 device_name = "デバイス名設定なし"
-            iccid = device["device_data"]["param"]["iccid"]
+            iccid = device.get("device_data").get("param").get("iccid")
             device_name_list.append(f"{device_name}({iccid})")
 
         user_name = account["user_data"]["config"]["user_name"]

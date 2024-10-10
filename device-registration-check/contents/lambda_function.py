@@ -226,7 +226,7 @@ def _register_device(pre_device, contract, device_announcements):
         )
 
         iccid_item = {
-            "iccid": pre_device["iccid"],
+            "iccid": pre_device.get("iccid"),
             "contract_id": pre_device["contract_id"],
             "device_id": device_id,
         }

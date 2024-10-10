@@ -41,7 +41,7 @@ def lambda_handler(event, context, req_body):
         pre_register_table = dynamodb.Table(ssm.table_names["PRE_REGISTER_DEVICE_TABLE"])
 
         imei = req_body["imei"]
-        iccid = req_body["iccid"]
+        iccid = req_body.get("iccid")
 
         # ### 2. カバレッジ判定
         # soracom_id_token = soracom_api.get_soracom_token(operator_table)
