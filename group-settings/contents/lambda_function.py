@@ -114,12 +114,23 @@ def lambda_handler(event, context, user_info):
             unregistered_device_info = db.get_device_info_by_imei(unregistered_device_id, pre_register_table)
             if not unregistered_device_info:
                 continue
-            unregistered_device_list.append(
-                {
-                    "device_imei": unregistered_device_id,
-                    "device_code": unregistered_device_info.get("device_code", {})
-                }
-            )
+            device_code = unregistered_device_info.get("device_code", {})
+            if device_code in ["MS-C0100","MS-C0110","MS-C0120"]:
+                unregistered_device_list.append(
+                    {
+                        "device_imei": unregistered_device_id,
+                        "device_sigfox_id": "",
+                        "device_code": device_code,
+                    }
+                )
+            elif device_code == "MS-C0130":
+                unregistered_device_list.append(
+                    {
+                        "device_imei": "",
+                        "device_sigfox_id": unregistered_device_id,
+                        "device_code": device_code,
+                    }
+                )
             
         res_body = {
             "message": "",
