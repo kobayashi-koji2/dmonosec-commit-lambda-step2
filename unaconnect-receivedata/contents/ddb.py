@@ -10,6 +10,11 @@ from aws_lambda_powertools import Logger
 dynamodb = boto3.resource("dynamodb")
 logger = Logger()
 
+
+def decimal_to_num(obj):
+    if isinstance(obj, decimal.Decimal):
+        return int(obj) if float(obj).is_integer() else float(obj)
+    
 #デバイス取得
 def get_device_info(pk, table):
     response = table.query(
@@ -20,8 +25,8 @@ def get_device_info(pk, table):
     return db.insert_id_key_in_device_info_list(response)
 
 #履歴一覧データ挿入
-def put_db_item(item, table):
-    # item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
+def put_db_item(db_item, table):
+    item = json.loads(json.dumps(db_item,default=decimal_to_num), parse_float=decimal.Decimal)
     try:
         table.put_item(Item=item)
     except ClientError as e:

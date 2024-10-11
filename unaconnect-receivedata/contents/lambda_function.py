@@ -3,7 +3,6 @@ import base64
 import boto3
 import ddb
 import json
-import decimal
 import ssm
 import time
 import traceback
@@ -96,8 +95,7 @@ def lambda_handler(event, context):
             "data":req_body.get("data"),
             "device_type":req_body.get("deviceType"),
         }
-        item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
-        ddb.put_db_item(item,hist_table)
+        ddb.put_db_item(db_item,hist_table)
 
         device_id = ddb.get_device_id_by_sigfox_id_info(req_body.get("deviceId"),sigfox_id_table)
         if (not device_id) or (device_id == ""):
@@ -133,8 +131,7 @@ def lambda_handler(event, context):
                     "precision_state":req_body.get("data").get("radius")
                 }
             }
-            item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
-            ddb.put_db_item(item,hist_list_table)
+            ddb.put_db_item(db_item,hist_list_table)
 
         #現状態の取得
         device_current_state = ddb.get_device_state(device_id, state_table)

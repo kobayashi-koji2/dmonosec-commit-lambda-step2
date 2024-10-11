@@ -1,6 +1,4 @@
 from aws_lambda_powertools import Logger
-import json
-import decimal
 
 logger = Logger()
 
@@ -49,6 +47,5 @@ def initCurrentStateInfo(req_body,device_current_state,device_id):
         device_current_state["device_id"] = device_id
         device_current_state["battery_voltage"] = req_body.get("batteryVoltage",0)
         device_current_state["battery_near_last_update_datetime"] = req_body.get("timestamp") * 1000
-        device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000
-    device_current_state = json.loads(json.dumps(device_current_state), parse_float=decimal.Decimal)  
+        device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000    
     return device_current_state
