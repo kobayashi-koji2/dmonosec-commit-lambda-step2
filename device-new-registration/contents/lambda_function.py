@@ -146,7 +146,6 @@ def lambda_handler(event, context, user_info, request_body):
                     "device_code": pre_device_info["device_code"],
                     "contract_id": contract_id,
                     "dev_reg_datetime": int(pre_device_info["dev_reg_datetime"]),
-                    "coverage_url": pre_device_info["coverage_url"],
                     "use_type": 0,
                     "dev_user_reg_datetime": int(time.time() * 1000),
                     "service": "monosc",
