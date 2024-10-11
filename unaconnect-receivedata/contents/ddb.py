@@ -20,8 +20,8 @@ def get_device_info(pk, table):
     return db.insert_id_key_in_device_info_list(response)
 
 #履歴一覧データ挿入
-def put_db_item(db_item, table):
-    item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
+def put_db_item(item, table):
+    # item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
     try:
         table.put_item(Item=item)
     except ClientError as e:
