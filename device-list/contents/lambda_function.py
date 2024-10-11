@@ -324,9 +324,9 @@ def lambda_handler(event, context, user_info):
             pre_register_device_group_relation = []
             for pre_reg_device_info in pre_reg_device_info_list:
                 if pre_reg_device_info.get("device_code") == "MS-C0130":
-                    pre_device_id = pre_reg_device_info.get("sigfox_id")
+                    pre_device_id = pre_reg_device_info.get("device_sigfox_id")
                 else:
-                    pre_device_id = pre_reg_device_info.get("imei")
+                    pre_device_id = pre_reg_device_info.get("device_imei")
                 pre_device_group_id_list = db.get_pre_device_relation_group_id_list(pre_device_id, tables["device_relation_table"])
                 pre_register_device_group_relation.append({"device_id": pre_device_id, "group_list": pre_device_group_id_list})
 
@@ -622,16 +622,16 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
 
         if detect_condition == 2:
             if pre_reg_device_info.get("device_code") == "MS-C0130":
-                device_value = pre_reg_device_info.get("sigfox_id")
+                device_value = pre_reg_device_info.get("device_sigfox_id")
             else:
-                device_value = pre_reg_device_info.get("imei")
+                device_value = pre_reg_device_info.get("device_imei")
         elif detect_condition == 3:
             device_value = pre_reg_device_info.get("device_code")
         elif detect_condition == 4:
             if pre_reg_device_info.get("device_code") == "MS-C0130":
-                device_id = pre_reg_device_info.get("sigfox_id")
+                device_id = pre_reg_device_info.get("device_sigfox_id")
             else:
-                device_id = pre_reg_device_info.get("imei")
+                device_id = pre_reg_device_info.get("device_imei")
             device_value = next((item["group_list"] for item in pre_register_device_group_relation if item.get("device_id") == device_id), [])
             if device_value == []:
                 continue
@@ -748,7 +748,7 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
 
         device_code = pre_reg_device_info.get("device_code")
         if device_code == "MS-C0130":
-            device_id = pre_reg_device_info.get("sigfox_id")
+            device_id = pre_reg_device_info.get("device_sigfox_id")
         else:
             device_id = pre_reg_device_info.get("device_imei")
 
