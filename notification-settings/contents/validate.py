@@ -73,6 +73,17 @@ def _validate_body(event, context):
     return event
 
 
+# カスタムイベントチェック
+def custom_event_check(custom_event_id, device):
+    for custom_event_info in device.get("device_data", {}).get("config", {}).get("custom_event_list", []):
+        if custom_event_info.get("custom_event_id") == custom_event_id:
+            if custom_event_info.get("event_type") == 0:
+                event_type = "custom_datetime"
+            else:
+                event_type = "custom_timer"
+            return event_type
+    return False
+
 # パラメータチェック
 def validate(event, body, device_table):
     device_id = event.get("pathParameters", {}).get("device_id")
@@ -84,7 +95,7 @@ def validate(event, body, device_table):
 
     # 入力値チェック    
     notification_list = body["notification_list"]
-    for notification in notification_list:
+    for i, notification in enumerate(notification_list):
         event_trigger = notification.get("event_trigger")
         terminal_no = notification.get("terminal_no")
         event_type = notification.get("event_type")
@@ -152,7 +163,13 @@ def validate(event, body, device_table):
             
             if not custom_event_id:
                 return {"message": "パラメータが不正です"}
-            
+
+            custom_event_type = custom_event_check(custom_event_id, device)
+            if not custom_event_type:
+                return {"message": "パラメータが不正です"}
+            else:
+                notification_list[i]["event_type"] = custom_event_type
+
         else:   
             return {"message": "パラメータが不正です"}
     return {}
