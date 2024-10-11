@@ -139,24 +139,26 @@ def lambda_handler(event, context):
         #現状態と受信した状態を比較、更新。
         current_state_info = eventJudge(req_body,device_current_state,device_id)
         logger.debug(f"current_state_info={current_state_info}")
-        ddb.put_db_item(current_state_info,state_table)
 
-        # デバイスヘルシー判定
-        queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
-        if current_state_info.get(
-            "device_healthy_state"
-        ) == 1 and current_state_info.get(
-            "latitude_last_update_datetime"
-        ) != device_current_state.get(
-            "latitude_last_update_datetime"
-        ):
-            body = {
-                "event_trigger": "lambda-unaconnect-receivedata",
-                "event_type": "device_unhealthy",
-                "event_datetime": req_body.get("timestamp",""),
-                "device_id": device_id,
-            }
-            queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
+        if current_state_info:
+            ddb.put_db_item(current_state_info,state_table)
+
+            # デバイスヘルシー判定
+            queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
+            if current_state_info.get(
+                "device_healthy_state"
+            ) == 1 and current_state_info.get(
+                "latitude_last_update_datetime"
+            ) != device_current_state.get(
+                "latitude_last_update_datetime"
+            ):
+                body = {
+                    "event_trigger": "lambda-unaconnect-receivedata",
+                    "event_type": "device_unhealthy",
+                    "event_datetime": req_body.get("timestamp",""),
+                    "device_id": device_id,
+                }
+                queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
         
         #メッセージ応答
         res_body = {"message": ""}

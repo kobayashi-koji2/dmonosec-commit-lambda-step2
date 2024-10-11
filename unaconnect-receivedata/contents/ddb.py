@@ -20,12 +20,12 @@ def get_device_info(pk, table):
     return db.insert_id_key_in_device_info_list(response)
 
 #履歴一覧データ挿入
-def put_db_item(db_item, hist_table):
+def put_db_item(db_item, table):
     item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
     try:
-        hist_table.put_item(Item=item)
+        table.put_item(Item=item)
     except ClientError as e:
-        logger.debug(f"put_cnt_histエラー e={e}")
+        logger.debug(f"put_db_itemエラー e={e} item = {item}")
 
 #sigfox_idをキーにdevice_id取得
 def get_device_id_by_sigfox_id_info(sigfox_id,sigfox_id_table):
