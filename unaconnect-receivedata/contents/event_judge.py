@@ -31,6 +31,7 @@ def eventJudge(req_body,device_current_state,device_id):
 
 
 def initCurrentStateInfo(req_body,device_current_state,device_id):
+    device_current_state = {}
     if req_body.get("dataType") == "GEOLOC":
         device_current_state["device_id"] = device_id,
         device_current_state["latitude_state"] = req_body.get("data").get("lat",0),
