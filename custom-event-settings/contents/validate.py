@@ -30,8 +30,6 @@ def validate(event, user, device_table, contract_table):
         return {"message": "アカウント情報が存在しません。"}
     
     # デバイスIDの権限チェック
-    logger.info(device_id)
-    logger.info(contract["contract_data"]["device_list"])
     if device_id not in contract["contract_data"]["device_list"]:
         return {"message": "不正なデバイスIDが指定されています。"}
     
