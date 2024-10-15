@@ -30,6 +30,8 @@ def validate(event, user, device_table, contract_table):
         return {"message": "アカウント情報が存在しません。"}
     
     # デバイスIDの権限チェック
+    logger.info(device_id)
+    logger.info(contract["contract_data"]["device_list"])
     if device_id not in contract["contract_data"]["device_list"]:
         return {"message": "不正なデバイスIDが指定されています。"}
     
@@ -47,7 +49,6 @@ def validate(event, user, device_table, contract_table):
             and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
         ) or (
             item["device_type"] == "UnaTag"
-            and len(item["device_data"]["config"]["terminal_settings"]["di_list"]) < 1 or len(item["device_data"]["config"]["terminal_settings"]["di_list"]) > 8
         ):
             return {"message": "不正なデバイスIDが指定されています"}
         
