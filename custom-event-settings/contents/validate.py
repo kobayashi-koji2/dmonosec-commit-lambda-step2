@@ -57,7 +57,7 @@ def validate(event, user, device_table, contract_table):
     if body_params["event_type"] == 0:
         week = body_params["weekday"].split(',')
         for item in week:
-            if not "0:00" < body_params["time"] < "23:59" or item not in ["","0","1","2","3","4","5","6","7"] or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
+            if not "0:00" <= body_params["time"] <= "23:59" or str(item) not in ["","0","1","2","3","4","5","6","7"] or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
                     return {"message": "時間、接点入力端子、状態の値が不正です"}
     elif body_params["event_type"] == 1:
         if  not 0 < body_params["elapsed_time"] < 301 or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
