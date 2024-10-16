@@ -229,29 +229,29 @@ def lambda_handler(event, context, user_info):
             logger.info(f"グループ名:{group_name_list}")
             # デバイス現状態取得
             logger.info(f"device_info_dev_id:{device_info["device_id"]}")
-            device_state = db.get_device_state(device_info["device_id"], tables["device_state_table"])
-            if not device_state:
-                logger.info(f"device current status information does not exist:{device_info["device_id"]}")
+            # device_state = db.get_device_state(device_info["device_id"], tables["device_state_table"])
+            # if not device_state:
+            #     logger.info(f"device current status information does not exist:{device_info["device_id"]}")
 
             # 機器異常状態判定
             device_abnormality = 0
-            if (
-                device_state.get("device_abnormality")
-                or device_state.get("parameter_abnormality")
-                or device_state.get("fw_update_abnormality")
-                or device_state.get("device_healthy_state")
-            ):
-                device_abnormality = 1
+            # if (
+            #     device_state.get("device_abnormality")
+            #     or device_state.get("parameter_abnormality")
+            #     or device_state.get("fw_update_abnormality")
+            #     or device_state.get("device_healthy_state")
+            # ):
+            #     device_abnormality = 1
 
-            logger.info(f"device_state:{device_state}")
+            # logger.info(f"device_state:{device_state}")
 
             # 最終受信日時取得
             last_receiving_time = ""
-            if device_state:
-                pattern = re.compile(r".*update_datetime$")
-                matching_keys = [key for key in device_state.keys() if pattern.match(key)]
-                matching_values = {key: device_state[key] for key in matching_keys}
-                last_receiving_time = max(matching_values.values())
+            # if device_state:
+            #     pattern = re.compile(r".*update_datetime$")
+            #     matching_keys = [key for key in device_state.keys() if pattern.match(key)]
+            #     matching_values = {key: device_state[key] for key in matching_keys}
+            #     last_receiving_time = max(matching_values.values())
 
             # 接点入力リスト
             di_list = []
@@ -260,14 +260,14 @@ def lambda_handler(event, context, user_info):
             ):
                 di_no = di["di_no"]
                 di_state_label = f"di{di_no}_state"
-                di_state = device_state.get(di_state_label)
+                # di_state = device_state.get(di_state_label)
                 di_healthy_state_label = f"di{di_no}_healthy_state"
-                di_healthy_state = device_state.get(di_healthy_state_label, 0)
+                # di_healthy_state = device_state.get(di_healthy_state_label, 0)
                 di_list.append(
                     {
                         "di_no": di_no,
-                        "di_state": di_state,
-                        "di_unhealthy": di_healthy_state,
+                        # "di_state": di_state,
+                        # "di_unhealthy": di_healthy_state,
                         "di_name": di.get("di_name"),
                         "di_on_name": di.get("di_on_name"),
                         "di_off_name": di.get("di_off_name"),
@@ -303,11 +303,11 @@ def lambda_handler(event, context, user_info):
                         "device_code"
                     ),
                     "last_receiving_time": last_receiving_time,
-                    "signal_status": device_state.get("signal_state", 0),
+                    # "signal_status": device_state.get("signal_state", 0),
                     "device_order": order,
                     "di_list": di_list,
                     "do_list": do_list,
-                    "battery_near_status": device_state.get("battery_near_state", 0),
+                    # "battery_near_status": device_state.get("battery_near_state", 0),
                     "device_abnormality": device_abnormality,
                 }
             )
