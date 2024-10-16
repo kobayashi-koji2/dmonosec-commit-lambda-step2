@@ -429,9 +429,9 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
         # device_valueは各デバイスの検索評価対象の値
         logger.info(f"検索評価対象の値:{device_value}")
 
-        #検索対象がNoneの場合は次のデバイスの処理に移行
+        #検索対象がNoneの場合,Not検索以外は該当データなし。Not検索の場合はすべて該当。
         if device_value is None:
-            continue
+            device_value = ""
         
         if case == 1:
             # グループID検索の場合は、device_valueはリスト
@@ -612,15 +612,13 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
 
     return_list = []
 
-    #未登録デバイスにはデバイス名がないため、detect_condition = 1が来た時点で[]を返す
-    if detect_condition == 1:
-        return return_list
-
     for pre_reg_device_info in pre_reg_device_info_list:
         
         hit_list = []
 
-        if detect_condition == 2:
+        if detect_condition == 1:
+            device_value = None
+        elif detect_condition == 2:
             if pre_reg_device_info.get("device_code") == "MS-C0130":
                 device_value = pre_reg_device_info.get("device_sigfox_id")
             else:
@@ -636,14 +634,14 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
             if device_value == []:
                 continue
         else :
-            pass
+            device_value = None
 
         # device_valueは各デバイスの検索評価対象の値
         logger.info(f"検索評価対象の値:{device_value}")
 
-        #検索対象がNoneの場合は次のデバイスの処理に移行
+        #検索対象がNoneの場合,Not検索以外は該当データなし。Not検索の場合はすべて該当。
         if device_value is None:
-            continue
+            device_value = ""
         
         if case == 1:
             # グループID検索の場合は、device_valueはリスト
