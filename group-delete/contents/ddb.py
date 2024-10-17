@@ -118,6 +118,22 @@ def delete_group_info(
             }
         }
         transact_items.append(remove_relation)
+        
+    # グループから削除された登録前デバイス
+    unregistered_device_list = db.get_device_relation(
+        "g-" + group_id, device_relation_table, sk_prefix="pd-"
+    )
+    for remove_unregistered_device_list in unregistered_device_list:
+        remove_unregistered_device = {
+            "Delete": {
+                "TableName": device_relation_table_name,
+                "Key": {
+                    "key1": {"S": remove_unregistered_device_list["key1"]},
+                    "key2": {"S": remove_unregistered_device_list["key2"]},
+                },
+            }
+        }
+        transact_items.append(remove_unregistered_device)
 
     user_relation_list = db.get_device_relation(
         "g-" + group_id, device_relation_table, sk_prefix="u-", gsi_name="key2_index"
