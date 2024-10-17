@@ -255,9 +255,9 @@ def create_response(request_params, hist_list):
                 "email_notification": (
                     "1" if hist["hist_data"].get("notification_hist_id") else "0"
                 ),
-                "latitude_state":hist.get("hist_data").get("lat"),
-                "longitude_state":hist.get("hist_data").get("lng"),
-                "precision_state":hist.get("hist_data").get("radius")
+                "latitude_state":hist.get("hist_data").get("latitude_state"),
+                "longitude_state":hist.get("hist_data").get("longitude_state"),
+                "precision_state":hist.get("hist_data").get("precision_state")
 
             }
         )
