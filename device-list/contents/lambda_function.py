@@ -322,6 +322,7 @@ def lambda_handler(event, context, user_info):
             )
 
             pre_register_device_group_relation = []
+            pre_reg_device_info_add_group_name_list = []
             for pre_reg_device_info in pre_reg_device_info_list:
                 if pre_reg_device_info.get("device_code") == "MS-C0130":
                     pre_device_id = pre_reg_device_info.get("device_sigfox_id")
@@ -329,6 +330,16 @@ def lambda_handler(event, context, user_info):
                     pre_device_id = pre_reg_device_info.get("device_imei")
                 pre_device_group_id_list = db.get_pre_device_relation_group_id_list(pre_device_id, tables["device_relation_table"])
                 pre_register_device_group_relation.append({"device_id": pre_device_id, "group_list": pre_device_group_id_list})
+                
+                unregistered_device_group_name_list = []
+                for pre_device_group_id in pre_device_group_id_list:
+                    unregistered_device_group_info = db.get_group_info(pre_device_group_id, group_table)
+                    unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_name"))
+                
+                pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
+                pre_reg_device_info_add_group_name_list.append(pre_reg_device_info)
+
+            pre_reg_device_info_list = pre_reg_device_info_add_group_name_list
 
             if keyword == None or keyword == "":
                 pass
