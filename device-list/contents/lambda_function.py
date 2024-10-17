@@ -333,7 +333,7 @@ def lambda_handler(event, context, user_info):
                 
                 unregistered_device_group_name_list = []
                 for pre_device_group_id in pre_device_group_id_list:
-                    unregistered_device_group_info = db.get_group_info(pre_device_group_id, group_table)
+                    unregistered_device_group_info = db.get_group_info(pre_device_group_id, tables["group_table"])
                     unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_name"))
                 
                 pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
