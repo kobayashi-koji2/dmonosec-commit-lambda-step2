@@ -151,7 +151,7 @@ def lambda_handler(event, context):
                     "hist_data": {
                         "device_name":req_body.get("deviceName"),
                         "sigfox_id":req_body.get("deviceId"),
-                        "event_type":"location_notice",
+                        "event_type":"battery_near",
                         "cnt_hist_id":hist_info_id,
                         "group_list":group_list,
                     }
