@@ -1,4 +1,5 @@
 from aws_lambda_powertools import Logger
+import ddb
 
 logger = Logger()
 
@@ -49,3 +50,20 @@ def initCurrentStateInfo(req_body,device_current_state,device_id):
         device_current_state["battery_near_last_update_datetime"] = req_body.get("timestamp") * 1000
         device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000    
     return device_current_state
+
+
+def judge_near_battery(current_state_info,hist_item,hist_list_table):
+
+    current_battry_voltage = current_state_info.get("battery_voltage")
+    current_battry_state = current_state_info.get("battery_near_state")
+
+    if (current_battry_state == 0) and (current_battry_voltage < 2.0):
+        current_state_info["battery_near_state"] = 1
+        hist_item["hist_data"]["occurrence_flag"] = 1
+        ddb.put_db_item(hist_item,hist_list_table)
+    elif (current_battry_state == 1) and (current_battry_voltage >= 3.0):
+        current_state_info["battery_near_state"] = 0
+        hist_item["hist_data"]["occurrence_flag"] = 0
+        ddb.put_db_item(hist_item,hist_list_table)
+
+    return current_state_info

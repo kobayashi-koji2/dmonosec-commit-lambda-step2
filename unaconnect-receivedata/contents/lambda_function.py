@@ -12,7 +12,7 @@ from datetime import datetime
 from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
-from event_judge import eventJudge
+from event_judge import eventJudge,judge_near_battery
 
 patch_all()
 
@@ -141,6 +141,23 @@ def lambda_handler(event, context):
         logger.debug(f"current_state_info={current_state_info}")
 
         if current_state_info:
+            if req_body.get("dataType") == "DATA":
+                hist_item = {
+                    "device_id": device_id,
+                    "hist_id": str(uuid.uuid4()),
+                    "event_datetime": req_body.get("timestamp") * 1000,
+                    "recv_datetime": recv_datetime,
+                    "expire_datetime": expire_datetime,
+                    "hist_data": {
+                        "device_name":req_body.get("deviceName"),
+                        "sigfox_id":req_body.get("deviceId"),
+                        "event_type":"location_notice",
+                        "cnt_hist_id":hist_info_id,
+                        "group_list":group_list,
+                    }
+                }
+                current_state_info = judge_near_battery(current_state_info,hist_item,hist_list_table)
+
             ddb.put_db_item(current_state_info,state_table)
 
             # デバイスヘルシー判定
