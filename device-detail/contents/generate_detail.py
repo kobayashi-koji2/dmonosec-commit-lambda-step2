@@ -63,7 +63,7 @@ def get_device_detail(device_info, device_state, group_info_list, automation_inf
         "device_healthy_period": device_info["device_data"]["config"].get(
             "device_healthy_period", 0
         ),
-        "signal_status": device_state.get("signal_state", 0),
+        "signal_status": device_state.get("signal_state", "no_signal"),
         "automation_list": formatted_automation_list,
         "custom_event_list": formatted_customevent_list["custom_event_list"],
         "di_list": terminal_info.get("di_list", ""),

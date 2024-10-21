@@ -303,7 +303,7 @@ def lambda_handler(event, context, user_info):
                         "device_code"
                     ),
                     "last_receiving_time": last_receiving_time,
-                    "signal_status": device_state.get("signal_state", 0),
+                    "signal_status": device_state.get("signal_state", "no_signal"),
                     "device_order": order,
                     "di_list": di_list,
                     "do_list": do_list,
