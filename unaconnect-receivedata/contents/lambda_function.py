@@ -12,7 +12,7 @@ from datetime import datetime
 from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
-from event_judge import eventJudge,judge_near_battery
+from event_judge import eventJudge,judge_near_battery,judge_signal_state
 
 patch_all()
 
@@ -136,8 +136,16 @@ def lambda_handler(event, context):
         #現状態の取得
         device_current_state = ddb.get_device_state(device_id, state_table)
         logger.debug(f"device_current_state={device_current_state}")
+
+        if req_body.get("dataType") == "TELEMETRY":
+            signal_score = req_body.get("signalScore")
+            if signal_score:
+                signal_state = judge_signal_state(signal_score)
+            else:
+                signal_state = "no_signal"
+
         #現状態と受信した状態を比較、更新。
-        current_state_info = eventJudge(req_body,device_current_state,device_id)
+        current_state_info = eventJudge(req_body,device_current_state,device_id,signal_state)
         logger.debug(f"current_state_info={current_state_info}")
 
         if current_state_info:

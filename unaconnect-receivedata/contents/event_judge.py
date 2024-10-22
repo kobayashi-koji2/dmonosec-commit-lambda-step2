@@ -3,11 +3,11 @@ import ddb
 
 logger = Logger()
 
-def eventJudge(req_body,device_current_state,device_id):
+def eventJudge(req_body,device_current_state,device_id,signal_state):
     
     # 現状態設定
     if device_current_state is None or len(device_current_state) == 0:
-        device_current_state = initCurrentStateInfo(req_body,device_current_state,device_id)
+        device_current_state = initCurrentStateInfo(req_body,device_current_state,device_id,signal_state)
     else:
         if req_body.get("dataType") == "GEOLOC":
             if device_current_state.get("latitude_state") != req_body.get("data").get("lat"):
@@ -27,11 +27,13 @@ def eventJudge(req_body,device_current_state,device_id):
                 device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000
             device_current_state["battery_voltage"] = req_body.get("batteryVoltage")
             device_current_state["battery_near_last_update_datetime"] = req_body.get("timestamp") * 1000
+        elif req_body.get("dataType") == "TELEMETRY":
+            device_current_state["signal_state"] = signal_state
     logger.debug(f"device_current_state={device_current_state}")   
     return device_current_state
 
 
-def initCurrentStateInfo(req_body,device_current_state,device_id):
+def initCurrentStateInfo(req_body,device_current_state,device_id,signal_state):
     device_current_state = {}
     if req_body.get("dataType") == "GEOLOC":
         device_current_state["device_id"] = device_id
@@ -48,7 +50,11 @@ def initCurrentStateInfo(req_body,device_current_state,device_id):
         device_current_state["device_id"] = device_id
         device_current_state["battery_voltage"] = req_body.get("batteryVoltage",0)
         device_current_state["battery_near_last_update_datetime"] = req_body.get("timestamp") * 1000
-        device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000    
+        device_current_state["battery_near_last_change_datetime"] = req_body.get("timestamp") * 1000
+    elif req_body.get("dataType") == "TELEMETRY":
+        device_current_state["device_id"] = device_id
+        device_current_state["signal_state"] = signal_state
+
     return device_current_state
 
 
@@ -67,3 +73,15 @@ def judge_near_battery(current_state_info,hist_item,hist_list_table):
         ddb.put_db_item(hist_item,hist_list_table)
 
     return current_state_info
+
+
+def judge_signal_state(signal_score):
+
+    if signal_score >= 60:
+        signal_state = "high"
+    elif signal_score >= 40:
+        signal_state = "mid"
+    else:
+        signal_state = "low"
+
+    return signal_state
