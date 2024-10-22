@@ -22,7 +22,7 @@ def get_device_info(pk, table):
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
 
-    return db.insert_id_key_in_device_info_list(response)
+    return db.insert_id_key_in_device_info(response[0]) if response else None
 
 #履歴一覧データ挿入
 def put_db_item(db_item, table):
