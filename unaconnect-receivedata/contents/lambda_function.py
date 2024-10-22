@@ -143,6 +143,7 @@ def lambda_handler(event, context):
         device_current_state = ddb.get_device_state(device_id, state_table)
         logger.debug(f"device_current_state={device_current_state}")
 
+        signal_state = None
         if req_body.get("dataType") == "TELEMETRY":
             signal_score = req_body.get("signalScore")
             if signal_score:
