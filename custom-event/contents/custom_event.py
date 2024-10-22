@@ -37,8 +37,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
             event_type = "custom_datetime"
         # 経過日時
         elif custom_event_info.get("event_type") == 1:
-            # カスタムイベント経過時間(分)をUNIXミリ秒に変換
-            custom_event_elapsed_time = custom_event_info.get("elapsed_time")
+            custom_event_elapsed_time = int(custom_event_info.get("elapsed_time"))
             event_type = "custom_timer"
         else:
             logger.debug(f"カスタムイベント種別不正値")
@@ -61,10 +60,9 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                     now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
                     di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
                     last_change_unixtime = device_current_state.get(di_last_change_datetime)
-                    elapsed_datetime =  datetime.fromtimestamp(last_change_unixtime / 1000) + \
-                        relativedelta.relativedelta(minutes=custom_event_elapsed_time)
+                    logger.debug(f"now_datetime={now_datetime}, di_last_change_datetime={di_last_change_datetime}, last_change_unixtime={last_change_unixtime}")
+                    elapsed_datetime = datetime.fromtimestamp(last_change_unixtime / 1000) + relativedelta.relativedelta(minutes=custom_event_elapsed_time)
 
-                    # 最終受信日時 + 経過時間 = 現在日時
                     logger.debug(f"now_datetime={now_datetime}, elapsed_datetime={elapsed_datetime}")
                     if not (now_datetime.hour == elapsed_datetime.hour and now_datetime.minute == elapsed_datetime.minute):
                         logger.debug(f"日時アンマッチ")
