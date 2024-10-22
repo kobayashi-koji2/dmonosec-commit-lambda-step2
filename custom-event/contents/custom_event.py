@@ -61,8 +61,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                     now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
                     di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
                     last_change_unixtime = device_current_state.get(di_last_change_datetime)
-                    elapsed_unixtime = last_change_unixtime + custom_event_elapsed_time
-                    elapsed_datetime =  datetime.fromtimestamp(elapsed_unixtime / 1000) + \
+                    elapsed_datetime =  datetime.fromtimestamp(last_change_unixtime / 1000) + \
                         relativedelta.relativedelta(minutes=custom_event_elapsed_time)
 
                     # 最終受信日時 + 経過時間 = 現在日時
