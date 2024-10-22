@@ -59,11 +59,19 @@ def lambda_handler(event, context, user_info, request_body):
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
         device_id = request_body["device_id"]
-        if request_body["device_imei"]:
+        
+        if "device_imei" in request_body:
             identification_id = request_body["device_imei"]
-        elif request_body["device_sigfox_id"]:
+        elif "device_sigfox_id" in request_body:
             identification_id = request_body["device_sigfox_id"]
-
+        else:
+            res_body = {"message": "imeiとsigfox_idのいずれかが未指定です。"}
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
+            
         transact_items = list()
         ### 2. デバイス情報更新
         pre_device_info = ddb.get_pre_reg_device_info_by_imei(identification_id, pre_register_table)
