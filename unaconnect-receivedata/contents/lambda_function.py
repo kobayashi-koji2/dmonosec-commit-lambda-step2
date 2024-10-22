@@ -105,7 +105,12 @@ def lambda_handler(event, context):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
+        
         device_info = ddb.get_device_info(device_id,device_table)
+        device_name = None
+        if device_info:
+            device_name = device_info.get("device_data").get("config").get("device_name")
+
         group_list =  ddb.get_device_group_list(device_id, device_relation_table, group_table)
         expire_datetime = int(
             (
@@ -122,7 +127,7 @@ def lambda_handler(event, context):
                 "recv_datetime": recv_datetime,
                 "expire_datetime": expire_datetime,
                 "hist_data": {
-                    "device_name":device_info.get("device_data").get("config").get("device_name"),
+                    "device_name":device_name,
                     "sigfox_id":req_body.get("deviceId"),
                     "event_type":"location_notice",
                     "cnt_hist_id":hist_info_id,
@@ -158,7 +163,7 @@ def lambda_handler(event, context):
                     "recv_datetime": recv_datetime,
                     "expire_datetime": expire_datetime,
                     "hist_data": {
-                        "device_name":device_info.get("device_data").get("config").get("device_name"),
+                        "device_name":device_name,
                         "sigfox_id":req_body.get("deviceId"),
                         "event_type":"battery_near",
                         "cnt_hist_id":hist_info_id,
