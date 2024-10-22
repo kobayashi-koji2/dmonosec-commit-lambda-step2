@@ -35,50 +35,6 @@ def get_device_state(device_id, device_state_table):
     return device_state[0] if device_state else None
 
 
-# 現状態データ更新
-def update_current_state(device_id, db_item, state_table):
-
-    option = {
-        "Key": {
-            "device_id": device_id,
-        },
-        "UpdateExpression": "set #di1_custom_event_state = :di1_custom_event_state, \
-                            #di2_custom_event_state = :di2_custom_event_state, \
-                            #di3_custom_event_state = :di3_custom_event_state, \
-                            #di4_custom_event_state = :di4_custom_event_state, \
-                            #di5_custom_event_state = :di5_custom_event_state, \
-                            #di6_custom_event_state = :di6_custom_event_state, \
-                            #di7_custom_event_state = :di7_custom_event_state, \
-                            #di8_custom_event_state = :di8_custom_event_state",
-        "ExpressionAttributeNames": {
-            "#di1_custom_event_state": "di1_custom_event_state",
-            "#di2_custom_event_state": "di2_custom_event_state",
-            "#di3_custom_event_state": "di3_custom_event_state",
-            "#di4_custom_event_state": "di4_custom_event_state",
-            "#di5_custom_event_state": "di5_custom_event_state",
-            "#di6_custom_event_state": "di6_custom_event_state",
-            "#di7_custom_event_state": "di7_custom_event_state",
-            "#di8_custom_event_state": "di8_custom_event_state",
-        },
-        "ExpressionAttributeValues": {
-            ":di1_custom_event_state": db_item.get("di1_custom_event_state", 0),
-            ":di2_custom_event_state": db_item.get("di2_custom_event_state", 0),
-            ":di3_custom_event_state": db_item.get("di3_custom_event_state", 0),
-            ":di4_custom_event_state": db_item.get("di4_custom_event_state", 0),
-            ":di5_custom_event_state": db_item.get("di5_custom_event_state", 0),
-            ":di6_custom_event_state": db_item.get("di6_custom_event_state", 0),
-            ":di7_custom_event_state": db_item.get("di7_custom_event_state", 0),
-            ":di8_custom_event_state": db_item.get("di8_custom_event_state", 0),
-        },
-    }
-    logger.debug(f"option={option}")
-
-    try:
-        state_table.update_item(**option)
-    except ClientError as e:
-        logger.debug(f"update_current_stateエラー e={e}")
-
-
 # 履歴一覧データ挿入
 def put_cnt_hist_list(db_items, hist_list_table):
     for db_item in db_items:

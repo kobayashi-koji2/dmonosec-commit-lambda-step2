@@ -16,7 +16,7 @@ HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 logger = Logger()
 
 
-def customEvent(device_info, device_current_state, hist_list_items, now_datetime, dt_event, group_list):
+def customEvent(device_info, device_current_state, hist_list_items, now_unixtime, dt_event, group_list):
     logger.debug(f"customEvent開始 device_info={device_info}")
 
     # カスタムイベントリスト分ループ
@@ -38,7 +38,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_datetime
         # 経過日時
         elif custom_event_info.get("event_type") == 1:
             # カスタムイベント経過時間(分)をUNIXミリ秒に変換
-            custom_event_elapsed_time = custom_event_info.get("elapsed_time") * 60 * 1000
+            custom_event_elapsed_time = custom_event_info.get("elapsed_time")
             event_type = "custom_timer"
         else:
             logger.debug(f"カスタムイベント種別不正値")
@@ -57,21 +57,17 @@ def customEvent(device_info, device_current_state, hist_list_items, now_datetime
                     logger.debug(f"接点入力状態アンマッチ di_state={di_event_info.get("di_state")} current_di_state={current_di_state}")
                     continue
 
-                # カスタムイベント条件チェック
-                di_custom_event_state = f"di{terminal_no}_custom_event_state"
-                custom_event_state = device_current_state.get(di_custom_event_state, 0)
-                if custom_event_state == 1 and event_type == "custom_timer":
-                    # カスタムイベント作成済みの為、スキップ
-                    logger.debug(f"カスタムイベント作成済み")
-                    continue
-
                 if event_type == "custom_timer":
+                    now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
                     di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
-                    last_change_datetime = device_current_state.get(di_last_change_datetime)
-                    elapsed_time = now_datetime - last_change_datetime
-                    logger.debug(f"now_datetime={now_datetime}, last_change_datetime={last_change_datetime}")
-                    logger.debug(f"elapsed_time={elapsed_time}, custom_event_elapsed_time={custom_event_elapsed_time}")
-                    if elapsed_time < custom_event_elapsed_time:
+                    last_change_unixtime = device_current_state.get(di_last_change_datetime)
+                    elapsed_unixtime = last_change_unixtime + custom_event_elapsed_time
+                    elapsed_datetime =  datetime.fromtimestamp(elapsed_unixtime / 1000) + \
+                        relativedelta.relativedelta(minutes=custom_event_elapsed_time)
+
+                    # 最終受信日時 + 経過時間 = 現在日時
+                    logger.debug(f"now_datetime={now_datetime}, elapsed_datetime={elapsed_datetime}")
+                    if not (now_datetime.hour == elapsed_datetime.hour and now_datetime.minute == elapsed_datetime.minute):
                         logger.debug(f"日時アンマッチ")
                         continue
 
@@ -115,9 +111,5 @@ def customEvent(device_info, device_current_state, hist_list_items, now_datetime
                 }
                 hist_list_items.append(hist_list_item)
 
-                # 現状態更新
-                if event_type == "custom_timer":
-                    device_current_state[di_custom_event_state] = 1
-
     logger.debug("customEvent正常終了")
-    return device_current_state, hist_list_items
+    return hist_list_items

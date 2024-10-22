@@ -99,13 +99,9 @@ def lambda_handler(event, context):
                 logger.debug(f"group_name={group_name}")
 
                 # カスタムイベント処理
-                device_current_state, hist_list_items = customEvent(device_info, device_current_state, hist_list_items, now_datetime, dt_event, group_list)
+                hist_list_items = customEvent(device_info, device_current_state, hist_list_items, now_datetime, dt_event, group_list)
 
                 if hist_list_items:
-                    # 現状態更新
-                    ddb.update_current_state(device_id, device_current_state, state_table)
-                    logger.debug("現状態更新")
-
                     # メール通知
                     hist_list_items = mailNotice(
                         device_info, group_name, hist_list_items, now_datetime, user_table, account_table, notification_hist_table
