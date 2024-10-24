@@ -29,7 +29,10 @@ def eventJudge(req_body,device_current_state,device_id,signal_state):
             device_current_state["battery_voltage"] = req_body.get("batteryVoltage")
             device_current_state["battery_near_last_update_datetime"] = req_body.get("timestamp") * 1000
         elif req_body.get("dataType") == "TELEMETRY":
+            if device_current_state.get("signal_state") != signal_state:
+                device_current_state["signal_last_change_datetime"] = req_body.get("timestamp") * 1000
             device_current_state["signal_state"] = signal_state
+            device_current_state["signal_last_update_datetime"] = req_body.get("timestamp") * 1000
     logger.debug(f"device_current_state={device_current_state}")   
     return device_current_state
 
@@ -55,6 +58,8 @@ def initCurrentStateInfo(req_body,device_current_state,device_id,signal_state):
     elif req_body.get("dataType") == "TELEMETRY":
         device_current_state["device_id"] = device_id
         device_current_state["signal_state"] = signal_state
+        device_current_state["signal_last_change_datetime"] = req_body.get("timestamp") * 1000
+        device_current_state["signal_last_update_datetime"] = req_body.get("timestamp") * 1000
 
     return device_current_state
 
