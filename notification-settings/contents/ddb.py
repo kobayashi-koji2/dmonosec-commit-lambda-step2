@@ -19,7 +19,7 @@ def update_device_notification_settings(device_id, notificaton_settings, notific
             "TableName": ssm.table_names["DEVICE_TABLE"],
             "Key": {
                 "device_id": {"S": device["device_id"]},
-                "identification_id": {"S": device["imei"]},
+                "identification_id": {"S": device["identification_id"]},
             },
             "UpdateExpression": "set #map_d.#map_c.#map_n = :s, #map_d.#map_c.#map_t = :t",
             "ExpressionAttributeNames": {
