@@ -71,15 +71,23 @@ def judge_near_battery(current_state_info,hist_item,hist_list_table):
     current_battry_voltage = current_state_info.get("battery_voltage")
     current_battry_state = current_state_info.get("battery_near_state")
 
-    if (current_battry_state == 0) and (current_battry_voltage < 2.0):
-        current_state_info["battery_near_state"] = 1
-        hist_item["hist_data"]["occurrence_flag"] = 1
-        ddb.put_db_item(hist_item,hist_list_table)
-    elif (current_battry_state == 1) and (current_battry_voltage >= 3.0):
-        current_state_info["battery_near_state"] = 0
-        hist_item["hist_data"]["occurrence_flag"] = 0
-        ddb.put_db_item(hist_item,hist_list_table)
-
+    if current_battry_state:
+        if (current_battry_state == 0) and (current_battry_voltage < 2.0):
+            current_state_info["battery_near_state"] = 1
+            hist_item["hist_data"]["occurrence_flag"] = 1
+            ddb.put_db_item(hist_item,hist_list_table)
+        elif (current_battry_state == 1) and (current_battry_voltage >= 3.0):
+            current_state_info["battery_near_state"] = 0
+            hist_item["hist_data"]["occurrence_flag"] = 0
+            ddb.put_db_item(hist_item,hist_list_table)
+    else:
+        if current_battry_voltage < 2.0:
+            current_state_info["battery_near_state"] = 1
+            hist_item["hist_data"]["occurrence_flag"] = 1
+            ddb.put_db_item(hist_item,hist_list_table)
+        else:
+            current_state_info["battery_near_state"] = 0
+            
     return current_state_info
 
 
