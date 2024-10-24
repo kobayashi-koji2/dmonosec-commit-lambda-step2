@@ -28,13 +28,14 @@ def device_healthy(device_info, now_datetime, device_current_state, hist_list_it
         logger.debug(f"デバイスヘルシー未設定")
         return device_current_state, hist_list_items
 
+    last_recv_datetime = None
+    if device_info.get("device_type") == "UnaTag":
+        last_recv_datetime = device_current_state.get("unatag_last_recv_datetime")
+    else:
+        last_recv_datetime = device_current_state.get("device_abnormality_last_update_datetime")
+
     # デバイスヘルシーチェック
-    if (device_info.get("device_type") == "UnaTag" and "unatag_last_recv_datetime" in device_current_state) \
-        or (device_info.get("device_type") != "UnaTag" and "device_abnormality_last_update_datetime" in device_current_state):
-        if device_info.get("device_type") == "UnaTag":
-            last_recv_datetime = device_current_state.get("unatag_last_recv_datetime")
-        else:
-            last_recv_datetime = device_current_state.get("device_abnormality_last_update_datetime")
+    if last_recv_datetime:
         elapsed_time = now_datetime - last_recv_datetime
         device_healthy_period_time = device_healthy_period * 24 * 60 * 60 * 1000
         logger.debug(f"now_datetime={now_datetime}, last_recv_datetime={last_recv_datetime}")
