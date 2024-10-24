@@ -177,13 +177,7 @@ def lambda_handler(event, context):
 
             # デバイスヘルシー判定
             queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
-            if current_state_info.get(
-                "device_healthy_state"
-            ) == 1 and current_state_info.get(
-                "latitude_last_update_datetime"
-            ) != device_current_state.get(
-                "latitude_last_update_datetime"
-            ):
+            if current_state_info.get("device_healthy_state") == 1:
                 body = {
                     "event_trigger": "lambda-unaconnect-receivedata",
                     "event_type": "device_unhealthy",

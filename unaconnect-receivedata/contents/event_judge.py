@@ -10,6 +10,7 @@ def eventJudge(req_body,device_current_state,device_id,signal_state):
     if device_current_state is None or len(device_current_state) == 0:
         device_current_state = initCurrentStateInfo(req_body,device_current_state,device_id,signal_state)
     else:
+        device_current_state["unatag_last_recv_datetime"] = req_body.get("timestamp") * 1000
         if req_body.get("dataType") == "GEOLOC":
             if device_current_state.get("latitude_state") != Decimal(str(req_body.get("data").get("lat"))):
                 device_current_state["latitude_last_change_datetime"] = req_body.get("timestamp") * 1000
@@ -39,6 +40,7 @@ def eventJudge(req_body,device_current_state,device_id,signal_state):
 
 def initCurrentStateInfo(req_body,device_current_state,device_id,signal_state):
     device_current_state = {}
+    device_current_state["unatag_last_recv_datetime"] = req_body.get("timestamp") * 1000
     if req_body.get("dataType") == "GEOLOC":
         device_current_state["device_id"] = device_id
         device_current_state["latitude_state"] = req_body.get("data").get("lat",0)
