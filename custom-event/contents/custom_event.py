@@ -59,7 +59,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                 if event_type == "custom_timer":
                     now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
                     di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
-                    last_change_unixtime = device_current_state.get(di_last_change_datetime)
+                    last_change_unixtime = int(device_current_state.get(di_last_change_datetime))
                     logger.debug(f"now_datetime={now_datetime}, di_last_change_datetime={di_last_change_datetime}, last_change_unixtime={last_change_unixtime}")
                     elapsed_datetime = datetime.fromtimestamp(last_change_unixtime / 1000) + relativedelta.relativedelta(minutes=custom_event_elapsed_time)
 
