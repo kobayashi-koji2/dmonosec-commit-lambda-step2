@@ -57,6 +57,7 @@ def lambda_handler(event, context, user):
         try:
             detect_condition = None
             keyword = None
+            unregistered_device_sort_flag = 0
             query_params = event.get("queryStringParameters")
             if query_params:
                 keyword = query_params.get("keyword")
@@ -64,6 +65,10 @@ def lambda_handler(event, context, user):
                 if query_param_detect_condition:
                     if query_param_detect_condition.isdecimal():
                         detect_condition = int(query_param_detect_condition)
+                query_param_unregistered_device_sort_flag = query_params.get("unregistered_device_sort_flag")
+                if query_param_unregistered_device_sort_flag:
+                    if query_param_unregistered_device_sort_flag.isdecimal():
+                        unregistered_device_sort_flag = int(query_param_unregistered_device_sort_flag)                
 
             contract_info = db.get_contract_info(user["contract_id"], contract_table)
             for group_id in contract_info.get("contract_data", {}).get("group_list", {}):
@@ -98,7 +103,7 @@ def lambda_handler(event, context, user):
                     )
                 logger.info(group_list)
             if group_list:
-                if query_params.get("unregistered_device_sort_flag") == 1:
+                if unregistered_device_sort_flag == 1:
                     group_list = sorted(group_list, key=lambda x:(x['unregistered_device_flag'] == 0, x['group_name']))
                 else:
                     group_list = sorted(group_list, key=lambda x:x['group_name'])
