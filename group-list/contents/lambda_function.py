@@ -98,7 +98,7 @@ def lambda_handler(event, context, user):
                     )
                 logger.info(group_list)
             if group_list:
-                if query_params.get("unregistered_device_sort_flag"):
+                if query_params.get("unregistered_device_sort_flag") == 1:
                     group_list = sorted(group_list, key=lambda x:(x['unregistered_device_flag'] == 0, x['group_name']))
                 else:
                     group_list = sorted(group_list, key=lambda x:x['group_name'])
