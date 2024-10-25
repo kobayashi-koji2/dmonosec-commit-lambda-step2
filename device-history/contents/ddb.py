@@ -1,3 +1,4 @@
+import os
 import json
 from datetime import datetime
 
@@ -12,6 +13,7 @@ from dateutil.relativedelta import relativedelta
 logger = Logger()
 dynamodb = boto3.resource("dynamodb")
 client = boto3.client("dynamodb", region_name="ap-northeast-1")
+PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY = int(os.environ["PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY"])
 
 
 DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
@@ -101,14 +103,29 @@ def get_hist_list(hist_list_table_table, params, history_storage_period):
             }
         device_hist_list = []
         while len(device_hist_list) < params["limit"]:
-            query_options = {
-                "IndexName": "event_datetime_index",
-                "KeyConditionExpression": Key("device_id").eq(device["device_id"])
-                & sortkeyExpression,
-                "FilterExpression": Attr("hist_data.event_type").is_in(params["event_type_list"]),
-                "ScanIndexForward": not reverse,
-                "Limit": 100,
-            }
+            if params["event_type_list"] == ["location_notice"]:
+                query_options = {
+                    "IndexName": "event_datetime_index",
+                    "KeyConditionExpression": Key("device_id").eq(device["device_id"])
+                    & sortkeyExpression,
+                    "FilterExpression": Attr("#hist_data.#precision_state").lte(PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY),
+                    "ExpressionAttributeNames": {
+                        "#hist_data": "hist_data",
+                        "#precision_state": "precision_state"
+                    },
+                    "ScanIndexForward": not reverse,
+                    "Limit": 100,
+                }
+            else:
+                query_options = {
+                    "IndexName": "event_datetime_index",
+                    "KeyConditionExpression": Key("device_id").eq(device["device_id"])
+                    & sortkeyExpression,
+                    "FilterExpression": Attr("hist_data.event_type").is_in(params["event_type_list"]),
+                    "ScanIndexForward": not reverse,
+                    "Limit": 100,
+                }
+
             if last_evaluated_key:
                 query_options["ExclusiveStartKey"] = last_evaluated_key
             logger.debug(query_options)

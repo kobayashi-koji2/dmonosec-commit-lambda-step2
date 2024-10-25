@@ -23,7 +23,7 @@ dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"
 
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 
-PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY = float(os.environ["PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY"])
+# PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY = float(os.environ["PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY"])
 
 logger = Logger()
 
@@ -366,7 +366,7 @@ def lambda_handler(event, context, user_info):
         try:
             # 履歴取得
             hist_list = ddb.get_hist_list(hist_list_table, validate_result["request_params"], history_storage_period)
-            hist_list = filter_unaconnect_location_histrory(hist_list)
+            # hist_list = filter_unaconnect_location_histrory(hist_list)
             response = create_response(validate_result["request_params"], hist_list)
         except ClientError as e:
             logger.info(e)
@@ -392,6 +392,7 @@ def lambda_handler(event, context, user_info):
             "body": json.dumps(body, ensure_ascii=False),
         }
 
+"""
 def filter_unaconnect_location_histrory(hist_list):
     filtered_hist_list = []
     for hist in hist_list:
@@ -402,3 +403,4 @@ def filter_unaconnect_location_histrory(hist_list):
                 if hist.get("hist_data").get("precision_state") <= PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY:
                     filtered_hist_list.append(hist)
     return filtered_hist_list
+"""
