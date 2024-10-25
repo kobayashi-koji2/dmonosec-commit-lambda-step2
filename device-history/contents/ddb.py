@@ -108,11 +108,7 @@ def get_hist_list(hist_list_table_table, params, history_storage_period):
                     "IndexName": "event_datetime_index",
                     "KeyConditionExpression": Key("device_id").eq(device["device_id"])
                     & sortkeyExpression,
-                    "FilterExpression": Attr("#hist_data.#precision_state").lte(PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY),
-                    "ExpressionAttributeNames": {
-                        "#hist_data": "hist_data",
-                        "#precision_state": "precision_state"
-                    },
+                    "FilterExpression": Attr("hist_data.precision_state").lte(PRECISION_THRESHOLD_DISPLAYING_LOCATION_HISTORY),
                     "ScanIndexForward": not reverse,
                     "Limit": 100,
                 }
