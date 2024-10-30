@@ -20,6 +20,10 @@ class AuthError(Exception):
         self.message = message
 
 
+def is_alphanumeric(contract_id):
+    return contract_id.isalnum()
+
+
 def verify_login_user(verify_password_exp=True):
     def _verify_login_user(func):
         def wrapper(event, *args, **kwargs):
@@ -79,6 +83,11 @@ def _get_login_user(event, verify_password_exp=True):
         contract_id = event["headers"]["mono-contract-id"]
         if not isinstance(contract_id, str):
             contract_id = str(contract_id)
+        if is_alphanumeric(contract_id):
+            if len(contract_id) != 8:
+                raise AuthError(401, "認証情報が不正です。")
+        else:
+            raise AuthError(401, "認証情報が不正です。")
 
         # 認証日時
         auth_time = claims["auth_time"]
