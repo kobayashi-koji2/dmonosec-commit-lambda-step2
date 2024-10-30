@@ -33,6 +33,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         return {"message": "パラメータが不正です"}
 
     if params["history_start_datetime"]:
+        if len(params["history_start_datetime"]) != 10:
+            return {"message": "パラメータが不正です"}
         try:
             datetime.fromtimestamp(int(params["history_start_datetime"]))
         except ValueError:
@@ -40,6 +42,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
             return {"message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
+        if len(params["history_end_datetime"]) != 10:
+            return {"message": "パラメータが不正です"}
         try:
             datetime.fromtimestamp(int(params["history_end_datetime"]))
         except ValueError:
