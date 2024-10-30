@@ -83,10 +83,7 @@ def _get_login_user(event, verify_password_exp=True):
         contract_id = event["headers"]["mono-contract-id"]
         if not isinstance(contract_id, str):
             contract_id = str(contract_id)
-        if is_alphanumeric(contract_id):
-            if len(contract_id) != 8:
-                raise AuthError(401, "認証情報が不正です。")
-        else:
+        if not is_alphanumeric(contract_id):
             raise AuthError(401, "認証情報が不正です。")
 
         # 認証日時
