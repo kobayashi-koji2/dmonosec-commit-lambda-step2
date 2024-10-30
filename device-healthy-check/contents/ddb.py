@@ -25,7 +25,7 @@ def get_device_info_by_contract_id(contract_id, contract_table, device_table):
         device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         if device_info:
             device_list.append(device_info)
-    return device_list
+    return db.insert_id_key_in_device_info_list(device_list)
 
 # 現状態取得
 def get_device_state(device_id, device_state_table):
