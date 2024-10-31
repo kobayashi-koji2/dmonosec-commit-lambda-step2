@@ -3,6 +3,8 @@ import os
 import time
 import traceback
 
+from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 import boto3
@@ -74,16 +76,22 @@ def lambda_handler(event, context, user_info):
                 ),
             }
 
-        device_id = remote_control["device_id"]
-
-        # デバイス情報取得
-        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+        # # デバイス情報取得
+        # device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
+        # logger.info(f"device_id: {device_id}")
+        # logger.info(f"device_info: {device_info}")
+        # if len(device_info) == 0:
+        #     return {"message": "デバイス情報が存在しません。"}
+        
+        # デバイス種別取得
+        device_id = remote_control.get("device_id")
+        device_info = get_device_info(device_id, device_table)
         logger.info(f"device_id: {device_id}")
         logger.info(f"device_info: {device_info}")
         if len(device_info) == 0:
             return {"message": "デバイス情報が存在しません。"}
-
-        device_type = device_info["device_type"]
+        
+        device_type = device_info[0]["device_type"]
 
         # デバイス種別チェック
         if device_type == "UnaTag":
@@ -165,3 +173,11 @@ def lambda_handler(event, context, user_info):
                 {"message": "予期しないエラーが発生しました。"}, ensure_ascii=False
             ),
         }
+        
+# デバイス情報取得(契約状態:使用不可以外)
+def get_device_info(pk, table):
+    response = table.query(
+        KeyConditionExpression=Key("device_id").eq(pk),
+        FilterExpression=Attr("contract_state").ne(2),
+    ).get("Items", [])
+    return response
