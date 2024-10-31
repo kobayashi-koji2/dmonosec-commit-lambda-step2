@@ -75,14 +75,7 @@ def lambda_handler(event, context, user_info):
                     {"message": "端末要求が存在しません。"}, ensure_ascii=False
                 ),
             }
-
-        # # デバイス情報取得
-        # device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
-        # logger.info(f"device_id: {device_id}")
-        # logger.info(f"device_info: {device_info}")
-        # if len(device_info) == 0:
-        #     return {"message": "デバイス情報が存在しません。"}
-        
+            
         # デバイス種別取得
         device_id = remote_control.get("device_id")
         device_info = get_device_info(device_id, device_table)
