@@ -13,6 +13,7 @@ import auth
 import ssm
 import convert
 import ddb
+import db
 import validate
 
 patch_all()

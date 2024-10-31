@@ -30,12 +30,13 @@ def validate(
 
     if "device_req_no" not in path_params:
         return {"message": "パラメータが不正です"}
-
-    # 遠隔制御情報取得
-    remote_control = ddb.get_remote_control_info(
-        path_params["device_req_no"], remote_controls_table
-    )
-    if not remote_control:
+    
+    # レスポンスヘッダー
+    device_req_no = event["pathParameters"]["device_req_no"]
+    logger.info(f"device_req_no: {device_req_no}")
+    remote_control = db.get_remote_control(device_req_no, remote_controls_table)
+    logger.info(f"remote_control: {remote_control}")
+    if remote_control is None:
         return {"message": "端末要求番号が存在しません。"}
 
     # デバイス種別取得
