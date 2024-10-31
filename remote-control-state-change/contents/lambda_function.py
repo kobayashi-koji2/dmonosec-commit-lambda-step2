@@ -82,13 +82,25 @@ def lambda_handler(event, context, user_info):
         logger.info(f"device_id: {device_id}")
         logger.info(f"device_info: {device_info}")
         if len(device_info) == 0:
-            return {"message": "デバイス情報が存在しません。"}
+            return {
+                "statusCode": 400,
+                "headers": response_headers,
+                "body": json.dumps(
+                    {"message": "デバイス情報が存在しません。"}, ensure_ascii=False
+                ),
+            }
         
         device_type = device_info[0]["device_type"]
 
         # デバイス種別チェック
         if device_type == "UnaTag":
-            return {"message": "UnaTagに接点入力設定を行うことはできません。"}
+            return {
+                "statusCode": 404,
+                "headers": response_headers,
+                "body": json.dumps(
+                    {"message": "UnaTagに接点入力設定を行うことはできません。"}, ensure_ascii=False
+                ),
+            }
 
         # デバイス操作権限チェック（共通）
         contract = db.get_contract_info(user_info["contract_id"], contract_table)
