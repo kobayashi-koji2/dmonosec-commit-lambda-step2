@@ -89,11 +89,11 @@ def lambda_handler(event, context):
             error_flg = False
             for device_info in device_info_list:
                 logger.info(f"--- device_info: {device_info}")
-                device_id = device_info["device_id"]
-                contract_id = device_info["device_data"]["param"]["contract_id"]
-                icc_id = device_info["device_data"]["param"]["iccid"]
-                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
-                di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
+                device_id = device_info.get("device_id")
+                contract_id = device_info.get("device_data").get("param").get("contract_id")
+                icc_id = device_info.get("device_data").get("param").get("iccid")
+                do_list = device_info.get("device_data").get("config").get("terminal_settings").get("do_list")
+                di_list = device_info.get("device_data").get("config").get("terminal_settings").get("di_list")
 
                 for do_info in do_list:
                     # タイマー設定チェック
