@@ -324,7 +324,7 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
     return current_state_info
 
 
-def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
+def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_data):
     di_state = [
         "di1_state",
         "di2_state",
@@ -351,11 +351,35 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime):
     # イベント判定結果をもとに現状態情報を更新
     # 接点入力部
     if event_info.get("event_type") == "di_change":
-        list_num = int(event_info.get("terminal_no")) - 1
+        terminal_no = event_info.get("terminal_no")
+        list_num = int(terminal_no) - 1
         state_key = di_state[list_num]
         change_datetime_key = di_change_datetime[list_num]
         current_state_info[state_key] = event_info.get("di_state")
         current_state_info[change_datetime_key] = event_datetime
+
+        # カスタムタイマーイベント
+        recv_datetime = recv_data.get("recv_datetime")
+        custom_timer_event_list = current_state_info.get("custom_timer_event_list", [])
+        for custom_timer_event in custom_timer_event_list:
+            elapsed_time = custom_timer_event.get("elapsed_time") * 60 * 1000
+            di_event_list = custom_timer_event.get("di_event_list", [])
+            for di_event in di_event_list:
+                if di_event.get("di_no") == event_info.get("terminal_no"):
+                    if ((di_event.get("di_state") in [0, 1] and di_event.get("di_state") == event_info.get("di_state")) or
+                     (di_event.get("di_state") == 2)):
+                        di_event["event_judge_datetime"] = event_datetime
+                        if event_datetime + elapsed_time < recv_datetime:
+                            # カスタムイベント判定日時が受信日時よりも過去の場合、受信日時の30分後を設定
+                            di_event["event_datetime"] = recv_datetime + 30 * 60 * 1000
+                            di_event["delay_flag"] = 1
+                        else:
+                            di_event["event_datetime"] = event_datetime + elapsed_time
+                    else:
+                        di_event["event_judge_datetime"] = 0
+                        di_event["event_datetime"] = 0
+                        di_event["delay_flag"] = 0
+                    break
 
     # 接点出力部
     elif event_info.get("event_type") == "do_change":
@@ -470,7 +494,7 @@ def eventJudge(
                 current_di = device_current_state.get(terminal_key)
             if (init_state_flg) or (not init_state_flg and int(di_list[i]) != current_di):
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # 接点出力変化判定
@@ -496,7 +520,7 @@ def eventJudge(
                 current_do = device_current_state.get(terminal_key)
             if (init_state_flg) or (not init_state_flg and int(do_list[i]) != current_do):
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # バッテリーニアエンド判定
@@ -520,7 +544,7 @@ def eventJudge(
                 )
                 hist_list.append(hist_list_data)
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # 機器異常判定
@@ -546,7 +570,7 @@ def eventJudge(
                 )
                 hist_list.append(hist_list_data)
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # パラメータ異常判定
@@ -572,7 +596,7 @@ def eventJudge(
                 )
                 hist_list.append(hist_list_data)
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # FW更新異常判定
@@ -598,7 +622,7 @@ def eventJudge(
                 )
                 hist_list.append(hist_list_data)
                 current_state_info = updateCurrentStateInfo(
-                    current_state_info, event_info, event_datetime
+                    current_state_info, event_info, event_datetime, recv_data
                 )
 
     # 電源ON
@@ -610,7 +634,7 @@ def eventJudge(
             recv_data, device_info, event_info, device_relation_table, group_table
         )
         hist_list.append(hist_list_data)
-        current_state_info = updateCurrentStateInfo(current_state_info, event_info, event_datetime)
+        current_state_info = updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_data)
 
     # 電波状態
     if recv_data.get("message_type") in ["0001", "0011", "0012"]:
@@ -623,7 +647,7 @@ def eventJudge(
             not init_state_flg and hist_signal_state != device_current_state.get("signal_state")
         ):
             current_state_info = updateCurrentStateInfo(
-                current_state_info, event_info, event_datetime
+                current_state_info, event_info, event_datetime, recv_data
             )
 
     # 遠隔制御（接点出力制御応答）
