@@ -62,11 +62,11 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                         event_date_time = int(device_current_state.get("event_datetime"))
                         elapsed_datetime = datetime.fromtimestamp(event_date_time / 1000)
                         if event_date_time <= now_unixtime:
-                            logger(f"イベント設定時刻 <= 現時刻")
+                            logger.debug(f"イベント設定時刻 <= 現時刻")
                         else:
                             continue
                     else:
-                        logger(f"event_datetimeなし")
+                        logger.debug(f"event_datetimeなし")
                         continue
                     logger.debug(f"now_datetime={now_datetime}, elapsed_datetime={elapsed_datetime}")
                     if not (now_datetime.hour == elapsed_datetime.hour and now_datetime.minute == elapsed_datetime.minute):

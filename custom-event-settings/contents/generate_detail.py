@@ -104,20 +104,21 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
 
     # デバイス現状態のカスタムタイマーイベントリスト追加
-    device_state_timer_list = list()
-    if any(device_state):
-        if len(device_state.get("custom_timer_event_list",[])):
-            for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
-                logger.info("中身あり")
-                device_state_custom_event_item = {
-                    "custom_event_id": device_state_custom_event["custom_event_id"],
-                    "elapsed_time": device_state_custom_event["elapsed_time"],
-                    "di_event_list" : device_state_custom_event["di_event_list"],
-                }
-                device_state_timer_list.append(device_state_custom_event_item)
-    
-        device_state_timer_list.append(device_state_put_item) 
-        device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+    if custom_event["event_type"] == 1:
+        device_state_timer_list = list()
+        if any(device_state):
+            if len(device_state.get("custom_timer_event_list",[])):
+                for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
+                    logger.info("中身あり")
+                    device_state_custom_event_item = {
+                        "custom_event_id": device_state_custom_event["custom_event_id"],
+                        "elapsed_time": device_state_custom_event["elapsed_time"],
+                        "di_event_list" : device_state_custom_event["di_event_list"],
+                    }
+                    device_state_timer_list.append(device_state_custom_event_item)
+        
+            device_state_timer_list.append(device_state_put_item) 
+            device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
     
     if custom_event_db_update == True:
         if device_state_custom_event_db_update == True:
