@@ -113,7 +113,8 @@ def update_current_state(current_state_info, device_info, state_table):
                 #device_abnormality_last_change_datetime = :device_abnormality_last_change_datetime, \
                 #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
                 #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
-                #di1_last_change_datetime = :di1_last_change_datetime",
+                #di1_last_change_datetime = :di1_last_change_datetime, \
+                #custom_timer_event_list  = :custom_timer_event_list",
             "ExpressionAttributeNames": {
                 "#signal_last_update_datetime": "signal_last_update_datetime",
                 "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
@@ -133,6 +134,7 @@ def update_current_state(current_state_info, device_info, state_table):
                 "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
                 "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
                 "#di1_last_change_datetime": "di1_last_change_datetime",
+                "#custom_timer_event_list": "custom_timer_event_list",
             },
             "ExpressionAttributeValues": {
                 ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
@@ -153,6 +155,7 @@ def update_current_state(current_state_info, device_info, state_table):
                 ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
                 ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
                 ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
+                ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
             },
         }
     elif device_info["device_type"] == "PJ2":
