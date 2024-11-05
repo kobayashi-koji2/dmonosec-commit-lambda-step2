@@ -189,15 +189,22 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                     }
                 else:
                     for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
-                        sum_event_datetime = datetime.fromtimestamp(int(device_state_custom_event_di["event_judge_datetime"])) + timedelta(minutes= custom_event_info["elapsed_time"])
-                        event_datetime =  math.floor(sum_event_datetime.timestamp()) 
-                        logger.info(event_datetime)
-                        di_list = {
-                            "di_no": device_state_custom_event_di["di_no"],
-                            "di_state": device_state_custom_event_di["di_state"],
-                            "event_judge_datetime": device_state_custom_event_di["event_judge_datetime"],
-                            "event_datetime": event_datetime,
-                        }
+                        if device_state_custom_event_di.get("event_judge_datetime", 0) == 0:
+                            di_list = {
+                                "di_no": device_state_custom_event_di["di_no"],
+                                "di_state": device_state_custom_event_di["di_state"],
+                                "event_judge_datetime": 0,
+                                "event_datetime": 0,
+                            }
+                        else:
+                            event_datetime = device_state_custom_event_di["event_judge_datetime"] + custom_event_info["elapsed_time"] * 60 * 1000
+                            logger.info(event_datetime)
+                            di_list = {
+                                "di_no": device_state_custom_event_di["di_no"],
+                                "di_state": device_state_custom_event_di["di_state"],
+                                "event_judge_datetime": device_state_custom_event_di["event_judge_datetime"],
+                                "event_datetime": event_datetime,
+                            }
                         di_event_list.append(di_list)
                     device_state_put_item = {
                         "custom_event_id": custom_event_info["custom_event_id"],
