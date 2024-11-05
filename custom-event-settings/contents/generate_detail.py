@@ -171,7 +171,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
             }
     elif custom_event_info["event_type"] == 1:
         di_event_list = []
-        for device_state_custom_event in device_state[0].get("custom_timer_event_list",[]):
+        for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
             if custom_event_info["custom_event_id"] == device_state_custom_event["custom_event_id"]:
                 if device_state_custom_event["elapsed_time"]  == custom_event_info["elapsed_time"]:
                     for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
