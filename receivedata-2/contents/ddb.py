@@ -204,7 +204,8 @@ def update_current_state(current_state_info, device_info, state_table):
                 #di7_last_change_datetime = :di7_last_change_datetime, \
                 #di8_last_change_datetime = :di8_last_change_datetime, \
                 #do1_last_change_datetime = :do1_last_change_datetime, \
-                #do2_last_change_datetime = :do2_last_change_datetime",
+                #do2_last_change_datetime = :do2_last_change_datetime,\
+                #custom_timer_event_list  = :custom_timer_event_list",
             "ExpressionAttributeNames": {
                 "#signal_last_update_datetime": "signal_last_update_datetime",
                 "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
@@ -251,6 +252,7 @@ def update_current_state(current_state_info, device_info, state_table):
                 "#di8_last_change_datetime": "di8_last_change_datetime",
                 "#do1_last_change_datetime": "do1_last_change_datetime",
                 "#do2_last_change_datetime": "do2_last_change_datetime",
+                "#custom_timer_event_list": "custom_timer_event_list",
             },
             "ExpressionAttributeValues": {
                 ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
@@ -298,6 +300,7 @@ def update_current_state(current_state_info, device_info, state_table):
                 ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
                 ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
                 ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
+                ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
             },
         }
     logger.debug(f"option={option}")
