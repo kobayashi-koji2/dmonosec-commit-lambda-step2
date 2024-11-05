@@ -57,8 +57,14 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                     continue
 
                 if event_type == "custom_timer":
-                    if device_current_state.get("event_datetime"):
-                        event_date_time = int(device_current_state.get("event_datetime"))
+                    event_date_time = None
+                    for custom_timer_event in device_current_state.get("custom_timer_event_list", []):
+                        if custom_timer_event.get("custom_event_id") == custom_event_info.get("custom_event_id"):
+                            for di_event in custom_timer_event.get("di_event_list", []):
+                                if di_event.get("di_no") == terminal_no:
+                                    event_date_time = di_event.get("event_datetime")
+                                    break
+                    if event_date_time:
                         if event_date_time <= now_unixtime:
                             logger.debug(f"イベント設定時刻 <= 現時刻")
                         else:
