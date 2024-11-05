@@ -292,6 +292,25 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
                 current_state_info["ai2_threshold_last_update_datetime"] = recv_data.get("recv_datetime")
             """
 
+            device_state_custom_timer_event_list = []
+            for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
+                if custom_event.get("event_type") == 1:
+                    custom_timer_event = {}
+                    custom_timer_event["custom_timer_id"] = custom_event.get("custom_event_id")
+                    custom_timer_event["elapsed_time"] = custom_event.get("elapsed_time")
+                    device_state_di_event_list = []
+                    for di_event in custom_event.get("di_event_list", []):
+                        device_state_di_event = {}
+                        device_state_di_event["di_no"] = di_event["di_no"]
+                        device_state_di_event["di_state"] = di_event["di_state"]
+                        device_state_di_event["event_datetime"] = 0
+                        device_state_di_event["event_judge_datetime"] = 0
+                        device_state_di_event["delay_flag"] = 0
+                        device_state_di_event_list.append(device_state_di_event)
+                    custom_timer_event["di_event_list"] = device_state_di_event_list
+                    device_state_custom_timer_event_list.append(custom_timer_event)
+            current_state_info["custom_timer_event_list"] = device_state_custom_timer_event_list
+
     else:
         current_state_info = device_current_state.copy()
         recv_datetime = recv_data.get("recv_datetime")

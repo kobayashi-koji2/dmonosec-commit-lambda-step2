@@ -60,6 +60,8 @@ def delete_custom_event(device_table, custom_event_id, device_id, identification
 def delete_custom_event_in_state_table(device_state_table, custom_event_id, device_id):
     custom_event_list = list()
     device_state = db.get_device_state(device_id, device_state_table)
+    if not device_state:
+        return True, res_body
     for custom_event in device_state.get("custom_timer_event_list"):
         if custom_event_id != custom_event.get("custom_event_id"):
             custom_event_list.append(custom_event)
