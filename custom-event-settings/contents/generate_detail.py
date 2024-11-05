@@ -101,7 +101,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
             custom_event_list.append(custom_event_item)
     
     custom_event_list.append(custom_put_item) 
-    # custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
+    custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
 
     # デバイス現状態のカスタムタイマーイベントリスト追加
     device_state_timer_list = list()
@@ -116,13 +116,9 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
                     "di_event_list" : device_state_custom_event["di_event_list"],
                 }
                 device_state_timer_list.append(device_state_custom_event_item)
-    logger.info(device_state_timer_list)
     
     device_state_timer_list.append(device_state_put_item) 
-    logger.info(device_state_timer_list)
-    
     device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
-    custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
     
     if custom_event_db_update == True:
         if device_state_custom_event_db_update == True:
@@ -140,11 +136,16 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     device_info = ddb.get_device_info(device_id, device_table)
     device_state = ddb.get_device_state(device_id, device_state_table)
     custom_put_item = dict()
+    custom_event_id_list = []
     
     for item in device_info:
         for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
+    for device_state_custom_event in device_state[0].get("custom_timer_event_list",[]):
+        custom_event_id_list.append(device_state_custom_event["custom_event_id"])
+            
+    logger.info(custom_event_id_list)
             
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:
@@ -170,39 +171,39 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                 "di_event_list": custom_event_info["di_event_list"],
             }
     elif custom_event_info["event_type"] == 1:
-        for item in device_state:
-            for device_state_custom_event in item.get("custom_timer_event_list",[]):
-                if device_state_custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
-                    if device_state_custom_event["elapsed_time"]  == custom_event_info["elapsed_time"]:
-                        for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
-                            di_event_list = {
-                                "di_no": device_state_custom_event_di["di_no"],
-                                "di_state": device_state_custom_event_di["di_state"],
-                                "event_judge_datetime": device_state_custom_event.get("di_event_list").get("event_judge_datetime", ''),
-                            }
-                        device_state_put_item = {
-                            "custom_event_id": custom_event_info["custom_event_id"],
-                            "elapsed_time": custom_event_info["elapsed_time"],
-                            "di_event_list": di_event_list,
+        di_event_list = []
+        for device_state_custom_event in device_state[0].get("custom_timer_event_list",[]):
+            if custom_event_info["custom_event_id"] == device_state_custom_event["custom_event_id"]:
+                if device_state_custom_event["elapsed_time"]  == custom_event_info["elapsed_time"]:
+                    for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
+                        di_list = {
+                            "di_no": device_state_custom_event_di["di_no"],
+                            "di_state": device_state_custom_event_di["di_state"],
+                            "event_judge_datetime":device_state_custom_event_di["event_judge_datetime"],
                         }
-                    else:
-                        sum_event_datetime = datetime.fromtimestamp(int(device_state_custom_event.get("di_event_list").get("event_judge_datetime"))) + timedelta(minutes= custom_event_info["elapsed_time"])
-                        event_datetime = sum_event_datetime.timestamp()
-                        logger.info(event_datetime)
-                        for device_state_custom_event_di in device_state_custom_event.get("di_event_list"):
-                            di_event_list = {
-                                "di_no": device_state_custom_event_di["di_no"],
-                                "di_state": device_state_custom_event_di["di_state"],
-                                "event_judge_datetime": device_state_custom_event.get("di_event_list").get("event_judge_datetime", ''),
-                                "event_datetime": event_datetime,
-                            }
-                        device_state_put_item = {
-                            "custom_event_id": custom_event_info["custom_event_id"],
-                            "elapsed_time": custom_event_info["elapsed_time"],
-                            "di_event_list": di_event_list,
-                        }
+                        di_event_list.append(di_list)
+                    device_state_put_item = {
+                        "custom_event_id": custom_event_info["custom_event_id"],
+                        "elapsed_time": custom_event_info["elapsed_time"],
+                        "di_event_list": di_event_list,
+                    }
                 else:
-                    return {"message": "カスタムイベントIDが現状態テーブルに存在しません。"}
+                    for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
+                        sum_event_datetime = datetime.fromtimestamp(int(device_state_custom_event_di["event_judge_datetime"])) + timedelta(minutes= custom_event_info["elapsed_time"])
+                        event_datetime =  math.floor(sum_event_datetime.timestamp()) 
+                        logger.info(event_datetime)
+                        di_list = {
+                            "di_no": device_state_custom_event_di["di_no"],
+                            "di_state": device_state_custom_event_di["di_state"],
+                            "event_judge_datetime": device_state_custom_event_di["event_judge_datetime"],
+                            "event_datetime": event_datetime,
+                        }
+                        di_event_list.append(di_list)
+                    device_state_put_item = {
+                        "custom_event_id": custom_event_info["custom_event_id"],
+                        "elapsed_time": custom_event_info["elapsed_time"],
+                        "di_event_list": di_event_list,
+                    }
         
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の継続時間カスタムイベント"
@@ -237,13 +238,10 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
             
     # デバイス現状態のカスタムタイマーイベントリスト更新
     device_state_timer_list = list()
-    for item in device_state:
-        for device_state_custom_event in item.get("custom_timer_event_list",[]):
-            if device_state_custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
-                device_state_custom_event = device_state_put_item
-            device_state_timer_list.append(device_state_custom_event)
-    
-    device_state_timer_list.append(device_state_put_item) 
+    for device_state_custom_event in device_state[0].get("custom_timer_event_list",[]):
+        if device_state_custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
+            device_state_custom_event = device_state_put_item
+        device_state_timer_list.append(device_state_custom_event)
     device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
     
     if custom_event_db_update == True:
