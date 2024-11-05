@@ -58,8 +58,8 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
 
                 if event_type == "custom_timer":
                     now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
-                    if device_current_state.get(event_datetime):
-                        event_date_time = int(device_current_state.get(event_datetime))
+                    if device_current_state.get("event_datetime"):
+                        event_date_time = int(device_current_state.get("event_datetime"))
                         elapsed_datetime = datetime.fromtimestamp(event_date_time / 1000)
                         if event_date_time <= now_unixtime:
                             logger(f"イベント設定時刻 <= 現時刻")
