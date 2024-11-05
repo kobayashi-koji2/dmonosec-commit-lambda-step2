@@ -105,9 +105,8 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
 
     # デバイス現状態のカスタムタイマーイベントリスト追加
     device_state_timer_list = list()
-    # for item in device_state:
-    if device_state:
-        if device_state.get("custom_timer_event_list",[]) != []:
+    if any(device_state):
+        if len(device_state.get("custom_timer_event_list",[])):
             for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
                 logger.info("中身あり")
                 device_state_custom_event_item = {
@@ -117,8 +116,8 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
                 }
                 device_state_timer_list.append(device_state_custom_event_item)
     
-    device_state_timer_list.append(device_state_put_item) 
-    device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+        device_state_timer_list.append(device_state_put_item) 
+        device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
     
     if custom_event_db_update == True:
         if device_state_custom_event_db_update == True:
