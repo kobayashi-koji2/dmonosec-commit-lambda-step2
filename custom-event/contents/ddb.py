@@ -91,8 +91,21 @@ def get_notice_mailaddress(user_id_list, user_table, account_table):
 
 
 def update_current_state(device_current_state,state_table):
-    item = json.loads(json.dumps(device_current_state,default=decimal_to_num), parse_float=decimal.Decimal)
+    option = {
+        "Key": {
+            "device_id": device_current_state['device_id'],
+        },
+        "UpdateExpression": "#custom_timer_event_list  = :custom_timer_event_list",
+        "ExpressionAttributeNames": {
+            "#custom_timer_event_list": "custom_timer_event_list",
+        },
+        "ExpressionAttributeValues": {
+            ":custom_timer_event_list": device_current_state.get("custom_timer_event_list"),
+        },
+    }
+    logger.debug(f"option={option}")
+
     try:
-        state_table.put_item(Item=item)
+        state_table.update_item(**option)
     except ClientError as e:
-        logger.debug(f"put_db_itemエラー e={e} item = {item}")
+        logger.debug(f"update_current_stateエラー e={e}")
