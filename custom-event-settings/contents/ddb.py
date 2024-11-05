@@ -15,3 +15,9 @@ def get_device_info(pk, table):
     ).get("Items", [])
     return db.insert_id_key_in_device_info_list(response)
 
+#　現状態取得
+def get_device_state(device_id, device_state_table):
+    device_state = device_state_table.query(
+        KeyConditionExpression=Key("device_id").eq(device_id)
+    ).get("Items")
+    return device_state if device_state else None
