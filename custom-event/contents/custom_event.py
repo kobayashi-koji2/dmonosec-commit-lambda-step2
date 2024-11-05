@@ -37,7 +37,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
             event_type = "custom_datetime"
         # 経過日時
         elif custom_event_info.get("event_type") == 1:
-            custom_event_elapsed_time = int(custom_event_info.get("elapsed_time"))
+            # custom_event_elapsed_time = int(custom_event_info.get("elapsed_time"))
             event_type = "custom_timer"
         else:
             logger.debug(f"カスタムイベント種別不正値")
@@ -58,11 +58,16 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
 
                 if event_type == "custom_timer":
                     now_datetime = datetime.fromtimestamp(now_unixtime / 1000)
-                    di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
-                    last_change_unixtime = int(device_current_state.get(di_last_change_datetime))
-                    logger.debug(f"now_datetime={now_datetime}, di_last_change_datetime={di_last_change_datetime}, last_change_unixtime={last_change_unixtime}")
-                    elapsed_datetime = datetime.fromtimestamp(last_change_unixtime / 1000) + relativedelta.relativedelta(minutes=custom_event_elapsed_time)
-
+                    if device_current_state.get(event_datetime):
+                        event_date_time = int(device_current_state.get(event_datetime))
+                        elapsed_datetime = datetime.fromtimestamp(event_date_time / 1000)
+                        if event_date_time <= now_unixtime:
+                            logger(f"イベント設定時刻 <= 現時刻")
+                        else:
+                            continue
+                    else:
+                        logger(f"event_datetimeなし")
+                        continue
                     logger.debug(f"now_datetime={now_datetime}, elapsed_datetime={elapsed_datetime}")
                     if not (now_datetime.hour == elapsed_datetime.hour and now_datetime.minute == elapsed_datetime.minute):
                         logger.debug(f"日時アンマッチ")

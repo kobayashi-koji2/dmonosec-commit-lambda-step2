@@ -88,3 +88,11 @@ def get_notice_mailaddress(user_id_list, user_table, account_table):
             ).get("Items", [])
             mailaddress_list.append(account_info[0]["email_address"])
     return mailaddress_list
+
+
+def update_current_state(device_current_state,state_table):
+    item = json.loads(json.dumps(device_current_state,default=decimal_to_num), parse_float=decimal.Decimal)
+    try:
+        state_table.put_item(Item=item)
+    except ClientError as e:
+        logger.debug(f"put_db_itemエラー e={e} item = {item}")

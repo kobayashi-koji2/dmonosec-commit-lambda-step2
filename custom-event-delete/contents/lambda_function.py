@@ -35,6 +35,7 @@ def lambda_handler(event, context, user):
         try:
             device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
             contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+            device_state_table = dynamodb.Table(ssm.table_names["STATE_TABLE"])
         except KeyError as e:
             body = {"message": e}
             return {
@@ -58,7 +59,9 @@ def lambda_handler(event, context, user):
         
         # カスタムイベント設定削除
         custom_event_delete = ddb.delete_custom_event(device_table, custom_event_id, device_id, identification_id)
+        custom_event_delete_in_state_table = ddb.delete_custom_event_in_state_table(device_state_table, custom_event_id, device_id)
         logger.info(custom_event_delete)
+        logger.info(custom_event_delete_in_state_table)
         
         ### 7. メッセージ応答
         res_body = {"message": ""}
