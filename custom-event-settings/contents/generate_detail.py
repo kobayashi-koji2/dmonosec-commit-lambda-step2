@@ -104,7 +104,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
 
     # デバイス現状態のカスタムタイマーイベントリスト追加
-    if custom_event["event_type"] == 1:
+    if custom_event_info["event_type"] == 1:
         device_state_timer_list = list()
         if any(device_state):
             if len(device_state.get("custom_timer_event_list",[])):
