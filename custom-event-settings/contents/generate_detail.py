@@ -141,7 +141,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
         for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
-    for device_state_custom_event in device_state[0].get("custom_timer_event_list",[]):
+    for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
         custom_event_id_list.append(device_state_custom_event["custom_event_id"])
             
     logger.info(custom_event_id_list)
