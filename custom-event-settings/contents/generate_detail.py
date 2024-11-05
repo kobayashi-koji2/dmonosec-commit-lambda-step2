@@ -48,26 +48,11 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
                 "di_event_list": custom_event_info["di_event_list"],
             }
     elif custom_event_info["event_type"] == 1:
-        # device_state_put_item = {
-        #     "custom_event_id": custom_event_id,
-        #     "elapsed_time": custom_event_info["elapsed_time"],
-        #     "di_event_list": custom_event_info["di_event_list"],
-        # }
-        for device_state_custom_event_di in custom_event_info["di_event_list"]:
-            di_list = {
-                "di_no": device_state_custom_event_di["di_no"],
-                "di_state": device_state_custom_event_di["di_state"],
-                "event_judge_datetime": 1730782358,
-            }
-        logger.info(custom_event_id)
-        logger.info(custom_event_info["elapsed_time"])
-        logger.info(di_list)
         device_state_put_item = {
             "custom_event_id": custom_event_id,
             "elapsed_time": custom_event_info["elapsed_time"],
-            "di_event_list": di_list,
+            "di_event_list": custom_event_info["di_event_list"],
         }
-        logger.info(device_state_put_item)
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の継続時間カスタムイベント"
             custom_put_item = {
