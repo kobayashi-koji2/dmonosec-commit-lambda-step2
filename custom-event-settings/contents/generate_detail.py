@@ -119,14 +119,12 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
         
             device_state_timer_list.append(device_state_put_item) 
             device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+    else:
+        device_state_custom_event_db_update = True
     
-    if custom_event_db_update == True:
-        if device_state_custom_event_db_update == True:
-            res_body = {"message": "データの登録に成功しました。"}
-            return True, res_body
-        elif device_state_custom_event_db_update == False or not device_state_custom_event_db_update:
-            res_body = {"message": "データの登録に失敗しました。"}
-            return False, res_body
+    if custom_event_db_update and device_state_custom_event_db_update:
+        res_body = {"message": "データの登録に成功しました。"}
+        return True, res_body
     else:
         res_body = {"message": "データの登録に失敗しました。"}
         return False, res_body
