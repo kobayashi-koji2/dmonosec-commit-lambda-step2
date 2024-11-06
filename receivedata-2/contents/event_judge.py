@@ -379,7 +379,7 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
 
         # カスタムタイマーイベント
         recv_datetime = recv_data.get("recv_datetime")
-        custom_timer_event_list = current_state_info.get("custom_timer_event_list", [])
+        custom_timer_event_list = current_state_info.get("custom_timer_event_list") or []
         for custom_timer_event in custom_timer_event_list:
             elapsed_time = custom_timer_event.get("elapsed_time") * 60 * 1000
             di_event_list = custom_timer_event.get("di_event_list", [])
@@ -391,11 +391,19 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
                         if event_datetime + elapsed_time < recv_datetime:
                             # カスタムイベント判定日時が受信日時よりも過去の場合、受信日時の30分後を設定
                             di_event["event_datetime"] = recv_datetime + 30 * 60 * 1000
+                            di_event["event_hpn_datetime"] = event_datetime + elapsed_time
                             di_event["delay_flag"] = 1
                         else:
                             di_event["event_datetime"] = event_datetime + elapsed_time
+                            if recv_data.get("message_type") in ["0011", "0012"]:
+                                # 現状態通知（電源ON、定時送信）
+                                di_event["event_hpn_datetime"] = event_datetime
+                            else:
+                                # 状態変化通知
+                                di_event["event_hpn_datetime"] = event_datetime + elapsed_time
                     else:
                         di_event["event_judge_datetime"] = 0
+                        di_event["event_hpn_datetime"] = 0
                         di_event["event_datetime"] = 0
                         di_event["delay_flag"] = 0
                     break
