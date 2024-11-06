@@ -108,10 +108,7 @@ def lambda_handler(event, context):
                     )
 
                     # デバイス現状態の更新
-                    device_current_state["event_datetime"] = 0
-                    device_current_state["event_judge_datetime"] = 0
-                    device_current_state["delay_flag"] = 0
-                    ddb.update_current_state(device_current_state ,state_table)
+                    ddb.update_current_state(device_current_state ,state_table,hist_list_items)
                     # 履歴一覧挿入
                     ddb.put_cnt_hist_list(hist_list_items, hist_list_table)
 
