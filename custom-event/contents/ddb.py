@@ -90,25 +90,25 @@ def get_notice_mailaddress(user_id_list, user_table, account_table):
     return mailaddress_list
 
 
-def update_current_state(device_current_state,state_table,hist_list_items):
+def update_current_state(device_current_state, state_table, hist_list_items):
     update_custom_timer_event_list = []
-    for custom_timer_event in device_current_state.get("custom_timer_event_list"):
+    for custom_timer_event in device_current_state.get("custom_timer_event_list", []):
         for hist_list_item in hist_list_items:
             if hist_list_item.get("hist_data").get("custom_event_id") == custom_timer_event.get("custom_event_id"):
                 update_di_event_list = []
-                for di_event in custom_timer_event.get("di_event_list"):
+                for di_event in custom_timer_event.get("di_event_list", []):
                     if hist_list_item.get("hist_data").get("terminal_no") == di_event.get("di_no"):
                         di_event["event_datetime"] = 0
                         di_event["event_judge_datetime"] = 0
                     di_event["delay_flag"] = 0
-                    update_di_event_list.append(di_event)                    
+                    update_di_event_list.append(di_event)
                 custom_timer_event["di_event_list"] = update_di_event_list
         update_custom_timer_event_list.append(custom_timer_event)
     option = {
         "Key": {
             "device_id": device_current_state['device_id'],
         },
-        "UpdateExpression": "#custom_timer_event_list = :custom_timer_event_list",
+        "UpdateExpression": "SET #custom_timer_event_list = :custom_timer_event_list",
         "ExpressionAttributeNames": {
             "#custom_timer_event_list": "custom_timer_event_list",
         },
