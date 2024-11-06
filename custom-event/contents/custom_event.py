@@ -68,7 +68,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                             for di_event in custom_timer_event.get("di_event_list", []):
                                 if di_event.get("di_no") == terminal_no:
                                     event_date_time = di_event.get("event_datetime")
-                                    event_php_datetime = di_event.get("event_hpn_datetime")
+                                    event_hpn_datetime = di_event.get("event_hpn_datetime")
                                     break
                     if event_date_time:
                         if event_date_time <= now_unixtime:
@@ -101,7 +101,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                 hist_list_item = {
                     "device_id": device_info.get("device_id"),
                     "hist_id": str(uuid.uuid4()),
-                    "event_datetime": event_php_datetime,
+                    "event_datetime": event_hpn_datetime,
                     "expire_datetime": expire_datetime,
                     "hist_data": {
                         "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),
