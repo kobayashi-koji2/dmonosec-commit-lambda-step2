@@ -13,7 +13,9 @@ logger = Logger()
 
 # パラメータチェック
 def validate(event, user, device_table, contract_table):
-    
+    operation_auth = operation_auth_check(user)
+    if not operation_auth:
+        return {"message": "ユーザの操作権限がありません。"}
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
@@ -42,4 +44,12 @@ def validate(event, user, device_table, contract_table):
         return {"message": "イベントカスタムIDが存在しません"}
             
     return {"custom_event_id": body_params["custom_event_id"], "device_id": device_id, "identification_id": identification_id, "message": ""}
+
+# 操作権限チェック
+def operation_auth_check(user):
+    user_type = user["user_type"]
+    logger.debug(f"権限:{user_type}")
+    if user_type == "admin" or user_type == "sub_admin" or user_type == "worker":
+        return True
+    return False
 
