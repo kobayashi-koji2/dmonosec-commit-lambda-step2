@@ -134,16 +134,11 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     device_info = ddb.get_device_info(device_id, device_table)
     device_state = ddb.get_device_state(device_id, device_state_table)
     custom_put_item = dict()
-    custom_event_id_list = []
     
     for item in device_info:
         for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
-    for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
-        custom_event_id_list.append(device_state_custom_event["custom_event_id"])
-            
-    logger.info(custom_event_id_list)
             
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:

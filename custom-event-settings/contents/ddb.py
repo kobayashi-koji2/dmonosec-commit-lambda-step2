@@ -20,4 +20,4 @@ def get_device_state(device_id, device_state_table):
     device_state = device_state_table.query(
         KeyConditionExpression=Key("device_id").eq(device_id)
     ).get("Items")
-    return device_state[0] if device_state[0] else None
+    return device_state[0] if device_state else None
