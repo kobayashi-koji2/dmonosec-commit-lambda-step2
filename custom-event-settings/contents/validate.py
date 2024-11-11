@@ -54,8 +54,16 @@ def validate(event, user, device_table, contract_table):
         
     # Bodyパラメータの中身チェック
     for key in body_params["di_event_list"]:
-        res_di_no = key["di_no"]
-        res_di_state = key["di_state"]
+        if key.get("di_no"):
+            res_di_no = key["di_no"]
+        else:
+            return {"message": "パラメータが不正です"}
+        
+        if key.get("di_state"):
+            res_di_state = key["di_state"]
+        else:
+            return {"message": "パラメータが不正です"}
+
     if body_params["event_type"] == 0:
         week = body_params["weekday"].split(',')
         for item in week:

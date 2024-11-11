@@ -106,7 +106,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     # デバイス現状態のカスタムタイマーイベントリスト追加
     if custom_event_info["event_type"] == 1:
         device_state_timer_list = list()
-        if any(device_state):
+        if device_state:
             if len(device_state.get("custom_timer_event_list",[])):
                 for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
                     logger.info("中身あり")
