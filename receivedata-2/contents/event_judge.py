@@ -296,7 +296,7 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
                 if custom_event.get("event_type") == 1:
                     custom_timer_event = {}
-                    custom_timer_event["custom_timer_id"] = custom_event.get("custom_event_id")
+                    custom_timer_event["custom_event_id"] = custom_event.get("custom_event_id")
                     custom_timer_event["elapsed_time"] = custom_event.get("elapsed_time")
                     device_state_di_event_list = []
                     for di_event in custom_event.get("di_event_list", []):
