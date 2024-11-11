@@ -19,6 +19,8 @@ def validate(event, user_info, tables):
         return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
+    if not device_id:
+        return {"message": "リクエストパラメータが不正です。"}
     body = json.loads(body)
     logger.info(f"device_id: {device_id}")
     logger.info(f"body: {body}")
