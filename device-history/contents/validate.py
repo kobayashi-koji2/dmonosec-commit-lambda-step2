@@ -10,11 +10,20 @@ import db
 logger = Logger()
 
 
+def contains_device_id_and_last_hist_id(device_list):
+    return all("device_id" in device and "last_hist_id" in device for device in device_list)
+
+
 # パラメータチェック
 def validate(event, user, account_table, user_table, contract_table, device_relation_table):
     # 入力値ェック
     query_params = event.get("queryStringParameters", {})
     multi_query_params = event.get("multiValueQueryStringParameters", {})
+    if not (query_params.get("history_start_datetime").isdigit() and
+            query_params.get("history_end_datetime").isdigit() and
+            query_params.get("sort").isdigit() and
+            query_params.get("limit").isdigit()):
+        return {"message": "パラメータが不正です"}
 
     params = {
         "history_start_datetime": query_params.get("history_start_datetime"),
@@ -61,6 +70,9 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         and params["history_end_datetime"]
         and int(params["history_start_datetime"]) > int(params["history_end_datetime"])
     ):
+        return {"message": "パラメータが不正です"}
+
+    if not contains_device_id(params["device_list"]):
         return {"message": "パラメータが不正です"}
 
     if len(params["device_list"]) == 0:

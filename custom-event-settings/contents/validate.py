@@ -62,6 +62,8 @@ def validate(event, user, device_table, contract_table):
             return {"message": "パラメータが不正です"}
         res_di_no = key["di_no"]
         res_di_state = key["di_state"]
+    if "event_type" not in body_params:
+        return {"message": "パラメータが不正です"}
     if body_params["event_type"] == 0:
         if not body_params.get("weekday"):
             return {"message": "パラメータが不正です"}
