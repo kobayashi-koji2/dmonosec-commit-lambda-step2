@@ -40,6 +40,9 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
         except ValueError:
             logger.info(ValueError)
             return {"message": "パラメータが不正です"}
+        except OverflowError:
+            logger.info(OverflowError)
+            return {"message": "パラメータが不正です"}
 
     if params["history_end_datetime"]:
         if len(params["history_end_datetime"]) != 10:
@@ -48,6 +51,9 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
             datetime.fromtimestamp(int(params["history_end_datetime"]))
         except ValueError:
             logger.info(ValueError)
+            return {"message": "パラメータが不正です"}
+        except OverflowError:
+            logger.info(OverflowError)
             return {"message": "パラメータが不正です"}
 
     if (

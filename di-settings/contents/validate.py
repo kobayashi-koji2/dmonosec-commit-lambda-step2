@@ -105,6 +105,8 @@ def terminal_check(body, device_id, device_type, tables):
     ):
         # 端子番号
         for item in body.get("di_list", {}):
+            if not isinstance(item.get("di_no"), int):
+                return False
             di_no_list.append(item.get("di_no"))
         # 端子番号の範囲
         if all(1 <= int(num) <= di for num in di_no_list):

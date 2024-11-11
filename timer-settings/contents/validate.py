@@ -94,6 +94,15 @@ def device_terminal_check(device_type, body):
 def input_check(param):
     out_range_list, invalid_format_list, invalid_data_type_list = [], [], []
 
+    # 項目存在チェック
+    if (not "do_no" in param or 
+        not "do_timer_list" in param or 
+        not "do_timer_name" in param or 
+        not "do_time" in param or 
+        not "do_weekday" in param or 
+        not "do_onoff_control" in param):
+        return False
+
     # 文字数の制限
     str_value_limits = {"do_timer_name": {0, 30}, "do_time": {0, 5}}
 
@@ -170,8 +179,8 @@ def input_check(param):
     return False
 
 
-# 重複チェック
 def duplicate_check(param, device_info):
+# 重複チェック
     do_list = (
         device_info.get("device_data").get("config").get("terminal_settings").get("do_list", [])
     )
