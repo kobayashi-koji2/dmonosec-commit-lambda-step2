@@ -119,6 +119,8 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
         
             device_state_timer_list.append(device_state_put_item) 
             device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+        else:
+            device_state_custom_event_db_update = True
     else:
         device_state_custom_event_db_update = True
     
