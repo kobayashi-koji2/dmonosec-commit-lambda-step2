@@ -54,9 +54,9 @@ def validate(event, user, device_table, contract_table):
         
     # Bodyパラメータの中身チェック
     for key in body_params["di_event_list"]:
-        if not key.get("di_no"):
+        if key.get("di_no") is None:
             return {"message": "パラメータが不正です"}
-        if not key.get("di_state"):
+        if key.get("di_state") is None:
             return {"message": "パラメータが不正です"}
         res_di_no = key["di_no"]
         res_di_state = key["di_state"]
@@ -70,7 +70,7 @@ def validate(event, user, device_table, contract_table):
             if not "00:00" <= body_params["time"] <= "23:59" or item not in ["","0","1","2","3","4","5","6","7"] or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
                     return {"message": "時間、接点入力端子、状態の値が不正です"}
     elif body_params["event_type"] == 1:
-        if not body_params.get("elapsed_time"):
+        if body_params.get("elapsed_time") is None:
             return {"message": "パラメータが不正です"}
         if  not 0 < body_params["elapsed_time"] < 301 or res_di_no not in [1,2,3,4,5,6,7,8] or res_di_state not in [0, 1, 2]:
             return {"message": "継続時間、接点入力端子、状態がの値が不正です"}
