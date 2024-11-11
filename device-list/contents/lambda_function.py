@@ -424,7 +424,11 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
         hit_list = []
 
         if detect_condition == 1:
-            device_value = device_info.get("device_data").get("config").get("device_name")
+            device_value = (
+                device_info.get("device_data").get("config").get("device_name")
+                if device_info.get("device_data").get("config").get("device_name")
+                else f"【{device_info.get("device_code")}】{device_info.get("imei")}（IMEI）"
+            )
         elif detect_condition == 2:
             device_value = device_info.get("identification_id")
         elif detect_condition == 3:
@@ -547,7 +551,11 @@ def device_detect_all(keyword,device_info_list):
         
         hit_list = []
 
-        device_name = device_info.get("device_data").get("config").get("device_name")
+        device_name = (
+            device_info.get("device_data").get("config").get("device_name")
+            if device_info.get("device_data").get("config").get("device_name")
+            else f"【{device_info.get("device_code")}】{device_info.get("imei")}（IMEI）"
+        )
         device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
 
