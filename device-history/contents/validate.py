@@ -30,11 +30,21 @@ def contains_device_id_and_last_hist_id(device_list):
 def validate(event, user, account_table, user_table, contract_table, device_relation_table):
     # 入力値チェック
     query_params = event.get("queryStringParameters", {})
-    multi_query_params = event.get("multiValueQueryStringParameters", {})
+    if not ("history_start_datetime" in query_params and
+            "history_end_datetime" in query_params and
+            "sort" in query_params and
+            "limit" in query_params):
+        return {"message": "パラメータが不正です"}
+
     if not (query_params.get("history_start_datetime").isdigit() and
             query_params.get("history_end_datetime").isdigit() and
             query_params.get("sort").isdigit() and
             query_params.get("limit").isdigit()):
+        return {"message": "パラメータが不正です"}
+
+    multi_query_params = event.get("multiValueQueryStringParameters", {})
+    if not ("event_type_list[]" in multi_query_params and
+            "device_list[]" in multi_query_params):
         return {"message": "パラメータが不正です"}
 
     params = {

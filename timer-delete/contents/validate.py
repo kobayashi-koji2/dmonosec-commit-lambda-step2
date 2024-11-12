@@ -22,6 +22,8 @@ def validate(event, user_info, tables):
         return {"message": "リクエストパラメータが不正です。"}
 
     device_id = event["pathParameters"]["device_id"]
+    if not device_id:
+        return {"message": "リクエストパラメータが不正です。"}
     do_no = body["do_no"]
     do_timer_id = body["do_timer_id"]
     logger.info(f"device_id: {device_id}")
