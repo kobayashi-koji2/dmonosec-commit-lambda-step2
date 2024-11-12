@@ -45,6 +45,8 @@ def lambda_handler(event, context, user):
                 "body": json.dumps({"message": "パラメータが不正です。"}, ensure_ascii=False),
             }
         device_id = pathParam["device_id"]
+        if not device_id:
+            return {"message": "リクエストパラメータが不正です。"}
 
         if user.get("user_type") != "admin" and user.get("user_type") != "sub_admin":
             return {
