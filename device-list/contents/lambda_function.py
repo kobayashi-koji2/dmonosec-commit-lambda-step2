@@ -640,7 +640,11 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
         hit_list = []
 
         if detect_condition == 1:
-            device_value = None
+            device_value = (
+                f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}（タグID）"
+                if pre_reg_device_info.get("device_code") == "MS-C0130"
+                else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_imei')}（IMEI）"
+            )
         elif detect_condition == 2:
             if pre_reg_device_info.get("device_code") == "MS-C0130":
                 device_value = pre_reg_device_info.get("device_sigfox_id")
@@ -767,6 +771,11 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
         
         hit_list = []
 
+        device_name = (
+            f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}（タグID）"
+            if pre_reg_device_info.get("device_code") == "MS-C0130"
+            else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_imei')}（IMEI）"
+        )
         device_code = pre_reg_device_info.get("device_code")
         if device_code == "MS-C0130":
             device_id = pre_reg_device_info.get("device_sigfox_id")
@@ -774,6 +783,8 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
             device_id = pre_reg_device_info.get("device_imei")
 
         #Noneの場合にエラーが起きることの回避のため
+        if device_name is None:
+            device_name = ""
         if device_id is None:
             device_id = ""
         if device_code is None:
@@ -781,7 +792,7 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
 
         if case == 1:
             for key in key_list:
-                if (key in device_id) or (key in device_code):
+                if (key in device_name) or (key in device_id) or (key in device_code):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -792,7 +803,7 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
                     return_list.append(pre_reg_device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_id) or (key in device_code):
+                if (key in device_name) or (key in device_id) or (key in device_code):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -802,12 +813,12 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
                 if result != 0:
                     return_list.append(pre_reg_device_info)
         elif case == 3:
-            if (keyword[1:] in device_id) or (keyword[1:] in device_code):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code):
                 pass
             else:
                 return_list.append(pre_reg_device_info)
         else:
-            if (keyword in device_id) or (keyword in device_code):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code):
                 return_list.append(pre_reg_device_info)
 
     return return_list
