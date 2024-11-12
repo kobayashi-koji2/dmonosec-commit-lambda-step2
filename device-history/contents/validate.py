@@ -26,6 +26,14 @@ def contains_device_id_and_last_hist_id(device_list):
     )
 
 
+def is_numeric(value):
+    if isinstance(value, int):
+        return True
+    if isinstance(value, str) and value.isdigit():
+        return True
+    return False
+
+
 # パラメータチェック
 def validate(event, user, account_table, user_table, contract_table, device_relation_table):
     # 入力値チェック
@@ -38,8 +46,8 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
 
     if not (query_params.get("history_start_datetime").isdigit() and
             query_params.get("history_end_datetime").isdigit() and
-            query_params.get("sort").isdigit() and
-            query_params.get("limit").isdigit()):
+            is_numeric(query_params.get("sort")) and
+            is_numeric(query_params.get("limit"))):
         return {"message": "パラメータが不正です"}
 
     multi_query_params = event.get("multiValueQueryStringParameters", {})
@@ -47,14 +55,19 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
             "device_list[]" in multi_query_params):
         return {"message": "パラメータが不正です"}
 
+    try:
+        param_device_list = [
+            json.loads(device_param)
+            for device_param in multi_query_params.get("device_list[]", [])
+        ]
+    except json.JSONDecodeError:
+        return {"message": "パラメータが不正です"}
+
     params = {
         "history_start_datetime": query_params.get("history_start_datetime"),
         "history_end_datetime": query_params.get("history_end_datetime"),
         "event_type_list": multi_query_params.get("event_type_list[]", []),
-        "device_list": [
-            json.loads(device_param)
-            for device_param in multi_query_params.get("device_list[]", [])
-        ],
+        "device_list": param_device_list,
         "sort": int(query_params.get("sort", "1")),
         "limit": int(query_params.get("limit", "50")),
     }
