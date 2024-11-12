@@ -1,5 +1,6 @@
 import json
 import traceback
+import re
 from datetime import datetime
 
 from aws_lambda_powertools import Logger
@@ -10,8 +11,19 @@ import db
 logger = Logger()
 
 
+def is_valid_uuidv4(uuid_string):
+    uuid_regex = re.compile(
+        r'^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\Z', re.I)
+    return bool(uuid_regex.match(uuid_string))
+
+
 def contains_device_id_and_last_hist_id(device_list):
-    return all("device_id" in device and "last_hist_id" in device for device in device_list)
+    return all(
+        "device_id" in device and "last_hist_id" in device and
+        (device["device_id"] == "" or is_valid_uuidv4(device["device_id"])) and
+        (device["last_hist_id"] == "" or is_valid_uuidv4(device["last_hist_id"]))
+        for device in device_list
+    )
 
 
 # パラメータチェック
@@ -72,7 +84,7 @@ def validate(event, user, account_table, user_table, contract_table, device_rela
     ):
         return {"message": "パラメータが不正です"}
 
-    if not contains_device_id(params["device_list"]):
+    if not contains_device_id_and_last_hist_id(params["device_list"]):
         return {"message": "パラメータが不正です"}
 
     if len(params["device_list"]) == 0:
