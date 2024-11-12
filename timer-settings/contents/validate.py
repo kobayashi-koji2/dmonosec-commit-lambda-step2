@@ -98,7 +98,6 @@ def input_check(param):
 
     # 項目存在チェック
     if (not "do_no" in param or 
-        not "do_timer_list" in param or 
         not "do_timer_name" in param or 
         not "do_time" in param or 
         not "do_weekday" in param or 
