@@ -427,9 +427,9 @@ def device_detect(detect_condition,keyword,device_info_list,device_group_relatio
             device_value = (
                 device_info.get("device_data").get("config").get("device_name")
                 if device_info.get("device_data").get("config").get("device_name")
-                else f"【{device_info.get('device_code')}】{device_info.get('sigfox_id')}（タグID）"
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id')}（タグID）"
                 if device_info.get("device_type") == "UnaTag"
-                else f"【{device_info.get('device_code')}】{device_info.get('imei')}（IMEI）"
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('imei')}（IMEI）"
             )
         elif detect_condition == 2:
             device_value = device_info.get("identification_id")
@@ -556,9 +556,9 @@ def device_detect_all(keyword,device_info_list):
         device_name = (
             device_info.get("device_data").get("config").get("device_name")
             if device_info.get("device_data").get("config").get("device_name")
-            else f"【{device_info.get('device_code')}】{device_info.get('sigfox_id')}（タグID）"
+            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id')}（タグID）"
             if device_info.get("device_type") == "UnaTag"
-            else f"【{device_info.get('device_code')}】{device_info.get('imei')}（IMEI）"
+            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('imei')}（IMEI）"
         )
         device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
