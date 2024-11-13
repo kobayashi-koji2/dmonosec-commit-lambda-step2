@@ -271,27 +271,15 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             "control_exec_user_name"
                         )
                         event_detail = f"""
-                            　【画面操作による制御（成功）】
-                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                            　※{control_exec_user_name}が操作を行いました。
+                            　【マニュアルコントロール(成功)】
+                            　{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　 ※{control_exec_user_name}が操作
                         """
                     elif hist_list_data.get("hist_data", {}).get("event_type") in [
                         "timer_control",
                         "on_timer_control",
                         "off_timer_control",
                     ]:
-                        if (
-                            hist_list_data.get("hist_data", {}).get("event_type")
-                            == "on_timer_control"
-                        ):
-                            control = "ON制御"
-                        elif (
-                            hist_list_data.get("hist_data", {}).get("event_type")
-                            == "off_timer_control"
-                        ):
-                            control = "OFF制御"
-                        else:
-                            control = ""
                         terminal_name = hist_list_data.get("hist_data", {}).get(
                             "terminal_name"
                         )
@@ -302,10 +290,11 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             "link_terminal_state_name"
                         )
                         timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                        do_timer_name = hist_list_data.get("hist_data", {}).get("do_timer_name")
                         event_detail = f"""
-                            　【タイマー設定による制御（成功）】
-                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                            　※タイマー設定「{control} {timer_time}」により制御信号を送信しました。
+                            　【スケジュール(成功)】
+                            　{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　 ※スケジュール「{do_timer_name} ／ {timer_time}」
                         """
                     else:
                         terminal_name = hist_list_data.get("hist_data", {}).get(
@@ -340,9 +329,9 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             automation_trigger_event_detail_flag,
                         )
                         event_detail = f"""
-                            　【連動設定による制御（成功）】
-                            　制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                            　※連動設定「{automation_trigger_device_name}、{event_label["event_type_label"]}、{event_label["event_detail_label"]}」により制御信号を送信しました。
+                            　【オートメーション(成功)】
+                            　{terminal_name}コントロールコマンドがデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
+                            　 ※オートメーション「{automation_trigger_device_name} ／ {event_label["event_type_label"]} ／ {event_label["event_detail_label"]}」
                         """
                     mail_send_flg = True
                 else:
@@ -357,15 +346,15 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                             timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
                             event_detail = f"""
-                                　【画面操作による制御（実施中）】
-                                　{terminal_name}の制御信号がデバイスに届きました。
-                                　※{control_exec_user_name}が操作を行いました。
+                                　【マニュアルコントロール(実施中)】
+                                　{terminal_name}のコントロールコマンドがデバイスに届きました。
+                                　 ※{control_exec_user_name}が操作
                             """
                         else:
                             event_detail = f"""
-                                　【画面操作による制御（成功）】
-                                　{terminal_name}の制御信号がデバイスに届きました。
-                                　※{control_exec_user_name}が操作を行いました。
+                                　【マニュアルコントロール(コマンド送信)】
+                                　{terminal_name}のコントロールコマンドがデバイスに届きました。
+                                　 ※{control_exec_user_name}が操作
                             """
                         mail_send_flg = True
                     elif hist_list_data.get("hist_data", {}).get("event_type") in [
@@ -376,18 +365,20 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         if hist_list_data.get("hist_data", {}).get("control_result") == "not_excuted_link":
                             terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                             timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                            do_timer_name = hist_list_data.get("hist_data", {}).get("do_timer_name")
                             event_detail = f"""
-                                　【タイマー設定による制御（実施中）】
-                                　制御信号（{terminal_name}）がデバイスに届きました。
-                                　※タイマー設定「{timer_time}」により制御信号を送信しました。
+                                　【スケジュール(実施中)】
+                                　{terminal_name}のコントロールコマンドがデバイスに届きました。
+                                　 ※スケジュール「{do_timer_name} ／ {timer_time}」
                             """
                         else:
                             terminal_name = hist_list_data.get("hist_data", {}).get("terminal_name")
                             timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
+                            do_timer_name = hist_list_data.get("hist_data", {}).get("do_timer_name")
                             event_detail = f"""
-                                　【タイマー設定による制御（成功）】
-                                　制御信号（{terminal_name}）がデバイスに届きました。
-                                　※タイマー設定「{timer_time}」により制御信号を送信しました。
+                                　【スケジュール(コマンド送信)】
+                                　{terminal_name}のコントロールコマンドがデバイスに届きました。
+                                　 ※スケジュール「{do_timer_name} ／ {timer_time}」
                             """
                         mail_send_flg = True
                     else:
@@ -416,15 +407,15 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         )
                         if hist_list_data.get("hist_data", {}).get("control_result") == "not_excuted_link":
                             event_detail = f"""
-                                　【連動設定による制御（実施中）】
-                                　制御信号（{terminal_name}）がデバイスに届きました。
-                                　※連動設定「{automation_trigger_device_name}、{event_label["event_type_label"]}、{event_label["event_detail_label"]}」により制御信号を送信しました。
+                                　【オートメーション(実施中)】
+                                　{terminal_name}コントロールコマンドがデバイスに届きました。
+                                　 ※オートメーション「{automation_trigger_device_name} ／ {event_label["event_type_label"]} ／ {event_label["event_detail_label"]}」
                             """
                         else:
                             event_detail = f"""
-                                　【連動設定による制御（成功）】
-                                　制御信号（{terminal_name}）がデバイスに届きました。
-                                　※連動設定「{automation_trigger_device_name}、{event_label["event_type_label"]}、{event_label["event_detail_label"]}」により制御信号を送信しました。
+                                　【オートメーション(コマンド送信)】
+                                　{terminal_name}コントロールコマンドがデバイスに届きました。
+                                　 ※オートメーション「{automation_trigger_device_name} ／ {event_label["event_type_label"]} ／ {event_label["event_detail_label"]}」
                             """
                         mail_send_flg = True
 

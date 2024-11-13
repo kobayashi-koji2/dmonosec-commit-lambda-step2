@@ -87,6 +87,7 @@ def lambda_handler(event, context):
 
             ### 2. 接点出力制御要求
             error_flg = False
+            reason = ""
             for device_info in device_info_list:
                 logger.info(f"--- device_info: {device_info}")
                 device_id = device_info.get("device_id")
@@ -116,6 +117,7 @@ def lambda_handler(event, context):
                     if result == 1:
                         error_flg, result = __register_hist_info(
                             "__check_return_di_state",
+                            reason,
                             device_info,
                             do_info,
                             di_list,
@@ -153,6 +155,7 @@ def lambda_handler(event, context):
                     if result == 1:
                         error_flg, result = __register_hist_info(
                             "__check_under_control",
+                            reason,
                             device_info,
                             do_info,
                             di_list,
@@ -264,6 +267,7 @@ def lambda_handler(event, context):
                                     "link_di_no": {"N": str(do_di_return)},
                                     "iccid": {"S": icc_id},
                                     "timer_time": {"S": do_info["do_timer"]["do_time"]},
+                                    "do_timer_name": {"S": do_info["do_timer"]["do_timer_name"]},
                                 },
                             }
                         }
@@ -372,6 +376,7 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
         要求番号テーブルへnum:0のレコードを作成する。
     """
     result = None
+    reason = ""
 
     # 最新制御情報取得
     remote_control_latest = ddb.get_remote_control_latest(
@@ -389,7 +394,8 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
             and not remote_control_latest.get("link_di_result")
         ):
             logger.info("Not processed because it was judged that it was already under control")
-            return True, 1
+            reason = remote_control_latest.get("control_trigger")
+            return True, 1, reason
 
     req_no_count_info = ddb.get_req_no_count_info(icc_id, req_no_counter_table)
     if req_no_count_info:
@@ -412,15 +418,16 @@ def __check_under_control(do_info, icc_id, device_id, req_no_counter_table, remo
         result = db.execute_transact_write_item(write_items)
         if not result:
             res_body = {"message": "要求番号カウンタ情報への書き込みに失敗しました。"}
-            return False, res_body
+            return False, res_body, reason
         result = do_info
         result["req_num"] = req_num
 
-    return True, result
+    return True, result, reason
 
 
 def __register_hist_info(
     flg,
+    reason,
     device_info,
     do_info,
     di_list,
@@ -475,6 +482,7 @@ def __register_hist_info(
     if notification_setting:
         notification_hist_id = __send_mail(
             flg,
+            reason,
             notification_setting[0],
             device_info,
             group_list,
@@ -529,7 +537,11 @@ def __register_hist_info(
         "notification_hist_id": notification_hist_id,
         "control_result": control_result,
         "timer_time": do_info["do_timer"]["do_time"],
+        "do_timer_name": do_info["do_timer"]["do_timer_name"],
     }
+
+    if flg == "__check_under_control":
+        hist_data["not_excuted_done_reason"] = reason
 
     if flg == "__check_return_di_state":
         if do_onoff_control == 0:
@@ -574,6 +586,7 @@ def __register_hist_info(
 
 def __send_mail(
     flg,
+    reason,
     notification_setting,
     device_info,
     group_list,
@@ -595,6 +608,7 @@ def __send_mail(
     group_name_list = [g["group_name"] for g in group_list]
     group_name = "、".join(group_name_list)
     do_timer = do_info["do_timer"]["do_time"]
+    do_timer_name = do_info["do_timer"]["do_timer_name"]
 
     # 接点出力名の設定
     do_name = do_info["do_name"]
@@ -611,17 +625,14 @@ def __send_mail(
 
     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
     if do_onoff_control == 0:
-        control_name = "ON制御 "
         di_state = link_terminal["di_on_name"]
         if not di_state:
             di_state = "クローズ"
     elif do_onoff_control == 1:
-        control_name = "OFF制御 "
         di_state = link_terminal["di_off_name"]
         if not di_state:
             di_state = "オープン"
     elif do_onoff_control == 9:
-        control_name = ""
         di_state = ""
 
     mail_to_list = []
@@ -634,17 +645,32 @@ def __send_mail(
     event_detail = ""
     if flg == "__check_return_di_state":
         event_detail = f"""
-            　【タイマー設定による制御（不実施）】
-            　{di_name}がすでに{di_state}のため、{do_name}の制御を行いませんでした。
-            　※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
+            　【スケジュール(不実施)】
+            　{di_name}がすでに{di_state}のため、{do_name}のコントロールを行いませんでした。
+            　 ※スケジュール「{do_timer_name} ／ {do_timer}」
         """
     elif flg == "__check_under_control":
-        event_detail = f"""
-            　【タイマーによる制御（不実施）】
-            　他のユーザー操作、タイマーまたは連動設定により、{do_name}を制御中でした。
-            　そのため、制御を行いませんでした。
-            　※タイマー設定「{control_name}{do_timer}」による制御信号を送信しませんでした。
-        """
+        if reason == "manual_control":
+            event_detail = f"""
+                　【スケジュール(不実施)】
+                　他のユーザー操作により、{do_name}をコントロール中でした。
+                　そのため、コントロールを行いませんでした。
+                　 ※スケジュール「{do_timer_name} ／ {do_timer}」
+            """
+        elif reason in ["timer_control", "on_timer_control", "off_timer_control"]:
+            event_detail = f"""
+                　【スケジュール(不実施)】
+                　スケジュールにより、{do_name}をコントロール中でした。
+                　そのため、コントロールを行いませんでした。
+                　 ※スケジュール「{do_timer_name} ／ {do_timer}」
+            """
+        else:
+            reason = f"""
+                　【スケジュール(不実施)】
+                　オートメーションにより、{do_name}をコントロール中でした。
+                　そのため、コントロールを行いませんでした。
+                　 ※スケジュール「{do_timer_name} ／ {do_timer}」
+            """
     event_detail = textwrap.dedent(event_detail)
 
     # メール送信

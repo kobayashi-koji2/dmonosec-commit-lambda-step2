@@ -196,6 +196,7 @@ def lambda_handler(event, context, user_info):
                 regist_result = __register_hist_info(
                     device_info,
                     do_no,
+                    remote_control_latest.get("control_trigger"),
                     user_name,
                     email_address,
                     user_table,
@@ -388,6 +389,7 @@ def lambda_handler(event, context, user_info):
 def __register_hist_info(
     device_info,
     do_no,
+    control_trigger,
     user_name,
     email_address,
     user_table,
@@ -469,6 +471,7 @@ def __register_hist_info(
             "control_exec_user_email_address": email_address,
             "notification_hist_id": notification_hist_id,
             "control_result": "not_excuted_done",
+            "not_excuted_done_reason": control_trigger,
         },
     }
     item = convert.dict_dynamo_format(item)

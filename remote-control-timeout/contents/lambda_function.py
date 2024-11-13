@@ -88,27 +88,15 @@ def send_mail(
     if not change_state_mail:
         if remote_control.get("control_trigger") == "manual_control":
             event_detail = f"""
-                　【画面操作による制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きませんでした。
-                　※{user_name}が操作を行いました。
+                　【マニュアルコントロール(失敗)】
+                　{do_name}のコントロールコマンドがデバイスに届かなかった可能性があります。
+                　 ※{user_name}が操作
             """
-        elif remote_control.get("control_trigger") == "timer_control":
+        elif remote_control.get("control_trigger") in ["timer_control", "on_timer_control", "off_timer_control"]:
             event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きませんでした。
-                　※タイマー設定「{remote_control.get("timer_time")}」により制御信号を送信しました。
-            """
-        elif remote_control.get("control_trigger") == "on_timer_control":
-            event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きませんでした。
-                　※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
-            """
-        elif remote_control.get("control_trigger") == "off_timer_control":
-            event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きませんでした。
-                　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【スケジュール(失敗)】
+                　{do_name}のコントロールコマンドがデバイスに届きませんでした。
+                　 ※スケジュール「{remote_control.get("do_timer_name")} ／ {remote_control.get("timer_time")}」
             """
         elif remote_control.get("control_trigger") in [
             "automation_control",
@@ -182,9 +170,9 @@ def send_mail(
                 else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}（IMEI）"
             )
             event_detail = f"""
-                　【連動制御による制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きませんでした。
-                　※連動設定「{trigger_device_name}、{trigger_event_type_name}、{trigger_event_detail_name}」により制御信号を送信しました。
+                　【オートメーション(失敗)】
+                　{do_name}コントロールコマンドがデバイスに届きませんでした。
+                　 ※オートメーション「{trigger_device_name} ／ {trigger_event_type_name} ／ {trigger_event_detail_name}」
             """
     else:
         di_no = remote_control.get("link_di_no")
@@ -199,27 +187,15 @@ def send_mail(
         di_name = di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
         if remote_control.get("control_trigger") == "manual_control":
             event_detail = f"""
-                　【画面操作による制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                　※{user_name}が操作を行いました。
+                　【マニュアルコントロール(失敗)】
+                　{do_name}のコントロールコマンドがデバイスに届きましたが、{di_name}が変化しませんでした。
+                　 ※{user_name}が操作
             """
-        elif remote_control.get("control_trigger") == "timer_control":
+        elif remote_control.get("control_trigger") in ["timer_control", "on_timer_control", "off_timer_control"]:
             event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                　※タイマー設定「{remote_control.get("timer_time")}」により制御信号を送信しました。
-            """
-        elif remote_control.get("control_trigger") == "on_timer_control":
-            event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                　※タイマー設定「ON制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
-            """
-        elif remote_control.get("control_trigger") == "off_timer_control":
-            event_detail = f"""
-                　【タイマーによる制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                　※タイマー設定「OFF制御 {remote_control.get("timer_time")}」により制御信号を送信しました。
+                　【スケジュール(失敗)】
+                　{do_name}のコントロールコマンドがデバイスに届きましたが、{di_name}が変化しませんでした。
+                　 ※スケジュール「{remote_control.get("do_timer_name")} ／ {remote_control.get("timer_time")}」
             """
         elif remote_control.get("control_trigger") in [
             "automation_control",
@@ -293,9 +269,9 @@ def send_mail(
                 else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}（IMEI）"
             )
             event_detail = f"""
-                　【連動制御による制御（失敗）】
-                　制御信号（{do_name}）がデバイスに届きましたが、{di_name}が変化しませんでした。
-                　※連動設定「{trigger_device_name}、{trigger_event_type_name}、{trigger_event_detail_name}」により制御信号を送信しました。
+                　【オートメーション(失敗)】
+                　{do_name}コントロールコマンドがデバイスに届きましたが、{di_name}が変化しませんでした。
+                　 ※オートメーション「{trigger_device_name} ／ {trigger_event_type_name} ／ {trigger_event_detail_name}」
             """
 
     mail_subject = "イベントが発生しました"

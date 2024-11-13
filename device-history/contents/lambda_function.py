@@ -105,7 +105,7 @@ def create_history_message(hist):
     elif hist["event_type"] == "power_on":
         msg = "【電源ON】\nデバイスの電源がONになりました。"
 
-    # 画面操作による制御
+    # マニュアルコントロール
     elif hist["event_type"] == "manual_control":
         terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
@@ -117,70 +117,85 @@ def create_history_message(hist):
             else hist.get("control_exec_user_email_address")
         )
         if not hist.get("link_terminal_no"):
-            if hist["control_result"] == "success" or hist["control_result"] == "failure":
-                msg = f"【画面操作による制御（成功）】\n{terminal_name}の制御信号がデバイスに届きました。\n※{control_exec_uer_name}が操作を行いました。"
+            if hist["control_result"] == "success" or hist["control_result"] == "failure" or hist["control_result"] == "not_excuted_link":
+                msg = f"【マニュアルコントロール(コマンド送信成功)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【画面操作による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※{control_exec_uer_name}が操作を行いました。"
-            elif hist["control_result"] == "timeout_status":
-                msg = f"【画面操作による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※{control_exec_uer_name}が操作を行いました。"
+                msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届かなかった可能性があります。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【画面操作による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中だったため、制御を行いませんでした。\n ※{control_exec_uer_name}が操作を行いました。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【マニュアルコントロール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【マニュアルコントロール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
+                else:
+                    msg = f"【マニュアルコントロール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_link":
-                msg = f"【画面操作による制御（実施中）】\n{terminal_name}の制御信号がデバイスに届きました。\n※{control_exec_uer_name}が操作を行いました。"
+                msg = f"【マニュアルコントロール(実施中)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※{control_exec_uer_name}が操作を行いました。"
+
         else:
             link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
             if hist["control_result"] == "success" or hist["control_result"] == "failure":
-                msg = f"【画面操作による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n※{control_exec_uer_name}が操作を行いました。"
+                msg = f"【マニュアルコントロール(成功)】\n{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "timeout_status":
-                msg = f"【画面操作による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※{control_exec_uer_name}が操作を行いました。"
+                msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【画面操作による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きせんでした。\n※{control_exec_uer_name}が操作を行いました。"
+                msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届かなかった可能性があります。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【画面操作による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中だったため、制御を行いませんでした。\n ※{control_exec_uer_name}が操作を行いました。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【マニュアルコントロール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【マニュアルコントロール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
+                else:
+                    msg = f"【マニュアルコントロール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
 
-    # タイマー設定による制御
+    # スケジュールコントロール
     elif hist["event_type"] in ["timer_control", "on_timer_control", "off_timer_control"]:
-        on_off = ""
-        if hist["event_type"] == "on_timer_control":
-            on_off = "ON制御　"
-        elif hist["event_type"] == "off_timer_control":
-            on_off = "OFF制御　"
         terminal_name = hist.get("terminal_name")
+        do_timer_name = hist.get("do_timer_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
         if not terminal_name:
             terminal_name = "接点出力" + str(hist.get("terminal_no", ""))
         if not hist.get("link_terminal_no"):
             if hist["control_result"] == "success" or hist["control_result"] == "failure":
-                msg = f"【タイマー設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届きました。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュールコントロール(コマンド送信)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【スケジュール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【スケジュール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                else:
+                    msg = f"【スケジュール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_link":
-                msg = f"【タイマー設定による制御（実施中）】\n{terminal_name}の制御信号がデバイスに届きました。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュール(実施中)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
         else:
             link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
             if hist["control_result"] == "success" or hist["control_result"] == "failure":
-                msg = f"【タイマー設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュール(成功)】\n{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "timeout_status":
-                msg = f"【タイマー設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」により制御信号を送信しました。"
+                msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【タイマー設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。そのため、制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【スケジュール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【スケジュール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                else:
+                    msg = f"【スケジュール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif (
                 hist["control_result"] == "not_excuted_on"
                 or hist["control_result"] == "not_excuted_off"
             ):
-                msg = f"【タイマー設定による制御（不実施）】\n{link_terminal_name}が既に{hist.get("link_terminal_state_name")}のため、{terminal_name}の制御を行いませんでした。\n※タイマー設定「{on_off}{hist.get("timer_time")}」による制御信号を送信しませんでした。"
+                msg = f"【スケジュール(不実施)】\n{link_terminal_name}が既に{hist.get("link_terminal_state_name")}のため、{terminal_name}のコントロールを行いませんでした。\n ※スケジュール「{hist.get("link_terminal_state_name")}コントロール ／ {hist.get("timer_time")}」"
 
-    # 連動設定による制御（Ph2）
+    # オートメーションコントロール（Ph2）
     elif hist["event_type"] in ["automation_control", "on_automation_control", "off_automation_control"]:
         terminal_name = hist.get("terminal_name")
         # 接点名称のキー存在するが空文字の場合、接点名称を設定
@@ -192,13 +207,18 @@ def create_history_message(hist):
         event_type_label, event_detail_label = automation_setting(hist)
         if not hist.get("link_terminal_no"):
             if hist["control_result"] in ["success", "falure"]:
-                msg = f"【連動設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届きました。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーションコントロール(コマンド送信)】\n{terminal_name}コントロールコマンドがデバイスに届きました。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【連動設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーション(失敗)】\n{terminal_name}コントロールコマンドがデバイスに届かなかった可能性があります。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【連動設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。\nそのため、制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【オートメーション(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【オートメーション(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
+                else:
+                    msg = f"【オートメーション(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted_link":
-                msg = f"【連動設定による制御（実施中）】\n制御信号（{terminal_name}）がデバイスに届きました。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーション(実施中)】\n{terminal_name}コントロールコマンドがデバイスに届きました。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
         else:
             link_terminal_name = hist.get("link_terminal_name")
             # 接点名称のキー存在するが空文字の場合、接点名称を設定
@@ -206,15 +226,20 @@ def create_history_message(hist):
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
             link_terminal_state_name = hist["link_terminal_state_name"]
             if hist["control_result"] in ["success", "falure"]:
-                msg = f"【連動設定による制御（成功）】\n制御信号（{terminal_name}）がデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーション(成功)】\n{terminal_name}コントロールコマンドがデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "timeout_status":
-                msg = f"【連動設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーション(失敗)】\n{terminal_name}コントロールコマンドがデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【連動設定による制御（失敗）】\n制御信号（{terminal_name}）がデバイスに届きませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しました。"
+                msg = f"【オートメーション(失敗)】\n{terminal_name}コントロールコマンドがデバイスに届きませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted_done":
-                msg = f"【連動設定による制御（不実施）】\n他のユーザー操作、タイマーまたは連動設定により、{terminal_name}を制御中でした。\nそのため、制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
+                if hist["not_excuted_done_reason"] == "manual_control": 
+                    msg = f"【オートメーション(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
+                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    msg = f"【オートメーション(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
+                else:
+                    msg = f"【オートメーション(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted":
-                msg = f"【連動設定による制御（不実施）】\n{link_terminal_name}が既に{link_terminal_state_name}のため、{terminal_name}の制御を行いませんでした。\n※連動設定「{device_name}、{event_type_label}、{event_detail_label}」により制御信号を送信しませんでした。"
+                msg = f"【オートメーション(不実施)】\n{link_terminal_name}が既に{link_terminal_state_name}のため、{terminal_name}のコントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
     
     # カスタムイベント履歴取得
     elif hist["event_type"] in ["custom_datetime", "custom_timer"]:

@@ -89,6 +89,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
 
     result = True
     for automation in automation_list:
+        control_trigger = ""
         logger.info(f"automation: {automation}")
         # 制御対象デバイス情報取得
         control_device = db.get_device_info_other_than_unavailable(
@@ -153,6 +154,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                     user_table,
                     notification_hist_table,
                     "link_di_state",
+                    control_trigger,
                 )
 
                 # 履歴一覧登録
@@ -165,6 +167,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                     control_do,
                     notification_hist_id,
                     "not_excuted",
+                    control_trigger,
                     hist_list_table,
                 )
 
@@ -173,6 +176,11 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 continue
 
         # 制御中判定
+        # 最新制御情報を確認
+        remote_control_latest = _get_remote_control_latest(
+            control_device.get("device_id"), control_do.get("do_no"), remote_controls_table
+        )
+        control_trigger = remote_control_latest.get("control_trigger")
         # 制御状況を追加（同時処理の排他制御）
         if control_do.get("do_di_return"):
             # 紐づけありの場合は、30秒後に制御状況を自動削除
@@ -198,6 +206,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 user_table,
                 notification_hist_table,
                 "control_status",
+                control_trigger,
             )
 
             # 履歴一覧登録
@@ -210,6 +219,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                 control_do,
                 notification_hist_id,
                 "not_excuted_done",
+                control_trigger,
                 hist_list_table,
             )
 
@@ -217,10 +227,6 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
             result = False
             continue
 
-        # 最新制御情報を確認
-        remote_control_latest = _get_remote_control_latest(
-            control_device.get("device_id"), control_do.get("do_no"), remote_controls_table
-        )
         if len(remote_control_latest) > 0:
             remote_control_latest = remote_control_latest[0]
             link_di_no = remote_control_latest.get("link_di_no")
@@ -245,6 +251,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                     user_table,
                     notification_hist_table,
                     "control_status",
+                    control_trigger,
                 )
 
                 # 履歴一覧登録
@@ -257,6 +264,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
                     control_do,
                     notification_hist_id,
                     "not_excuted_done",
+                    control_trigger,
                     hist_list_table,
                 )
 
@@ -395,6 +403,7 @@ def _put_hist_list(
     control_do,
     notification_hist_id,
     control_result,
+    control_trigger,
     hist_list_table,
 ):
     event_datetime_ms = int(time.mktime(event_datetime.timetuple()) * 1000) + int(
@@ -460,6 +469,8 @@ def _put_hist_list(
             "control_result": control_result,
         },
     }
+    if control_result == "not_excuted_done":
+        hist_list_item["hist_data"]["not_excuted_done_reason"] = control_trigger
     hist_list_table.put_item(Item=hist_list_item)
 
 
@@ -474,6 +485,7 @@ def _send_not_exec_mail(
     user_table,
     notification_hist_table,
     mail_type,
+    control_trigger,
 ):
     # 制御対象デバイスの通知設定を取得
     notification_setting = [
@@ -607,26 +619,57 @@ def _send_not_exec_mail(
                     　デバイス：{control_device_name}
 
                     ■イベント内容
-                    　【連動設定による制御（不実施）】
-                    　{di_name}がすでに{di_state_name}のため、{do_name}の制御を行いませんでした。
-                    　※連動設定「{trigger_device_name}、{event_type_name}、{event_detail_name}」による制御信号を送信しませんでした。
+                    　【オートメーション(不実施)】
+                    　{di_name}がすでに{di_state_name}のため、{do_name}のコントロールを行いませんでした。
+                    　 ※オートメーション「{trigger_device_name} ／ {event_type_name} ／ {event_detail_name}」
                 """
                 ).strip()
             elif mail_type == "control_status":
-                mail_body = textwrap.dedent(
-                    f"""\
-                    ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
+                if control_trigger == "manual_control":
+                    mail_body = textwrap.dedent(
+                        f"""\
+                        ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
 
-                    ■グループ：{group_name}
-                    　デバイス：{control_device_name}
+                        ■グループ：{group_name}
+                        　デバイス：{control_device_name}
 
-                    ■イベント内容
-                    　【連動設定による制御（不実施）】
-                    　他のユーザー操作、タイマーまたは連動により、{do_name}を制御中でした。
-                    　そのため、制御を行いませんでした。
-                    　※連動設定「{trigger_device_name}、{event_type_name}、{event_detail_name}」による制御信号を送信しませんでした。
-                """
-                ).strip()
+                        ■イベント内容
+                        　【オートメーション(不実施)】
+                        　他のユーザー操作により、{do_name}をコントロール中でした。
+                        　そのため、コントロールを行いませんでした。
+                        　 ※オートメーション「{trigger_device_name} ／ {event_type_name} ／ {event_detail_name}」
+                    """
+                    ).strip()
+                elif control_trigger in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    mail_body = textwrap.dedent(
+                        f"""\
+                        ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
+
+                        ■グループ：{group_name}
+                        　デバイス：{control_device_name}
+
+                        ■イベント内容
+                        　【オートメーション(不実施)】
+                        　スケジュールにより、{do_name}をコントロール中でした。
+                        　そのため、コントロールを行いませんでした。
+                        　 ※オートメーション「{trigger_device_name} ／ {event_type_name} ／ {event_detail_name}」
+                    """
+                    ).strip()
+                else:
+                    mail_body = textwrap.dedent(
+                        f"""\
+                        ■発生日時：{event_datetime_jst.strftime('%Y/%m/%d %H:%M:%S')}
+
+                        ■グループ：{group_name}
+                        　デバイス：{control_device_name}
+
+                        ■イベント内容
+                        　【オートメーション(不実施)】
+                        　オートメーションにより、{do_name}をコントロール中でした。
+                        　そのため、コントロールを行いませんでした。
+                        　 ※オートメーション「{trigger_device_name} ／ {event_type_name} ／ {event_detail_name}」
+                    """
+                    ).strip()
 
             # メール送信
             mail.send_email(

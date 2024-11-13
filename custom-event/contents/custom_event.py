@@ -78,6 +78,8 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                     else:
                         logger.debug(f"event_datetimeなし")
                         continue
+                else:
+                    event_hpn_datetime = now_unixtime
 
                 now = datetime.now()
                 event_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)

@@ -88,12 +88,14 @@ def lambda_handler(event, context, user_info, identification_id):
             if device_type == "UnaTag":
                 result = {
                     "device_id": device_info["device_id"],
+                    "device_code": device_info["device_data"]["param"]["device_code"],
                     "device_name": device_info["device_data"]["config"]["device_name"],
                     "device_sigfox_id": device_info["sigfox_id"],
                 }
             else:
                 result = {
                     "device_id": device_info["device_id"],
+                    "device_code": device_info["device_data"]["param"]["device_code"],
                     "device_name": device_info["device_data"]["config"]["device_name"],
                     "device_imei": device_info["imei"],
                 }
