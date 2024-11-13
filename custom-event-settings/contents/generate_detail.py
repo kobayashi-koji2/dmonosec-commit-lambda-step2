@@ -175,8 +175,15 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                             di_list = {
                                 "di_no": device_state_custom_event_di["di_no"],
                                 "di_state": device_state_custom_event_di["di_state"],
-                                "event_judge_datetime":device_state_custom_event_di["event_judge_datetime"],
                             }
+                            if "event_judge_datetime" in device_state_custom_event_di:
+                                di_list["event_judge_datetime"] = device_state_custom_event_di["event_judge_datetime"]
+                            if "event_datetime" in device_state_custom_event_di:
+                                di_list["event_datetime"] = device_state_custom_event_di["event_datetime"]
+                            if "event_hpn_datetime" in device_state_custom_event_di:
+                                di_list["event_hpn_datetime"] = device_state_custom_event_di["event_hpn_datetime"]
+                            if "delay_flag" in device_state_custom_event_di:
+                                di_list["delay_flag"] = device_state_custom_event_di["delay_flag"]
                             di_event_list.append(di_list)
                         device_state_put_item = {
                             "custom_event_id": custom_event_info["custom_event_id"],
@@ -194,12 +201,20 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                                 }
                             else:
                                 event_datetime = device_state_custom_event_di["event_judge_datetime"] + custom_event_info["elapsed_time"] * 60 * 1000
+                                if device_state_custom_event_di.get("message_type") in ["0011", "0012"]:
+                                    # 現状態通知（電源ON、定時送信）
+                                    event_hpn_datetime = device_state_custom_event_di["event_hpn_datetime"]
+                                else:
+                                    # 状態変化通知
+                                    event_hpn_datetime = event_datetime
                                 logger.info(event_datetime)
                                 di_list = {
                                     "di_no": device_state_custom_event_di["di_no"],
                                     "di_state": device_state_custom_event_di["di_state"],
                                     "event_judge_datetime": device_state_custom_event_di["event_judge_datetime"],
                                     "event_datetime": event_datetime,
+                                    "event_hpn_datetime": event_hpn_datetime,
+                                    "delay_flag": device_state_custom_event_di["delay_flag"],
                                 }
                             di_event_list.append(di_list)
                         device_state_put_item = {

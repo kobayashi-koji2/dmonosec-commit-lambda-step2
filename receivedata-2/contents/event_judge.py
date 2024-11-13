@@ -395,6 +395,7 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
                             di_event["delay_flag"] = 1
                         else:
                             di_event["event_datetime"] = event_datetime + elapsed_time
+                            di_event["message_type"] = recv_data.get("message_type")
                             if recv_data.get("message_type") in ["0011", "0012"]:
                                 # 現状態通知（電源ON、定時送信）
                                 di_event["event_hpn_datetime"] = event_datetime
