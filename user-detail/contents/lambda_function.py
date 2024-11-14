@@ -69,6 +69,7 @@ def lambda_handler(event, context, user):
 
         group_id_list = db.get_user_relation_group_id_list(user_id, device_relation_table)
         group_list = []
+        device_list = []
         for group_id in group_id_list:
             group_info = db.get_group_info(group_id, group_table)
             logger.info(group_info)
@@ -80,13 +81,29 @@ def lambda_handler(event, context, user):
                     .get("group_name"),
                 }
             )
+
+            group_device_id_list = db.get_group_relation_device_id_list(group_id, device_relation_table)
+            for group_device_id in group_device_id_list:
+                logger.info(device_id)
+                device_info = db.get_device_info_other_than_unavailable(group_device_id, device_table)
+                logger.info(device_info)
+                if not device_info:
+                    continue
+                device_list.append(
+                    {
+                        "device_id": device_id,
+                        "device_name": device_info.get("device_data", {})
+                        .get("config", {})
+                        .get("device_name", {}),
+                    }
+                )
+
         if group_list:
             group_list = sorted(group_list, key=lambda x:x['group_name'])
 
         device_id_list = db.get_user_relation_device_id_list(
             user_id, device_relation_table, include_group_relation=False
         )
-        device_list = []
         for device_id in device_id_list:
             device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
             if device_info is not None:
@@ -98,6 +115,9 @@ def lambda_handler(event, context, user):
                         .get("device_name"),
                     }
                 )
+
+        unique_devices = {device['device_id']: device for device in device_list}
+        device_list = list(unique_devices.values())
 
         res_body = {
             "message": "",

@@ -65,16 +65,7 @@ def lambda_handler(event, context):
                 return -1
 
             # 対象デバイス取得
-            device_list = []
-            if event_trigger in ["lambda-receivedata-2", "lambda-unaconnect-receivedata"]:
-                healthy_datetime = event_datetime
-
-                # デバイスIDをキーにデバイス情報取得
-                device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
-                if device_info is not None:
-                    device_list.append(device_info)
-
-            elif event_trigger == "lambda-device-healthy-check-trigger":
+            if event_trigger == "lambda-device-healthy-check-trigger":
                 healthy_datetime = now_datetime
 
                 # 契約IDをキーにデバイス情報取得
@@ -118,13 +109,13 @@ def lambda_handler(event, context):
                 update_digit = 0b0000
 
                 # デバイスヘルシーチェック
-                if (event_trigger in ["lambda-receivedata-2", "lambda-unaconnect-receivedata"] and event_type == "device_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
+                if event_trigger == "lambda-device-healthy-check-trigger":
                     device_current_state, hist_list_items = device_healthy(device_info, now_datetime, device_current_state, hist_list_items, healthy_datetime, group_list)
                     if hist_list_items:
                         update_digit |= 0b0001
 
                 # DIヘルシーチェック
-                if (event_trigger == "lambda-receivedata-2" and event_type == "di_unhealthy") or (event_trigger == "lambda-device-healthy-check-trigger"):
+                if event_trigger == "lambda-device-healthy-check-trigger":
                     device_current_state, hist_list_items = di_healthy(device_info, di_no, device_current_state, hist_list_items, now_datetime, healthy_datetime, event_trigger, group_list)
                     if hist_list_items:
                         update_digit |= 0b0010

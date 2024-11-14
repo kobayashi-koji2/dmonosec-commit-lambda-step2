@@ -419,6 +419,27 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             """
                         mail_send_flg = True
 
+            # デバイスヘルシー 通知設定判定
+            elif hist_list_data.get('hist_data', {}).get('event_type') == "device_unhealthy" and \
+                notification_settings.get('event_trigger') == "device_change" and\
+                notification_settings.get('event_type') == "device_unhealthy":
+                event_detail = f"""
+                    　【信号未受信異常（復旧）】
+                    　デバイスから信号を受信しました。
+                """
+                mail_send_flg = True
+
+            elif hist_list_data.get('hist_data', {}).get('event_type') == "di_unhealthy" and \
+                notification_settings.get('event_trigger') == "di_change" and\
+                notification_settings.get('terminal_no') == hist_list_data.get('hist_data', {}).get('terminal_no') and\
+                notification_settings.get('change_detail') == 2:
+                terminal_name = hist_list_data.get('hist_data', {}).get('terminal_name')
+                event_detail = f"""
+                    　【接点入力未変化検出（復旧）】
+                    　{terminal_name}の変化信号を受信しました。
+                """
+                mail_send_flg = True
+
             # メール通知
             if mail_send_flg:
                 mail_address_list = ddb.get_notice_mailaddress(

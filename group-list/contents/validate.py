@@ -1,6 +1,7 @@
 import json
 import boto3
 import traceback
+import db
 
 from aws_lambda_powertools import Logger
 
@@ -9,18 +10,8 @@ logger = Logger()
 
 
 # パラメータチェック
-def validate(event, user):
-    operation_auth = operation_auth_check(user)
-    if not operation_auth:
-        return {"message": "グループの操作権限がありません。"}
-
+def validate(event, user, contract_table):
+    contract_info = db.get_contract_info(user["contract_id"], contract_table)
+    if not contract_info:
+        return {"message": "アカウント情報が存在しません。"}
     return {}
-
-
-# 操作権限チェック
-def operation_auth_check(user):
-    user_type = user["user_type"]
-    logger.debug(f"権限:{user_type}")
-    if user_type == "admin" or user_type == "sub_admin":
-        return True
-    return False

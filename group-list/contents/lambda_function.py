@@ -45,7 +45,7 @@ def lambda_handler(event, context, user):
             }
 
         # パラメータチェック
-        validate_result = validate.validate(event, user)
+        validate_result = validate.validate(event, user, contract_table)
         if validate_result.get("message"):
             return {
                 "statusCode": 400,
@@ -70,8 +70,32 @@ def lambda_handler(event, context, user):
                     if query_param_unregistered_device_sort_flag.isdecimal():
                         unregistered_device_sort_flag = int(query_param_unregistered_device_sort_flag)                
 
-            contract_info = db.get_contract_info(user["contract_id"], contract_table)
-            for group_id in contract_info.get("contract_data", {}).get("group_list", {}):
+            if user["user_type"] == "admin" or user["user_type"] == "sub_admin":
+                contract_info = db.get_contract_info(user["contract_id"], contract_table)
+                if not contract_info:
+                    res_body = {"message": "契約情報が存在しません。"}
+                    return {
+                        "statusCode": 500,
+                        "headers": res_headers,
+                        "body": json.dumps(res_body, ensure_ascii=False),
+                    }
+                group_id_list = contract_info.get("contract_data", {}).get("group_list", [])
+
+            elif user["user_type"] == "worker" or user["user_type"] == "referrer":
+                group_id_list = db.get_user_relation_group_id_list(
+                    user["user_id"], device_relation_table
+                )
+
+            else:
+                res_body = {"message": "不正なユーザです。"}
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
+            logger.info(f"グループID:{group_id_list}")
+
+            for group_id in group_id_list:
                 group_info = db.get_group_info(group_id, group_table)
                 unregistered_device_id_list = db.get_group_relation_pre_register_device_id_list(group_id, device_relation_table)
                 if len(unregistered_device_id_list) >= 1:

@@ -1,6 +1,7 @@
 import os
 import ddb
 import uuid
+import time
 from datetime import datetime
 from dateutil import relativedelta
 from aws_lambda_powertools import Logger
@@ -240,6 +241,34 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 hist_list_data["hist_data"]["automation_trigger_event_detail_flag"] = (
                     event_info.get("automation_trigger_event_detail_flag")
                 )
+
+    elif event_info.get("event_type") == "device_unhealthy":
+        hist_list_data["hist_data"]["device_healthy_period"] = event_info.get("device_healthy_period")
+        hist_list_data["hist_data"]["occurrence_flag"] = event_info.get("device_healthy_state")
+
+    elif event_info.get("event_type") == "di_unhealthy":
+        terminal_no = event_info.get("terminal_no")
+        for di_list in (
+            device_info.get("device_data", {})
+            .get("config", {})
+            .get("terminal_settings", {})
+            .get("di_list", [])
+        ):
+            if int(di_list.get("di_no")) == int(terminal_no):
+                terminal_name = di_list.get("di_name", f"接点入力{terminal_no}")
+                if event_info.get("di_state") == 0:
+                    terminal_state_name = di_list.get("di_on_name", "クローズ")
+                else:
+                    terminal_state_name = di_list.get("di_off_name", "オープン")
+                di_healthy_period = di_list.get("di_healthy_period", 0)
+                di_healthy_type = di_list.get("di_healthy_type")
+                break
+        hist_list_data["hist_data"]["terminal_no"] = terminal_no
+        hist_list_data["hist_data"]["terminal_name"] = terminal_name
+        hist_list_data["hist_data"]["di_healthy_type"] = di_healthy_type
+        hist_list_data["hist_data"]["di_healthy_period"] = di_healthy_period
+        hist_list_data["hist_data"]["occurrence_flag"] = event_info.get("device_healthy_state")
+
     return hist_list_data
 
 
@@ -443,6 +472,16 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
     elif event_info.get("event_type") == "signal_state":
         current_state_info["signal_state"] = event_info.get("signal_state")
         current_state_info["signal_last_change_datetime"] = event_datetime
+
+    # デバイスヘルシー
+    elif event_info.get("event_type") == "device_unhealthy":
+        current_state_info["device_healthy_state"] = 0
+
+    # 接点入力未変化
+    elif event_info.get("event_type") == "di_unhealthy":
+        di_no = event_info["di_no"]
+        current_di_healthy_state = f"di{di_no}_healthy_state"
+        current_state_info[current_di_healthy_state] = 0
 
     return current_state_info
 
@@ -832,5 +871,54 @@ def eventJudge(
                     remote_control_info.get("req_datetime"),
                     remote_control_table,
                 )
+
+    # デバイスヘルシー判定
+    if (current_state_info.get("device_healthy_state") == 1 and
+        current_state_info.get("device_abnormality_last_update_datetime") !=
+        device_current_state.get("device_abnormality_last_update_datetime")):
+
+        now = datetime.now()
+        now_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+        event_info = {}
+        event_info["event_datetime"] = now_datetime
+        event_info["event_type"] = "device_unhealthy"
+        event_info["device_healthy_period"] = device_info.get("device_data", {}).get("config", {}).get("device_healthy_period", 0)
+        event_info["device_healthy_state"] = 0
+        event_info["recv_datetime"] = recv_data.get("recv_datetime")
+
+        hist_list_data = createHistListData(
+            recv_data, device_info, event_info, device_relation_table, group_table
+        )
+        hist_list.append(hist_list_data)
+        current_state_info = updateCurrentStateInfo(
+            current_state_info, event_info, event_datetime, recv_data
+        )
+
+
+    # 接点入力未変化判定
+    di_range = 2 if recv_data.get("device_type") == "PJ1" else 9
+    for i in range(1, di_range):
+        di_healthy_state_key = f"di{i}_healthy_state"
+        di_healthy_state = current_state_info.get(di_healthy_state_key)
+        di_last_change_datetime = f"di{i}_last_change_datetime"
+        if di_healthy_state == 1 and current_state_info.get(
+            di_last_change_datetime
+        ) != device_current_state.get(di_last_change_datetime):
+            now = datetime.now()
+            now_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+            event_info = {}
+            event_info["event_datetime"] = now_datetime
+            event_info["event_type"] = "di_unhealthy"
+            event_info["di_no"] = i
+            event_info["di_healthy_state"] = 0
+            event_info["recv_datetime"] = recv_data.get("recv_datetime")
+
+            hist_list_data = createHistListData(
+                recv_data, device_info, event_info, device_relation_table, group_table
+            )
+            hist_list.append(hist_list_data)
+            current_state_info = updateCurrentStateInfo(
+                current_state_info, event_info, event_datetime, recv_data
+            )
 
     return hist_list, current_state_info

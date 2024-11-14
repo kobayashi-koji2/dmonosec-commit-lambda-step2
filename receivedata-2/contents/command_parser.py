@@ -1,9 +1,5 @@
 import os
-import re
 import ddb
-import json
-import boto3
-import logging
 import uuid
 from datetime import datetime
 from dateutil import relativedelta
@@ -11,8 +7,6 @@ from event_judge import eventJudge
 from mail_notice import mailNotice
 from automation_trigger import automationTrigger
 from aws_lambda_powertools import Logger
-
-sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 
 logger = Logger()
 
@@ -264,45 +258,17 @@ def commandParser(
 
         # 現状態テーブル
         if hist_flg:
-            logger.debug(f"現状態テーブル dbItem={current_state_info}")
-            ddb.update_current_state(current_state_info, device_info, state_table)
-
-            # デバイスヘルシー判定
-            queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
-            if current_state_info.get(
-                "device_healthy_state"
-            ) == 1 and current_state_info.get(
-                "device_abnormality_last_update_datetime"
-            ) != device_current_state.get(
-                "device_abnormality_last_update_datetime"
-            ):
-                body = {
-                    "event_trigger": "lambda-receivedata-2",
-                    "event_type": "device_unhealthy",
-                    "event_datetime": szRecvDatetime,
-                    "device_id": device_id,
-                }
-
-                queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
-
-            # 接点入力未変化判定
+            # 現状態更新タイプ
+            update_digit = 0b0000
+            if current_state_info.get("device_healthy_state") != device_current_state.get("device_healthy_state"):
+                update_digit |= 0b0001
             di_range = 2 if szDeviceType == "PJ1" else 9
             for i in range(1, di_range):
                 di_healthy_state_key = f"di{i}_healthy_state"
-                di_healthy_state = current_state_info.get(di_healthy_state_key)
-                di_last_change_datetime = f"di{i}_last_change_datetime"
-                if di_healthy_state == 1 and current_state_info.get(
-                    di_last_change_datetime
-                ) != device_current_state.get(di_last_change_datetime):
-                    body = {
-                        "event_trigger": "lambda-receivedata-2",
-                        "event_type": "di_unhealthy",
-                        "event_datetime": szRecvDatetime,
-                        "device_id": device_id,
-                        "di_no": i,
-                    }
-
-                    queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
+                if current_state_info.get(di_healthy_state_key) != device_current_state.get(di_healthy_state_key):
+                    update_digit |= 0b0010
+            logger.debug(f"現状態テーブル dbItem={current_state_info}")
+            ddb.update_current_state(current_state_info, device_info, update_digit, state_table)
 
         if hist_list:
             # 連動制御呼び出し
