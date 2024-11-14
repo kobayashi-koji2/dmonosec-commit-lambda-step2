@@ -391,8 +391,8 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
                      (di_event.get("di_state") == 2)):
                         di_event["event_judge_datetime"] = event_datetime
                         if event_datetime + elapsed_time < recv_datetime:
-                            # カスタムイベント判定日時が受信日時よりも過去の場合、受信日時の30分後を設定
-                            di_event["event_datetime"] = recv_datetime + 30 * 60 * 1000
+                            # カスタムイベント判定日時が受信日時よりも過去の場合、受信日時の3分後を設定
+                            di_event["event_datetime"] = recv_datetime + 3 * 60 * 1000
                             di_event["event_hpn_datetime"] = event_datetime + elapsed_time
                             di_event["delay_flag"] = 1
                         else:
