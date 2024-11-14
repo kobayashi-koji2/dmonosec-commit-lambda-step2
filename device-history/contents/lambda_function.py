@@ -122,9 +122,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_response":
                 msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届かなかった可能性があります。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【マニュアルコントロール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【マニュアルコントロール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
                 else:
                     msg = f"【マニュアルコントロール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
@@ -143,9 +143,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_response":
                 msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届かなかった可能性があります。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【マニュアルコントロール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【マニュアルコントロール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
                 else:
                     msg = f"【マニュアルコントロール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中だったため、コントロールを行いませんでした。\n ※{control_exec_uer_name}が操作"
@@ -163,9 +163,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_response":
                 msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【スケジュール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【スケジュール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
                 else:
                     msg = f"【スケジュール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
@@ -183,9 +183,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_status":
                 msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【スケジュール(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【スケジュール(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
                 else:
                     msg = f"【スケジュール(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
@@ -211,9 +211,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_response":
                 msg = f"【オートメーション(失敗)】\n{terminal_name}コントロールコマンドがデバイスに届かなかった可能性があります。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【オートメーション(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【オートメーション(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
                 else:
                     msg = f"【オートメーション(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
@@ -232,9 +232,9 @@ def create_history_message(hist):
             elif hist["control_result"] == "timeout_response":
                 msg = f"【オートメーション(失敗)】\n{terminal_name}コントロールコマンドがデバイスに届きませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
             elif hist["control_result"] == "not_excuted_done":
-                if hist["not_excuted_done_reason"] == "manual_control": 
+                if hist.get("not_excuted_done_reason") == "manual_control": 
                     msg = f"【オートメーション(不実施)】\n他のユーザー操作により、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
-                elif hist["not_excuted_done_reason"] in ["timer_control", "on_timer_control", "off_timer_control"]:
+                elif hist.get("not_excuted_done_reason") in ["timer_control", "on_timer_control", "off_timer_control"]:
                     msg = f"【オートメーション(不実施)】\nスケジュールにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"
                 else:
                     msg = f"【オートメーション(不実施)】\nオートメーションにより、{terminal_name}をコントロール中でした。\nそのため、コントロールを行いませんでした。\n ※オートメーション「{device_name} ／ {event_type_label} ／ {event_detail_label}」"

@@ -140,7 +140,7 @@ def lambda_handler(event, context):
                     checked_di_state_info = result
 
                     # 制御中判定
-                    error_flg, result = __check_under_control(
+                    error_flg, result, reason = __check_under_control(
                         checked_di_state_info,
                         icc_id,
                         device_id,
