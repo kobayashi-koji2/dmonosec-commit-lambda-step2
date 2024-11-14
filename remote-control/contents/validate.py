@@ -1,4 +1,5 @@
 import re
+import json
 
 from aws_lambda_powertools import Logger
 
@@ -38,8 +39,14 @@ def validate(event, user_info, account_table):
     if not re.compile(r"^[a-zA-Z0-9]+$").match(path_params["do_no"]):
         return {"message": "不正な接点出力端子番号が指定されています。"}
 
+    body = event.get("body", {})
+    body = json.loads(body)
+    if "do_control" not in body or "do_specified_time" not in body or "do_di_return" not in body:
+        return {"message": "リクエストパラメータが不正です。"}
+
     return {
         "path_params": path_params,
+        "body": body,
         "account_info": account_info,
     }
 

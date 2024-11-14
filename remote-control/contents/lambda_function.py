@@ -86,6 +86,9 @@ def lambda_handler(event, context, user_info):
         email_address = val_result["account_info"]["email_address"]
         device_id = val_result["path_params"]["device_id"]
         do_no = int(val_result["path_params"]["do_no"])
+        do_control = val_result["body"]["do_control"]
+        do_specified_time = val_result["body"]["do_specified_time"]
+        do_di_return = val_result["body"]["do_di_return"]
 
         ### 2. デバイス捜査権限チェック（共通）
         # デバイスID一覧取得
@@ -134,6 +137,18 @@ def lambda_handler(event, context, user_info):
             if do_item.get("do_no") == do_no:
                 if do_item.get("do_flag") == 0:
                     res_body = {"message": "制御不可の端子に対する操作はできません"}
+                    return {
+                        "statusCode": 400,
+                        "headers": res_headers,
+                        "body": json.dumps(res_body, ensure_ascii=False),
+                    }
+                if not (do_item.get("do_control") == do_control and
+                        do_item.get("do_specified_time") == do_specified_time and
+                        do_item.get("do_di_return") == do_di_return):
+                    res_body = {
+                        "message": "コントロール設定が変更されたため、実施しませんでした。",
+                        "error_flag": 1
+                    }
                     return {
                         "statusCode": 400,
                         "headers": res_headers,
@@ -216,7 +231,16 @@ def lambda_handler(event, context, user_info):
                         "headers": res_headers,
                         "body": json.dumps(regist_result[1], ensure_ascii=False),
                     }
-                res_body = {"message": "他のユーザー操作、タイマーまたは連動により制御中です。"}
+                if remote_control_latest.get("control_trigger") == "manual_control":
+                    error_flag = 4
+                elif remote_control_latest.get("control_trigger") in ["timer_control", "on_timer_control", "off_timer_control"]:
+                    error_flag = 2
+                else:
+                    error_flag = 3
+                res_body = {
+                    "message": "他のユーザー操作、タイマーまたは連動により制御中です。",
+                    "error_flag": error_flag
+                }
                 return {
                     "statusCode": 409,
                     "headers": res_headers,
@@ -442,6 +466,7 @@ def __register_hist_info(
             do_info,
             user_name,
             email_address,
+            control_trigger,
             user_table,
             account_table,
             notification_hist_table,
@@ -498,6 +523,7 @@ def __send_mail(
     do_info,
     user_name,
     email_address,
+    control_trigger,
     user_table,
     account_table,
     notification_hist_table,
@@ -533,11 +559,24 @@ def __send_mail(
         mail_to_list.append(mail_account.get("email_address"))
     logger.debug(f"mail_to_list: {mail_to_list}")
 
-    event_detail = f"""
-        　【画面制御による制御（不実施）】
-        　他のユーザー操作、タイマーまたは連動設定により{do_name}を制御中だったため、制御を行いませんでした。
-        　※{user_name}が操作しました。
-    """
+    if control_trigger == "manual_control":
+        event_detail = f"""
+            　【マニュアルコントロール(不実施)】
+            　他のユーザー操作により、{do_name}をコントロール中だったため、コントロールを行いませんでした。
+            　 ※{user_name}が操作
+        """
+    elif control_trigger in ["timer_control", "on_timer_control", "off_timer_control"]:
+        event_detail = f"""
+            　【マニュアルコントロール(不実施)】
+            　スケジュールにより、{do_name}をコントロール中だったため、コントロールを行いませんでした。
+            　 ※{user_name}が操作
+        """
+    else:
+        event_detail = f"""
+            　【マニュアルコントロール(不実施)】
+            　オートメーションにより、{do_name}をコントロール中だったため、コントロールを行いませんでした。
+            　 ※{user_name}が操作
+        """
     event_detail = textwrap.dedent(event_detail)
 
     # メール送信

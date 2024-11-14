@@ -118,7 +118,7 @@ def create_history_message(hist):
         )
         if not hist.get("link_terminal_no"):
             if hist["control_result"] == "success" or hist["control_result"] == "failure" or hist["control_result"] == "not_excuted_link":
-                msg = f"【マニュアルコントロール(コマンド送信成功)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※{control_exec_uer_name}が操作"
+                msg = f"【マニュアルコントロール(コマンド送信)】\n{terminal_name}のコントロールコマンドがデバイスに届きました。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "timeout_response":
                 msg = f"【マニュアルコントロール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届かなかった可能性があります。\n ※{control_exec_uer_name}が操作"
             elif hist["control_result"] == "not_excuted_done":
