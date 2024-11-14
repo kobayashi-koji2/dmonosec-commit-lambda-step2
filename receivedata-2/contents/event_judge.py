@@ -163,6 +163,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 "timer_control",
             ]:
                 hist_list_data["hist_data"]["timer_time"] = event_info.get("timer_time")
+                hist_list_data["hist_data"]["do_timer_name"] = event_info.get("do_timer_name")
             if event_info.get("event_type") in [
                 "automation_control",
                 "on_automation_control",
@@ -215,6 +216,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 "timer_control",
             ]:
                 hist_list_data["hist_data"]["timer_time"] = event_info.get("timer_time")
+                hist_list_data["hist_data"]["do_timer_name"] = event_info.get("do_timer_name")
             if event_info.get("event_type") in [
                 "automation_control",
                 "on_automation_control",
@@ -722,6 +724,7 @@ def eventJudge(
             "timer_control",
         ]:
             event_info["timer_time"] = remote_control_info.get("timer_time")
+            event_info["do_timer_name"] = remote_control_info.get("do_timer_name")
         if event_info["control_trigger"] in [
             "automation_control",
             "off_automation_control",
@@ -794,6 +797,7 @@ def eventJudge(
                     "timer_control",
                 ]:
                     event_info["timer_time"] = remote_control_info.get("timer_time")
+                    event_info["do_timer_name"] = remote_control_info.get("do_timer_name")
                 if event_info["control_trigger"] in [
                     "automation_control",
                     "off_automation_control",
