@@ -17,7 +17,6 @@ from event_judge import eventJudge,judge_near_battery,judge_signal_state
 patch_all()
 
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
-sqs = boto3.resource("sqs", endpoint_url=os.environ.get("endpoint_url"))
 
 logger = Logger()
 
@@ -180,15 +179,9 @@ def lambda_handler(event, context):
             ddb.put_db_item(current_state_info,state_table)
 
             # デバイスヘルシー判定
-            queue = sqs.get_queue_by_name(QueueName=DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME)
             if current_state_info.get("device_healthy_state") == 1:
-                body = {
-                    "event_trigger": "lambda-unaconnect-receivedata",
-                    "event_type": "device_unhealthy",
-                    "event_datetime": req_body.get("timestamp",""),
-                    "device_id": device_id,
-                }
-                queue.send_message(DelaySeconds=0, MessageBody=(json.dumps(body)))
+                current_state_info.get("device_healthy_state") = 0
+                ddb.update_current_healthy_state(device_id, current_state_info, state_table)
         
         #メッセージ応答
         res_body = {"message": ""}

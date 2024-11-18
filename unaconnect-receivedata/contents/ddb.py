@@ -24,7 +24,7 @@ def get_device_info(pk, table):
 
     return db.insert_id_key_in_device_info(response[0]) if response else None
 
-#履歴一覧データ挿入
+#現状態データ更新
 def put_db_item(db_item, table):
     item = json.loads(json.dumps(db_item,default=decimal_to_num), parse_float=decimal.Decimal)
     try:
@@ -66,3 +66,27 @@ def get_device_state(device_id, device_state_table):
         KeyConditionExpression=Key("device_id").eq(device_id)
     ).get("Items")
     return device_state[0] if device_state else None
+
+# 現状態デバイスヘルシー更新
+def update_current_healthy_state(device_id, db_item, state_table):
+
+    # デバイスヘルシー
+    option = {
+        "Key": {
+            "device_id": device_id,
+        },
+        "UpdateExpression": "set #device_healthy_state = :device_healthy_state",
+        "ExpressionAttributeNames": {
+            "#device_healthy_state": "device_healthy_state",
+        },
+        "ExpressionAttributeValues": {
+            ":device_healthy_state": db_item.get("device_healthy_state", 0),
+        },
+    }
+
+    logger.debug(f"option={option}")
+
+    try:
+        state_table.update_item(**option)
+    except ClientError as e:
+        logger.debug(f"update_current_stateエラー e={e}")
