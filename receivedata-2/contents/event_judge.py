@@ -267,7 +267,7 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
         hist_list_data["hist_data"]["terminal_name"] = terminal_name
         hist_list_data["hist_data"]["di_healthy_type"] = di_healthy_type
         hist_list_data["hist_data"]["di_healthy_period"] = di_healthy_period
-        hist_list_data["hist_data"]["occurrence_flag"] = event_info.get("device_healthy_state")
+        hist_list_data["hist_data"]["occurrence_flag"] = event_info.get("di_healthy_state")
 
     return hist_list_data
 
@@ -909,7 +909,7 @@ def eventJudge(
             event_info = {}
             event_info["event_datetime"] = now_datetime
             event_info["event_type"] = "di_unhealthy"
-            event_info["terminal_no"] = i + 1
+            event_info["terminal_no"] = i
             event_info["di_healthy_state"] = 0
             event_info["recv_datetime"] = recv_data.get("recv_datetime")
 

@@ -15,6 +15,7 @@ patch_all()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 
 HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
+NOTIFICATION_HIST_TTL = int(os.environ["NOTIFICATION_HIST_TTL"])
 
 logger = Logger()
 
