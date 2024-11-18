@@ -909,7 +909,7 @@ def eventJudge(
             event_info = {}
             event_info["event_datetime"] = now_datetime
             event_info["event_type"] = "di_unhealthy"
-            event_info["di_no"] = i
+            event_info["terminal_no"] = i + 1
             event_info["di_healthy_state"] = 0
             event_info["recv_datetime"] = recv_data.get("recv_datetime")
 
