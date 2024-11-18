@@ -251,6 +251,9 @@ def lambda_handler(event, context):
                             + relativedelta.relativedelta(years=REMOTE_CONTROLS_TTL)
                         ).timestamp()
                     )
+                    do_timer_name = do_info["do_timer"]["do_timer_name"]
+                    if not do_timer_name:
+                        do_timer_name = "無題のスケジュール"
                     put_items = [
                         {
                             "Put": {
@@ -267,7 +270,7 @@ def lambda_handler(event, context):
                                     "link_di_no": {"N": str(do_di_return)},
                                     "iccid": {"S": icc_id},
                                     "timer_time": {"S": do_info["do_timer"]["do_time"]},
-                                    "do_timer_name": {"S": do_info["do_timer"]["do_timer_name"]},
+                                    "do_timer_name": {"S": do_timer_name},
                                 },
                             }
                         }
@@ -521,6 +524,16 @@ def __register_hist_info(
     if do_di_return != 0:
         link_terminal = [di for di in di_list if di["di_no"] == do_di_return][0]
         link_terminal_name = link_terminal["di_name"]
+        if do_onoff_control == 0:
+            link_terminal_state_name = link_terminal["di_on_name"]
+            if not link_terminal_state_name:
+                link_terminal_state_name = "クローズ"
+        elif do_onoff_control == 1:
+            link_terminal_state_name = link_terminal["di_off_name"]
+            if not link_terminal_state_name:
+                link_terminal_state_name = "オープン"
+        elif do_onoff_control == 9:
+            link_terminal_state_name = ""
     else:
         link_terminal_name = ""
 
@@ -534,6 +547,7 @@ def __register_hist_info(
         "control_trigger": event_type,
         "link_terminal_no": int(do_di_return),
         "link_terminal_name": link_terminal_name,
+        "link_terminal_state_name": link_terminal_state_name,
         "notification_hist_id": notification_hist_id,
         "control_result": control_result,
         "timer_time": do_info["do_timer"]["do_time"],
@@ -609,6 +623,8 @@ def __send_mail(
     group_name = "、".join(group_name_list)
     do_timer = do_info["do_timer"]["do_time"]
     do_timer_name = do_info["do_timer"]["do_timer_name"]
+    if not do_timer_name:
+        do_timer_name = "無題のスケジュール"
 
     # 接点出力名の設定
     do_name = do_info["do_name"]
@@ -647,7 +663,7 @@ def __send_mail(
         event_detail = f"""
             　【スケジュール(不実施)】
             　{di_name}がすでに{di_state}のため、{do_name}のコントロールを行いませんでした。
-            　 ※スケジュール「{do_timer_name} ／ {do_timer}」
+            　 ※スケジュール「{di_state} ／ {do_timer}」
         """
     elif flg == "__check_under_control":
         if reason == "manual_control":

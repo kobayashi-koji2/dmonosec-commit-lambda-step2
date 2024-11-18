@@ -479,7 +479,7 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
 
     # 接点入力未変化
     elif event_info.get("event_type") == "di_unhealthy":
-        di_no = event_info["di_no"]
+        di_no = event_info["terminal_no"]
         current_di_healthy_state = f"di{di_no}_healthy_state"
         current_state_info[current_di_healthy_state] = 0
 

@@ -75,27 +75,17 @@ def put_notice_hist(db_item, notification_hist_table):
     except ClientError as e:
         logger.debug(f"put_notice_histエラー e={e}")
 
-
-# 現状態デバイスヘルシー更新
-def update_current_healthy_state(device_id, db_item, state_table):
-
-    # デバイスヘルシー
-    option = {
-        "Key": {
-            "device_id": device_id,
-        },
-        "UpdateExpression": "set #device_healthy_state = :device_healthy_state",
-        "ExpressionAttributeNames": {
-            "#device_healthy_state": "device_healthy_state",
-        },
-        "ExpressionAttributeValues": {
-            ":device_healthy_state": db_item.get("device_healthy_state", 0),
-        },
-    }
-
-    logger.debug(f"option={option}")
-
-    try:
-        state_table.update_item(**option)
-    except ClientError as e:
-        logger.debug(f"update_current_stateエラー e={e}")
+# 通知先メールアドレス取得
+def get_notice_mailaddress(user_id_list, user_table, account_table):
+    mailaddress_list = []
+    for item in user_id_list:
+        users_table_res = user_table.query(
+            KeyConditionExpression=Key("user_id").eq(item),
+        ).get("Items", [])
+        for items in users_table_res:
+            account_id = items["account_id"]
+            account_info = account_table.query(
+                KeyConditionExpression=Key("account_id").eq(account_id)
+            ).get("Items", [])
+            mailaddress_list.append(account_info[0]["email_address"])
+    return mailaddress_list

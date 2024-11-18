@@ -376,7 +376,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             timer_time = hist_list_data.get("hist_data", {}).get("timer_time")
                             do_timer_name = hist_list_data.get("hist_data", {}).get("do_timer_name")
                             event_detail = f"""
-                                　【スケジュール(コマンド送信)】
+                                　【スケジュールコントロール(コマンド送信)】
                                 　{terminal_name}のコントロールコマンドがデバイスに届きました。
                                 　 ※スケジュール「{do_timer_name} ／ {timer_time}」
                             """
