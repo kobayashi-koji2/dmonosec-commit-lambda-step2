@@ -13,6 +13,7 @@ from dateutil import relativedelta
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from event_judge import eventJudge,judge_near_battery,judge_signal_state
+from device_healthy import device_healthy_recover
 
 patch_all()
 
@@ -43,6 +44,9 @@ def lambda_handler(event, context):
             group_table = dynamodb.Table(ssm.table_names["GROUP_TABLE"])
             device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
             sigfox_id_table = dynamodb.Table(ssm.table_names["SIGFOX_ID_TABLE"])
+            notification_hist_table = dynamodb.Table(ssm.table_names["NOTIFICATION_HIST_TABLE"])
+            user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+            account_table = dynamodb.Table(ssm.table_names["ACCOUNT_TABLE"])
         except KeyError as e:
             logger.error("KeyError")
             logger.error(traceback.format_exc())
@@ -176,12 +180,12 @@ def lambda_handler(event, context):
                 }
                 current_state_info = judge_near_battery(current_state_info,hist_item,hist_list_table)
 
-            ddb.put_db_item(current_state_info,state_table)
-
             # デバイスヘルシー判定
             if current_state_info.get("device_healthy_state") == 1:
-                current_state_info.get("device_healthy_state") = 0
-                ddb.update_current_healthy_state(device_id, current_state_info, state_table)
+                current_state_info = device_healthy_recover(req_body, recv_datetime, device_info, current_state_info,
+                                                            group_list, hist_list_table, notification_hist_table, user_table, account_table)
+
+            ddb.put_db_item(current_state_info,state_table)
         
         #メッセージ応答
         res_body = {"message": ""}

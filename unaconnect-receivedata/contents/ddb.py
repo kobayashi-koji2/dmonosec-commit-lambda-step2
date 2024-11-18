@@ -67,6 +67,15 @@ def get_device_state(device_id, device_state_table):
     ).get("Items")
     return device_state[0] if device_state else None
 
+# 通知履歴挿入
+def put_notice_hist(db_item, notification_hist_table):
+    item = json.loads(json.dumps(db_item), parse_float=decimal.Decimal)
+    try:
+        notification_hist_table.put_item(Item=item)
+    except ClientError as e:
+        logger.debug(f"put_notice_histエラー e={e}")
+
+
 # 現状態デバイスヘルシー更新
 def update_current_healthy_state(device_id, db_item, state_table):
 
