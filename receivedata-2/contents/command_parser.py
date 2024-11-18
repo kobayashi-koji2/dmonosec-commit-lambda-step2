@@ -10,7 +10,6 @@ from aws_lambda_powertools import Logger
 
 logger = Logger()
 
-DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
 CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
 

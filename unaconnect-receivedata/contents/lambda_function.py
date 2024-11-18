@@ -26,7 +26,6 @@ res_headers = {
     "Access-Control-Allow-Origin": "*",
 }
 
-DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME = os.environ["DEVICE_HEALTHY_CHECK_SQS_QUEUE_NAME"]
 HIST_LIST_TTL = int(os.environ["HIST_LIST_TTL"])
 CNT_HIST_TTL = int(os.environ["CNT_HIST_TTL"])
 
