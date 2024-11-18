@@ -49,6 +49,8 @@ def validate(event, user, contract_table, group_table):
         group = db.get_group_info(group_id, group_table)
         if group.get("group_data", {}).get("config", {}).get("group_name") == group_name:
             return {"message": "グループ名が重複しています。"}
+    if len(group_name) > 50:
+        return {"message": "グループ名は50文字以内で入力してください。"}
 
     params = {
         "group_id": path_params.get("group_id"),

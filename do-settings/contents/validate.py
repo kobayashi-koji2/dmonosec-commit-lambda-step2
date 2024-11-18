@@ -112,7 +112,7 @@ def input_check(param):
 
     # 文字数の制限
     # 接点名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
-    str_value_limits = {"do_name": {0, 30}}
+    str_value_limits = {"do_name": {0, 50}}
 
     # 桁数の制限
     int_float_value_limits = {"do_specified_time": {0.4, 3.0}}

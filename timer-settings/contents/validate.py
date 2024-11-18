@@ -105,7 +105,7 @@ def input_check(param):
         return False
 
     # 文字数の制限
-    str_value_limits = {"do_timer_name": {0, 30}, "do_time": {0, 5}}
+    str_value_limits = {"do_timer_name": {0, 50}, "do_time": {0, 5}}
 
     # 数値範囲の制限
     int_float_value_limits = {"do_onoff_control": {0, 9}}

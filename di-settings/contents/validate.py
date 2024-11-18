@@ -160,10 +160,10 @@ def input_check(param):
     # 文字数の制限
     # 接点名、ON-OFF名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
     str_value_limits = {
-        "di_name": {0, 30},
-        "di_on_name": {0, 10},
+        "di_name": {0, 50},
+        "di_on_name": {0, 20},
         "di_on_icon": {1, 30},
-        "di_off_name": {0, 10},
+        "di_off_name": {0, 20},
         "di_off_icon": {1, 30},
     }
 

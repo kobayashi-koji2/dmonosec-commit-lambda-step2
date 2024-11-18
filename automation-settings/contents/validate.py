@@ -17,7 +17,7 @@ REQUEST_BODY_SCHEMA = {
     "additionalProperties": False,
     "properties": {
         "automation_id": {"type": "string"},
-        "automation_name": {"type": "string"},
+        "automation_name": {"type": "string", "minLength": 0, "maxLength": 50},
         "trigger_event_type": {
             "type": "string",
             "enum": [

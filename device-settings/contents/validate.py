@@ -83,7 +83,7 @@ def input_check(param):
 
     # 文字数の制限
     # デバイス名は未登録の場合、WEB側で初期値を表示する仕様のため空文字を許容する
-    str_value_limits = {"device_name": {0, 30}}
+    str_value_limits = {"device_name": {0, 50}}
 
     # 特定の数値に一致
     int_float_format = {"device_healthy_period": [0, 3, 4, 5, 6, 7]}
