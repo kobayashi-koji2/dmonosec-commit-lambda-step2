@@ -578,6 +578,7 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
         filtered_device_group_relation = next(
             (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
         ).get("group_list", [])
+        logger.info(f"filtered_device_group_relation:{filtered_device_group_relation}")
         group_name_list = [
             next((group for group in group_info_list if group["group_id"] == item2), {})
             .get("group_data", {})
@@ -585,6 +586,7 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
             .get("group_name", "")
             for item2 in filtered_device_group_relation
         ]
+        logger.info(f"グループ名:{group_name_list}")
 
         #Noneの場合にエラーが起きることの回避のため
         if device_name is None:
