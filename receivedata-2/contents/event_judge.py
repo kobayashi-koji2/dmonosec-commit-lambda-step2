@@ -337,6 +337,7 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
                         device_state_di_event["event_datetime"] = 0
                         device_state_di_event["event_judge_datetime"] = 0
                         device_state_di_event["delay_flag"] = 0
+                        device_state_di_event["di_custom_event_state"] = 0
                         device_state_di_event_list.append(device_state_di_event)
                     custom_timer_event["di_event_list"] = device_state_di_event_list
                     device_state_custom_timer_event_list.append(custom_timer_event)
@@ -418,26 +419,19 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
                 if di_event.get("di_no") == event_info.get("terminal_no"):
                     if ((di_event.get("di_state") in [0, 1] and di_event.get("di_state") == event_info.get("di_state")) or
                      (di_event.get("di_state") == 2)):
-                        di_event["event_judge_datetime"] = event_datetime
-                        if event_datetime + elapsed_time < recv_datetime:
+                        di_event["di_custom_event_state"] = 0
+                        if event_datetime + custom_timer_event.get("elapsed_time") * 60 * 1000 < recv_datetime:
                             # カスタムイベント判定日時が受信日時よりも過去の場合、受信日時の3分後を設定
-                            di_event["event_datetime"] = recv_datetime + 3 * 60 * 1000
-                            di_event["event_hpn_datetime"] = event_datetime + elapsed_time
+                            di_event["event_judge_datetime"] = recv_datetime + 3 * 60 * 1000
                             di_event["delay_flag"] = 1
                         else:
-                            di_event["event_datetime"] = event_datetime + elapsed_time
-                            di_event["message_type"] = recv_data.get("message_type")
-                            if recv_data.get("message_type") in ["0011", "0012"]:
-                                # 現状態通知（電源ON、定時送信）
-                                di_event["event_hpn_datetime"] = event_datetime
-                            else:
-                                # 状態変化通知
-                                di_event["event_hpn_datetime"] = event_datetime + elapsed_time
+                            di_event["event_judge_datetime"] = event_datetime + elapsed_time
+                            di_event["delay_flag"] = 0
                     else:
                         di_event["event_judge_datetime"] = 0
-                        di_event["event_hpn_datetime"] = 0
                         di_event["event_datetime"] = 0
                         di_event["delay_flag"] = 0
+                        di_event["di_custom_event_state"] = 0
                     break
 
     # 接点出力部
