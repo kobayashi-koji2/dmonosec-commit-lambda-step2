@@ -663,7 +663,7 @@ def __send_mail(
         event_detail = f"""
             　【スケジュール(不実施)】
             　{di_name}がすでに{di_state}のため、{do_name}のコントロールを行いませんでした。
-            　 ※スケジュール「{di_state} ／ {do_timer}」
+            　 ※スケジュール「{di_state}コントロール ／ {do_timer}」
         """
     elif flg == "__check_under_control":
         if reason == "manual_control":

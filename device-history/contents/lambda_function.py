@@ -177,9 +177,9 @@ def create_history_message(hist):
             if not link_terminal_name:
                 link_terminal_name = "接点入力" + str(hist.get("link_terminal_no", ""))
             if hist["control_result"] == "success" or hist["control_result"] == "failure":
-                msg = f"【スケジュール(成功)】\n{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                msg = f"【スケジュール(成功)】\n{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{hist.get("link_terminal_state_name")}に変化しました。\n ※スケジュール「{do_timer_name} ／ {hist.get("link_terminal_state_name")}コントロール ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "timeout_response":
-                msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
+                msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("link_terminal_state_name")}コントロール ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "timeout_status":
                 msg = f"【スケジュール(失敗)】\n{terminal_name}のコントロールコマンドがデバイスに届きましたが、{link_terminal_name}が変化しませんでした。\n ※スケジュール「{do_timer_name} ／ {hist.get("timer_time")}」"
             elif hist["control_result"] == "not_excuted_done":

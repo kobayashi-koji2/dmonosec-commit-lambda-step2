@@ -137,6 +137,7 @@ def put_hist_list(
             "notification_hist_id": notification_hist_id,
             "device_req_no": remote_control.get("device_req_no"),
             "timer_time": remote_control.get("timer_time"),
+            "do_timer_name": remote_control.get("do_timer_name")
         },
     }
 

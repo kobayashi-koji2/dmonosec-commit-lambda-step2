@@ -31,10 +31,10 @@ def diNameToState(terminal_state_name, device_info):
     return di_state
 
 
-def automationSetting(event_type, event_detail_state, event_detail_flag):
+def automationSetting(event_type, event_detail_state, event_detail_flag, hist_list_data):
     # トリガーイベント項目
     if event_type == "di_change_state":
-        event_type_label = "接点入力(接点状態)"
+        event_type_label = f"接点入力{hist_list_data.get('hist_data', {}).get("link_terminal_no")}（接点状態）"
     elif event_type == "di_unhealthy":
         event_type_label = "接点入力(変化検出状態)"
     elif event_type == "device_unhealthy":
@@ -294,7 +294,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         event_detail = f"""
                             　【スケジュール(成功)】
                             　{terminal_name}のコントロールコマンドがデバイスに届き、{link_terminal_name}が{link_terminal_state_name}に変化しました。
-                            　 ※スケジュール「{do_timer_name} ／ {timer_time}」
+                            　 ※スケジュール「{do_timer_name} ／ {link_terminal_state_name}コントロール ／ {timer_time}」
                         """
                     else:
                         terminal_name = hist_list_data.get("hist_data", {}).get(
@@ -327,6 +327,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             automation_trigger_event_type,
                             automation_trigger_event_detail_state,
                             automation_trigger_event_detail_flag,
+                            hist_list_data
                         )
                         event_detail = f"""
                             　【オートメーション(成功)】
@@ -404,6 +405,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             automation_trigger_event_type,
                             automation_trigger_event_detail_state,
                             automation_trigger_event_detail_flag,
+                            hist_list_data
                         )
                         if hist_list_data.get("hist_data", {}).get("control_result") == "not_excuted_link":
                             event_detail = f"""
@@ -413,7 +415,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                             """
                         else:
                             event_detail = f"""
-                                　【オートメーション(コマンド送信)】
+                                　【オートメーションコントロール(コマンド送信)】
                                 　{terminal_name}コントロールコマンドがデバイスに届きました。
                                 　 ※オートメーション「{automation_trigger_device_name} ／ {event_label["event_type_label"]} ／ {event_label["event_detail_label"]}」
                             """
