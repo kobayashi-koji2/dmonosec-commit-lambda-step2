@@ -9,22 +9,6 @@ dynamodb = boto3.resource("dynamodb")
 logger = Logger()
 
 
-def get_device_info(pk, table):
-    response = table.query(
-        KeyConditionExpression=Key("device_id").eq(pk),
-        FilterExpression=Attr("contract_state").ne(2),
-    ).get("Items", [])
-    return db.insert_id_key_in_device_info_list(response)
-
-
-#　現状態取得
-def get_device_state(device_id, device_state_table):
-    device_state = device_state_table.query(
-        KeyConditionExpression=Key("device_id").eq(device_id)
-    ).get("Items")
-    return device_state[0] if device_state else None
-
-
 #　カスタムイベントリスト更新      
 def update_ddb_custom_event_info(custom_event_list, device_table, device_id, identification_id):
     put_item_fmt = convert.to_dynamo_format(custom_event_list)
