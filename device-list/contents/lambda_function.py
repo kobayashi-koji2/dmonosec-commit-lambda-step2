@@ -694,7 +694,7 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
         logger.info(f"検索評価対象の値:{device_value}")
 
         #検索対象がNoneの場合,Not検索以外は該当データなし。Not検索の場合はすべて該当。
-        if device_value is None:
+        if not device_value:
             device_value = ""
         
         if case == 1:
@@ -817,7 +817,7 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list,
             device_id = ""
         if device_code is None:
             device_code = ""
-        if group_name_list is None:
+        if not group_name_list:
             group_name_list = ""
 
         if case == 1:
