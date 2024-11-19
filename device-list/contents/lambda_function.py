@@ -192,6 +192,7 @@ def lambda_handler(event, context, user_info):
             
 
         for device_info in device_info_list_order_filtered:
+            logger.info(f"device_info_list_order_filtered:{device_info_list_order_filtered}")
             group_name_list = []
             # デバイス情報取得
             #device_info = ddb.get_device_info(item1, tables["device_table"])
@@ -546,6 +547,7 @@ def device_detect(detect_condition,keyword,device_info_list,group_info_list,devi
 
 def device_detect_all(keyword,device_info_list,group_info_list,device_group_relation):
 
+    logger.debug(f"keyword:{keyword}")
     # AND,OR区切りでリスト化
     if " OR " in keyword:
         key_list = re.split(" OR ",keyword)
@@ -559,6 +561,8 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
         case = 3
     else:
         case = 0
+
+    logger.debug(f"case:{case}")
 
     return_list = []
 
@@ -586,7 +590,7 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
             .get("group_name", "")
             for item2 in filtered_device_group_relation
         ]
-        logger.info(f"グループ名:{group_name_list}")
+        logger.info(f"グループ名1:{group_name_list}")
 
         #Noneの場合にエラーが起きることの回避のため
         if device_name is None:
@@ -595,8 +599,10 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
             device_id = ""
         if device_code is None:
             device_code = ""
-        if group_name_list is None:
+        if not group_name_list:
             group_name_list = ""
+
+        logger.info(f"グループ名2:{group_name_list}")
 
         if case == 1:
             for key in key_list:
@@ -627,6 +633,7 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
                 return_list.append(device_info)
         else:
             if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in group_name_list):
+                logger.info("条件一致")
                 return_list.append(device_info)
 
     return return_list

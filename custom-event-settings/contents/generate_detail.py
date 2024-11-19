@@ -107,8 +107,8 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
                 }
                 di_event_list.append(di_list_item)
             custom_timer_event_item = {
-                "custom_event_id": custom_event["custom_event_id"],
-                "elapsed_time": custom_event["elapsed_time"],
+                "custom_event_id": custom_event_info["custom_event_id"],
+                "elapsed_time": custom_event_info["elapsed_time"],
                 "di_event_list" : di_event_list,
             }
             custom_timer_event_list.append(custom_timer_event_item)
