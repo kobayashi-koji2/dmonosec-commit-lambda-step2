@@ -114,7 +114,7 @@ def lambda_handler(event, context):
             device_name = (
                 device_info.get("device_data").get("config").get("device_name")
                 if device_info.get("device_data").get("config").get("device_name")
-                else f"【{device_info.get('device_code')}】{device_info.get('sigfox_id')}（タグID）"
+                else f"【{device_info.get('device_code')}】{device_info.get('sigfox_id')}(タグID)"
             )
 
         group_list =  ddb.get_device_group_list(device_id, device_relation_table, group_table)

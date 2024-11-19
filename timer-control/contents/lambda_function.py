@@ -617,7 +617,7 @@ def __send_mail(
     device_name = (
         device_config.get("device_name")
         if device_config.get("device_name")
-        else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}（IMEI）"
+        else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}(IMEI)"
     )
     group_name_list = [g["group_name"] for g in group_list]
     group_name = "、".join(group_name_list)

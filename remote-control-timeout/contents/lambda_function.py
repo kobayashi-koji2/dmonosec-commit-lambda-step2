@@ -43,7 +43,7 @@ def send_mail(
     device_name = (
         device.get("device_data", {}).get("config", {}).get("device_name")
         if device.get("device_data", {}).get("config", {}).get("device_name")
-        else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{device.get("imei")}（IMEI）"
+        else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{device.get("imei")}(IMEI)"
     )
     group_id_list = db.get_device_relation_group_id_list(
         device["device_id"], device_relation_table
@@ -167,7 +167,7 @@ def send_mail(
             trigger_device_name = (
                 remote_control.get("automation_trigger_device_name")
                 if remote_control.get("automation_trigger_device_name")
-                else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}（IMEI）"
+                else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}(IMEI)"
             )
             event_detail = f"""
                 　【オートメーション(失敗)】
@@ -266,7 +266,7 @@ def send_mail(
             trigger_device_name = (
                 remote_control.get("automation_trigger_device_name")
                 if remote_control.get("automation_trigger_device_name")
-                else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}（IMEI）"
+                else f"【{device.get("device_data", {}).get("param", {}).get("device_code")}】{remote_control.get("automation_trigger_imei")}(IMEI)"
             )
             event_detail = f"""
                 　【オートメーション(失敗)】

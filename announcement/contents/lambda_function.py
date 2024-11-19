@@ -17,9 +17,9 @@ patch_all()
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
 SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
 DEVICE_ANNOUNCEMENT = {
-    "shipped": "デバイス（【{device_code}】{IMEI}（IMEI））が出荷されました。",
-    "regist_balance_days": "デバイス（【{device_code}】{IMEI}（IMEI））の利用登録を実施してください（残り{balance_day}日）。",
-    "auto_regist_complete": "デバイス（【{device_code}】{IMEI}（IMEI））の利用登録されないまま７日間経過したので、利用を開始しました。",
+    "shipped": "デバイス（【{device_code}】{IMEI}(IMEI)）が出荷されました。",
+    "regist_balance_days": "デバイス（【{device_code}】{IMEI}(IMEI)）の利用登録を実施してください（残り{balance_day}日）。",
+    "auto_regist_complete": "デバイス（【{device_code}】{IMEI}(IMEI)）の利用登録されないまま７日間経過したので、利用を開始しました。",
 }
 
 logger = Logger()

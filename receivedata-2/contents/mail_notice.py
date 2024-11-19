@@ -312,7 +312,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         automation_trigger_device_name = (
                             hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
                             if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
-                            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{automation_trigger_imei}（IMEI）"
+                            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{automation_trigger_imei}(IMEI)"
                         )
                         automation_trigger_event_type = hist_list_data.get(
                             "hist_data", {}
@@ -389,7 +389,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                         automation_trigger_device_name = (
                             hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
                             if hist_list_data.get("hist_data", {}).get("automation_trigger_device_name")
-                            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{automation_trigger_imei}（IMEI）"
+                            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{automation_trigger_imei}(IMEI)"
                         )
                         automation_trigger_event_type = hist_list_data.get("hist_data", {}).get(
                             "automation_trigger_event_type"
@@ -468,7 +468,7 @@ def mailNotice(hist_list, device_info, user_table, account_table, notification_h
                 device_name = (
                     hist_list_data.get('hist_data', {}).get("device_name")
                     if hist_list_data.get('hist_data', {}).get("device_name")
-                    else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}（IMEI）"
+                    else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}(IMEI)"
                 )
                 mail_body = textwrap.dedent(
                     f"""

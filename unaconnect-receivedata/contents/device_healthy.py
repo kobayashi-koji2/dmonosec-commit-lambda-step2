@@ -98,7 +98,7 @@ def device_healthy_recover(req_body, recv_datetime, device_info, current_state_i
                 device_name = (
                     device_info.get("device_data", {}).get("config", {}).get("device_name")
                     if device_info.get("device_data", {}).get("config", {}).get("device_name")
-                    else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}（IMEI）"
+                    else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get("imei")}(IMEI)"
                 )
                 mail_body = textwrap.dedent(f"""
                     ■発生日時：{event_dt}
