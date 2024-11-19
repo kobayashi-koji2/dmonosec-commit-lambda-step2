@@ -180,7 +180,10 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
         remote_control_latest = _get_remote_control_latest(
             control_device.get("device_id"), control_do.get("do_no"), remote_controls_table
         )
-        control_trigger = remote_control_latest.get("control_trigger")
+        if remote_control_latest:
+            control_trigger = remote_control_latest.get("control_trigger")
+        else:
+            control_trigger = ""
         # 制御状況を追加（同時処理の排他制御）
         if control_do.get("do_di_return"):
             # 紐づけありの場合は、30秒後に制御状況を自動削除
