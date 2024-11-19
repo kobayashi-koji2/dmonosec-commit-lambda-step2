@@ -458,7 +458,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
         )
         device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
-        do_name = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
+        do_name_list = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
         filtered_device_group_relation = next(
             (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
         ).get("group_list", [])
@@ -478,14 +478,14 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
             device_id = ""
         if device_code is None:
             device_code = ""
-        if do_name is None:
-            do_name = ""
+        if do_name_list is None:
+            do_name_list = ""
         if group_name_list is None:
             group_name_list = ""
 
         if case == 1:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name_list) or (key in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -496,7 +496,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                     return_list.append(device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name_list) or (key in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -506,12 +506,12 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in group_name_list):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in do_name_list) or (keyword[1:] in group_name_list):
                 pass
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in group_name_list):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in do_name_list) or (keyword in group_name_list):
                 return_list.append(device_info)
 
     return return_list
