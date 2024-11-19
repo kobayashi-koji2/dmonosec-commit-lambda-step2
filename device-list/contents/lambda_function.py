@@ -181,7 +181,7 @@ def lambda_handler(event, context, user_info):
         if keyword == None or keyword == "":
             device_info_list_order_filtered = device_info_list_order
         elif detect_condition != None:
-            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list_order,device_group_relation)
+            device_info_list_order_filtered = keyword_detection_device_list(detect_condition,keyword,device_info_list,group_info_list,device_group_relation)
         else:
             res_body = {"message": "検索条件が設定されていません。"}
             return {
