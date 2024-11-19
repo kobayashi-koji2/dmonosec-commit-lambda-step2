@@ -1,15 +1,10 @@
 import uuid
-
-from aws_lambda_powertools import Logger
-
-import db
 import ddb
-import convert
 import time
 import math
 import time
 from datetime import datetime, timedelta
-
+from aws_lambda_powertools import Logger
 
 logger = Logger()
 
@@ -27,26 +22,17 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の日時カスタムイベント"
-            custom_put_item = {
-                "custom_event_id": custom_event_id,
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "time": custom_event_info["time"],
-                "weekday": custom_event_info["weekday"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
         else:
             custom_event_name = custom_event_info["custom_event_name"]
-            custom_put_item = {
-                "custom_event_id": custom_event_id,
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "time": custom_event_info["time"],
-                "weekday": custom_event_info["weekday"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
+        custom_put_item = {
+            "custom_event_id": custom_event_id,
+            'custom_event_reg_datetime': custom_event_reg_datetime,
+            "event_type": custom_event_info["event_type"],
+            "custom_event_name": custom_event_name,
+            "time": custom_event_info["time"],
+            "weekday": custom_event_info["weekday"],
+            "di_event_list": custom_event_info["di_event_list"],
+        }
     elif custom_event_info["event_type"] == 1:
         device_state_put_item = {
             "custom_event_id": custom_event_id,
@@ -55,24 +41,16 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
         }
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の継続時間カスタムイベント"
-            custom_put_item = {
-                "custom_event_id": custom_event_id,
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "elapsed_time": custom_event_info["elapsed_time"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
         else:
             custom_event_name = custom_event_info["custom_event_name"]
-            custom_put_item = {
-                "custom_event_id": custom_event_id,
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "elapsed_time": custom_event_info["elapsed_time"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
+        custom_put_item = {
+            "custom_event_id": custom_event_id,
+            'custom_event_reg_datetime': custom_event_reg_datetime,
+            "event_type": custom_event_info["event_type"],
+            "custom_event_name": custom_event_name,
+            "elapsed_time": custom_event_info["elapsed_time"],
+            "di_event_list": custom_event_info["di_event_list"],
+        }
             
     # カスタムイベントリスト追加
     custom_event_list = list()
@@ -101,24 +79,40 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
             custom_event_list.append(custom_event_item)
     
     custom_event_list.append(custom_put_item) 
-    custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
+    custom_event_db_update = ddb.update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
 
     # デバイス現状態のカスタムタイマーイベントリスト追加
     if custom_event_info["event_type"] == 1:
-        device_state_timer_list = list()
+        custom_timer_event_list = list()
         if device_state:
             if len(device_state.get("custom_timer_event_list",[])):
-                for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
-                    logger.info("中身あり")
-                    device_state_custom_event_item = {
-                        "custom_event_id": device_state_custom_event["custom_event_id"],
-                        "elapsed_time": device_state_custom_event["elapsed_time"],
-                        "di_event_list" : device_state_custom_event["di_event_list"],
-                    }
-                    device_state_timer_list.append(device_state_custom_event_item)
-        
-            device_state_timer_list.append(device_state_put_item) 
-            device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+                custom_timer_event_list = device_state.get("custom_timer_event_list")
+            di_event_list = list()
+            for di_event in custom_event_info["di_event_list"]:
+                di_no = di_event["di_no"]
+                di_last_change_datetime = f"di{di_no}_last_change_datetime"
+                delay_flag = 0
+                event_judge_datetime = 0
+                last_change_datetime = device_state.get(di_last_change_datetime)
+                # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
+                if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
+                    delay_flag = 1
+                    event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                di_list_item = {
+                    "di_no": di_no,
+                    "di_state": di_event["di_state"],
+                    "event_judge_datetime": event_judge_datetime,
+                    "delay_flag": delay_flag,
+                    "di_custom_event_state": 0
+                }
+                di_event_list.append(di_list_item)
+            custom_timer_event_item = {
+                "custom_event_id": custom_event["custom_event_id"],
+                "elapsed_time": custom_event["elapsed_time"],
+                "di_event_list" : di_event_list,
+            }
+            custom_timer_event_list.append(custom_timer_event_item)
+            device_state_custom_event_db_update = ddb.update_ddb_device_state_info(custom_timer_event_list, device_state_table, device_id)
         else:
             device_state_custom_event_db_update = True
     else:
@@ -145,78 +139,83 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の日時カスタムイベント"
-            custom_put_item = {
-                "custom_event_id": custom_event_info["custom_event_id"],
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "time": custom_event_info["time"],
-                "weekday": custom_event_info["weekday"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
         else:
             custom_event_name = custom_event_info["custom_event_name"]
-            custom_put_item = {
-                "custom_event_id": custom_event_info["custom_event_id"],
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "time": custom_event_info["time"],
-                "weekday": custom_event_info["weekday"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
+        custom_put_item = {
+            "custom_event_id": custom_event_info["custom_event_id"],
+            'custom_event_reg_datetime': custom_event_reg_datetime,
+            "event_type": custom_event_info["event_type"],
+            "custom_event_name": custom_event_name,
+            "time": custom_event_info["time"],
+            "weekday": custom_event_info["weekday"],
+            "di_event_list": custom_event_info["di_event_list"],
+        }
     elif custom_event_info["event_type"] == 1:
         di_event_list = []
         if device_state:
             for device_state_custom_event in device_state.get("custom_timer_event_list",[]):
                 if custom_event_info["custom_event_id"] == device_state_custom_event["custom_event_id"]:
-                    if device_state_custom_event["elapsed_time"]  == custom_event_info["elapsed_time"]:
-                        for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
-                            di_list = {
-                                "di_no": device_state_custom_event_di["di_no"],
-                                "di_state": device_state_custom_event_di["di_state"],
-                            }
-                            if "event_judge_datetime" in device_state_custom_event_di:
-                                di_list["event_judge_datetime"] = device_state_custom_event_di["event_judge_datetime"]
-                            if "event_datetime" in device_state_custom_event_di:
-                                di_list["event_datetime"] = device_state_custom_event_di["event_datetime"]
-                            if "event_hpn_datetime" in device_state_custom_event_di:
-                                di_list["event_hpn_datetime"] = device_state_custom_event_di["event_hpn_datetime"]
-                            if "delay_flag" in device_state_custom_event_di:
-                                di_list["delay_flag"] = device_state_custom_event_di["delay_flag"]
-                            di_event_list.append(di_list)
+                    if custom_event_info["elapsed_time"] == device_state_custom_event["elapsed_time"]:
+                        for di_event in custom_event_info["di_event_list"]:
+                            find_flag = False
+                            for device_state_di_event in device_state_custom_event["di_event_list"]:
+                                if (di_event["di_no"] == device_state_di_event["di_no"] and
+                                    di_event["di_state"] == device_state_di_event["di_state"]):
+                                    di_event_list.append(device_state_di_event)
+                                    find_flag = True
+                                    break
+                            if not find_flag:
+                                di_no = di_event["di_no"]
+                                di_last_change_datetime = f"di{di_no}_last_change_datetime"
+                                logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
+                                delay_flag = 0
+                                event_judge_datetime = 0
+                                last_change_datetime = device_state.get(di_last_change_datetime)
+                                # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
+                                if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
+                                    delay_flag = 1
+                                    event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                                di_list_item = {
+                                    "di_no": di_no,
+                                    "di_state": di_event["di_state"],
+                                    "event_judge_datetime": event_judge_datetime,
+                                    "delay_flag": delay_flag,
+                                    "di_custom_event_state": 0
+                                }
+                                di_event_list.append(di_list_item)
                         device_state_put_item = {
                             "custom_event_id": custom_event_info["custom_event_id"],
                             "elapsed_time": custom_event_info["elapsed_time"],
                             "di_event_list": di_event_list,
                         }
                     else:
-                        for device_state_custom_event_di in device_state_custom_event["di_event_list"]:
-                            if device_state_custom_event_di.get("event_judge_datetime", 0) == 0:
-                                di_list = {
-                                    "di_no": device_state_custom_event_di["di_no"],
-                                    "di_state": device_state_custom_event_di["di_state"],
-                                    "event_judge_datetime": 0,
-                                    "event_datetime": 0,
+                        for di_event in custom_event_info["di_event_list"]:
+                            find_flag = False
+                            for device_state_di_event in device_state_custom_event["di_event_list"]:
+                                if (di_event["di_no"] == device_state_di_event["di_no"] and
+                                    di_event["di_state"] == device_state_di_event["di_state"]):
+                                    di_event_list.append(device_state_di_event)
+                                    find_flag = True
+                                    break
+                            if not find_flag:
+                                di_no = di_event["di_no"]
+                                di_last_change_datetime = f"di{di_no}_last_change_datetime"
+                                logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
+                                delay_flag = 0
+                                event_judge_datetime = 0
+                                last_change_datetime = device_state.get(di_last_change_datetime)
+                                # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
+                                if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
+                                    delay_flag = 1
+                                    event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                                di_list_item = {
+                                    "di_no": di_no,
+                                    "di_state": di_event["di_state"],
+                                    "event_judge_datetime": event_judge_datetime,
+                                    "delay_flag": delay_flag,
+                                    "di_custom_event_state": 0
                                 }
-                            else:
-                                event_datetime = device_state_custom_event_di["event_judge_datetime"] + custom_event_info["elapsed_time"] * 60 * 1000
-                                if device_state_custom_event_di.get("message_type") in ["0011", "0012"]:
-                                    # 現状態通知（電源ON、定時送信）
-                                    event_hpn_datetime = device_state_custom_event_di["event_hpn_datetime"]
-                                else:
-                                    # 状態変化通知
-                                    event_hpn_datetime = event_datetime
-                                logger.info(event_datetime)
-                                di_list = {
-                                    "di_no": device_state_custom_event_di["di_no"],
-                                    "di_state": device_state_custom_event_di["di_state"],
-                                    "event_judge_datetime": device_state_custom_event_di["event_judge_datetime"],
-                                    "event_datetime": event_datetime,
-                                    "event_hpn_datetime": event_hpn_datetime,
-                                    "delay_flag": device_state_custom_event_di["delay_flag"],
-                                }
-                            di_event_list.append(di_list)
+                                di_event_list.append(di_list_item)
                         device_state_put_item = {
                             "custom_event_id": custom_event_info["custom_event_id"],
                             "elapsed_time": custom_event_info["elapsed_time"],
@@ -225,24 +224,16 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
         
         if not custom_event_info["custom_event_name"]:
             custom_event_name = "無題の継続時間カスタムイベント"
-            custom_put_item = {
-                "custom_event_id": custom_event_info["custom_event_id"],
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "elapsed_time": custom_event_info["elapsed_time"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
         else:
             custom_event_name = custom_event_info["custom_event_name"]
-            custom_put_item = {
-                "custom_event_id": custom_event_info["custom_event_id"],
-                'custom_event_reg_datetime': custom_event_reg_datetime,
-                "event_type": custom_event_info["event_type"],
-                "custom_event_name": custom_event_name,
-                "elapsed_time": custom_event_info["elapsed_time"],
-                "di_event_list": custom_event_info["di_event_list"],
-            }
+        custom_put_item = {
+            "custom_event_id": custom_event_info["custom_event_id"],
+            'custom_event_reg_datetime': custom_event_reg_datetime,
+            "event_type": custom_event_info["event_type"],
+            "custom_event_name": custom_event_name,
+            "elapsed_time": custom_event_info["elapsed_time"],
+            "di_event_list": custom_event_info["di_event_list"],
+        }
             
     # カスタムイベントリスト更新
     custom_event_list = list()
@@ -252,7 +243,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
             if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 custom_event = custom_put_item
             custom_event_list.append(custom_event)
-    custom_event_db_update = update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
+    custom_event_db_update = ddb.update_ddb_custom_event_info(custom_event_list, device_table, device_id, imei)
             
     # デバイス現状態のカスタムタイマーイベントリスト更新
     device_state_timer_list = list()
@@ -261,11 +252,10 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
             if device_state_custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 device_state_custom_event = device_state_put_item
             device_state_timer_list.append(device_state_custom_event)
-        device_state_custom_event_db_update = update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
+        device_state_custom_event_db_update = ddb.update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
     else:
         device_state_custom_event_db_update = True
 
-    
     if custom_event_db_update == True:
         if device_state_custom_event_db_update == True:
             res_body = {"message": "データの登録に成功しました。"}
@@ -276,67 +266,3 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     else:
         res_body = {"message": "データの登録に失敗しました。"}
         return False, res_body
-    
-#　カスタムイベントリスト更新      
-def update_ddb_custom_event_info(custom_event_list, device_table, device_id, identification_id):
-    put_item_fmt = convert.to_dynamo_format(custom_event_list)
-    transact_items = []
-    
-    custom_event_create = {
-        "Update": {
-            "TableName": device_table.table_name,
-            "Key": {
-                "device_id": {"S": device_id},
-                "identification_id": {"S": identification_id},
-            },
-            "UpdateExpression": "set #map_d.#map_c.#map_cel = :s",
-            "ExpressionAttributeNames": {
-                "#map_d": "device_data",
-                "#map_c": "config",
-                "#map_cel": "custom_event_list",
-            },
-            "ExpressionAttributeValues": {
-                ":s": put_item_fmt
-            },
-        }
-    }
-    transact_items.append(custom_event_create)
-        
-    logger.debug(f"put_custom_event_info: {transact_items}")
-    # 各データを登録・更新
-    if not db.execute_transact_write_item(transact_items):
-        return False
-    else:
-        return True
-
-# 現状態テーブルのカスタムタイマーイベントリスト更新
-def update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id):
-    put_item_fmt = convert.to_dynamo_format(device_state_timer_list)
-    transact_items = []
-    
-    device_state_timer_list_create = {
-        "Update": {
-            "TableName": device_state_table.table_name,
-            "Key": {
-                "device_id": {"S": device_id},
-            },
-            "UpdateExpression": "set #map_c = :s",
-            "ExpressionAttributeNames": {
-                "#map_c": "custom_timer_event_list",
-            },
-            "ExpressionAttributeValues": {
-                ":s": put_item_fmt
-            },
-        }
-    }
-    
-    transact_items.append(device_state_timer_list_create)
-        
-    logger.debug(f"put_custom_event_info: {transact_items}")
-    # 各データを登録・更新
-    if not db.execute_transact_write_item(transact_items):
-        return False
-    else:
-        return True
-    
-
