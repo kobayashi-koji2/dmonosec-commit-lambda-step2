@@ -53,10 +53,9 @@ def validate(event, user_info, tables):
 
     # 重複チェック
     http_method = event.get("httpMethod")
-    if http_method == "POST":
-        duplicate = duplicate_check(body, device_info)
-        if not duplicate:
-            return {"message": "同じ設定が重複しています。"}
+    duplicate = duplicate_check(http_method, body, device_info)
+    if not duplicate:
+        return {"message": "同じ設定が重複しています。"}
 
     return {"device_id": device_id, "body": body}
 
@@ -180,8 +179,9 @@ def input_check(param):
     return False
 
 
-def duplicate_check(param, device_info):
-# 重複チェック
+def duplicate_check(http_method, param, device_info):
+
+    # 重複チェック
     do_list = (
         device_info.get("device_data").get("config").get("terminal_settings").get("do_list", [])
     )
@@ -197,5 +197,8 @@ def duplicate_check(param, device_info):
                 do_timer.get("do_time") == param.get("do_time")
                 and len(list(do_weekday & param_do_weekday)) > 0
             ):
-                return False
+                if http_method == "PUT" and do_timer.get("do_timer_id") == param.get("do_timer_id"):
+                    pass
+                else:
+                    return False
     return True
