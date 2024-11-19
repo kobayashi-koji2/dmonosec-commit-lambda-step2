@@ -377,7 +377,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
 
         if case == 1:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or any(key in group_name for group_name in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -388,7 +388,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                     return_list.append(device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or any(key in group_name for group_name in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -398,12 +398,12 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in group_name_list):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or any(keyword[1:] in group_name for group_name in group_name_list):
                 pass
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in group_name_list):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or any(keyword in group_name for group_name in group_name_list):
                 return_list.append(device_info)
 
     return return_list
