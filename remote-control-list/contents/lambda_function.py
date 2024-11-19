@@ -120,7 +120,7 @@ def lambda_handler(event, context, user_info):
         if keyword == None or keyword == "":
             device_info_list_filtered = device_info_list
         elif detect_condition != None:
-            device_info_list_filtered = keyword_detection_device_list(detect_condition, keyword, device_info_list, device_group_relation)
+            device_info_list_filtered = keyword_detection_device_list(detect_condition, keyword, device_info_list, group_info_list, device_group_relation)
         else:
             res_body = {"message": "検索条件が設定されていません。"}
             return {
@@ -142,7 +142,7 @@ def lambda_handler(event, context, user_info):
 
             if device_info is not None and device_info.get("device_type") in ["PJ1", "PJ2", "PJ3"]:
                 # 現状態情報取得
-                state_info = db.get_device_state(device_id, device_state_table)
+                state_info = db.get_device_state(device_info["device_id"], device_state_table)
                 # 現状態情報がない場合は次のデバイスへ
                 if not state_info:
                     continue
@@ -159,7 +159,7 @@ def lambda_handler(event, context, user_info):
 
                 # グループ情報取得
                 filtered_device_group_relation = next(
-                    (group for group in device_group_relation if group["device_id"] == device_id), {}
+                    (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
                 ).get("group_list", [])
                 logger.info(f"グループID参照:{filtered_device_group_relation}")
                 # グループ名参照
@@ -180,7 +180,7 @@ def lambda_handler(event, context, user_info):
                     if not do_info["do_control"]:
                         continue
                     res_item = __generate_response_items(
-                        device_id, device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list
+                        device_info["device_id"], device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list
                     )
                     results.append(res_item)
                 
@@ -269,19 +269,19 @@ def __decimal_to_integer_or_float(param):
     return param
 
 
-def keyword_detection_device_list(detect_condition, keyword, device_info_list, device_group_relation):
+def keyword_detection_device_list(detect_condition, keyword, device_info_list, group_info_list, device_group_relation):
 
     if detect_condition == 0:
-        filtered_device_list = device_detect_all(keyword, device_info_list)
-    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4 or detect_condition == 5:
-        filtered_device_list = device_detect(detect_condition, keyword, device_info_list, device_group_relation)
+        filtered_device_list = device_detect_all(keyword, device_info_list, group_info_list, device_group_relation)
+    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4 or detect_condition == 5 or detect_condition == 6:
+        filtered_device_list = device_detect(detect_condition, keyword, device_info_list, group_info_list, device_group_relation)
     else:
         filtered_device_list = device_info_list
     
     return filtered_device_list
 
 # デバイス検索
-def device_detect(detect_condition, keyword, device_info_list, device_group_relation):
+def device_detect(detect_condition, keyword, device_info_list, group_info_list, device_group_relation):
 
     # AND,OR区切りでリスト化
     if " OR " in keyword:
@@ -319,6 +319,19 @@ def device_detect(detect_condition, keyword, device_info_list, device_group_rela
             if device_value == []:
                 continue
         elif detect_condition == 5:
+            filtered_device_group_relation = next(
+                (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
+            ).get("group_list", [])
+            device_value = [
+                next((group for group in group_info_list if group["group_id"] == item2), {})
+                .get("group_data", {})
+                .get("config", {})
+                .get("group_name", "")
+                for item2 in filtered_device_group_relation
+            ]
+            if device_value == []:
+                continue
+        elif detect_condition == 6:
             device_id = device_info["device_id"]
             device_value = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
             if device_value == []:
@@ -414,7 +427,7 @@ def device_detect(detect_condition, keyword, device_info_list, device_group_rela
     return return_list
 
 
-def device_detect_all(keyword,device_info_list):
+def device_detect_all(keyword, device_info_list, group_info_list, device_group_relation):
 
     # AND,OR区切りでリスト化
     if " OR " in keyword:
@@ -446,6 +459,17 @@ def device_detect_all(keyword,device_info_list):
         device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
         do_name = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
+        filtered_device_group_relation = next(
+            (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
+        ).get("group_list", [])
+        group_name_list = [
+            next((group for group in group_info_list if group["group_id"] == item2), {})
+            .get("group_data", {})
+            .get("config", {})
+            .get("group_name", "")
+            for item2 in filtered_device_group_relation
+        ]
+
 
         #Noneの場合にエラーが起きることの回避のため
         if device_name is None:
@@ -456,10 +480,12 @@ def device_detect_all(keyword,device_info_list):
             device_code = ""
         if do_name is None:
             do_name = ""
+        if group_name_list is None:
+            group_name_list = ""
 
         if case == 1:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -470,7 +496,7 @@ def device_detect_all(keyword,device_info_list):
                     return_list.append(device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -480,12 +506,12 @@ def device_detect_all(keyword,device_info_list):
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in do_name):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in group_name_list):
                 pass
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in do_name):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in group_name_list):
                 return_list.append(device_info)
 
     return return_list
