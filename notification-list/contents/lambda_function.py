@@ -139,7 +139,7 @@ def lambda_handler(event, context, user):
 
             device_list.append(
                 {
-                    "device_id": device_id,
+                    "device_id": device_info.get("device_id", ""),
                     "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name", ""),
                     "group_name_list": group_name_list,
                     "device_imei": device_info.get("imei", ""),
