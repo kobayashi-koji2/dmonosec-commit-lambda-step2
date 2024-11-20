@@ -69,7 +69,12 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
 
                 for di_event in custom_timer_event.get("di_event_list", []):
                     terminal_no = di_event.get("di_no")
-                    if di_event.get("di_custom_event_state") == 1:
+                    terminal_key = f"di{terminal_no}_state"
+                    current_di_state = device_current_state.get(terminal_key)
+                    if (
+                        (di_event.get("di_state") in [0,1] and di_event.get("di_state") != current_di_state)
+                        or di_event.get("di_custom_event_state") == 1
+                    ):
                         continue
                     custom_event_period_time = custom_event_info.get("elapsed_time") * 60 * 1000
                     di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
