@@ -323,7 +323,8 @@ def lambda_handler(event, context, user_info):
             )
 
             pre_register_device_group_relation = []
-            for i, pre_reg_device_info in enumerate(pre_reg_device_info_list):
+            pre_reg_device_info_add_group_name_list = []
+            for pre_reg_device_info in pre_reg_device_info_list:
                 if pre_reg_device_info.get("device_code") == "MS-C0130":
                     pre_device_id = pre_reg_device_info.get("device_sigfox_id")
                 else:
@@ -336,14 +337,15 @@ def lambda_handler(event, context, user_info):
                     unregistered_device_group_info = db.get_group_info(pre_device_group_id, tables["group_table"])
                     unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_data").get("config").get("group_name"))
                 
-                pre_reg_device_info_list[i]["group_name_list"] = unregistered_device_group_name_list
+                pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
+                pre_reg_device_info_add_group_name_list.append(pre_reg_device_info)
+
+            pre_reg_device_info_list = pre_reg_device_info_add_group_name_list
 
             if keyword == None or keyword == "":
                 pass
             elif detect_condition != None:
                 pre_reg_device_info_list = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation)
-
-            pre_reg_device_info_list = [{k: v for k, v in d.items() if k != "group_name_list"} for d in pre_reg_device_info_list]
 
             ##################
             # 8 応答メッセージ生成
