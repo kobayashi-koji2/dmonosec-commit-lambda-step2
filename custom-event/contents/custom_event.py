@@ -67,14 +67,34 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                         if custom_timer_event.get("custom_event_id") == custom_event_info.get("custom_event_id"):
                             for di_event in custom_timer_event.get("di_event_list", []):
                                 if di_event.get("di_no") == terminal_no:
-                                    event_date_time = di_event.get("event_datetime")
-                                    event_hpn_datetime = di_event.get("event_hpn_datetime")
+
+                                    custom_event_period_time = custom_event_info.get("elapsed_time") * 60 * 1000
+
+                                    di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
+                                    logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
+                                    if di_last_change_datetime in device_current_state:
+                                        last_recv_datetime = device_current_state.get(di_last_change_datetime)
+                                        elapsed_time = now_unixtime - last_recv_datetime
+                                        logger.debug(f"now_datetime={now_unixtime}, last_recv_datetime={last_recv_datetime}")
+                                        logger.debug(f"elapsed_time={elapsed_time}, custom_event_period_time={custom_event_period_time}")
+                                        if elapsed_time >= custom_event_period_time:
+                                            di_custom_event_state = 1
+                                            # now = datetime.now()
+                                            # event_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+                                        else:
+                                            di_custom_event_state = 0
+
+                                    if di_custom_event_state == 1:
+                                        continue
+                                    # di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
+                                    # event_date_time = di_event.get("event_datetime")
+                                    event_hpn_datetime = device_current_state.get(di_last_change_datetime) + custom_event_period_time
                                     break
-                    if event_date_time:
-                        if event_date_time <= now_unixtime:
-                            logger.debug(f"イベント設定時刻 <= 現時刻")
-                        else:
-                            continue
+                    # if event_date_time:
+                    #     if event_date_time <= now_unixtime:
+                    #         logger.debug(f"イベント設定時刻 <= 現時刻")
+                    #     else:
+                    #         continue
                     else:
                         logger.debug(f"event_datetimeなし")
                         continue
