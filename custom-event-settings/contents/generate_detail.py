@@ -108,10 +108,9 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     device_state = db.get_device_state(device_id, device_state_table)
     custom_put_item = dict()
     
-    for item in device_info:
-        for custom_event in item.get("device_data").get("config").get("custom_event_list", []):
-            if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
-                custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
+    for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
+        if custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
+            custom_event_reg_datetime = custom_event["custom_event_reg_datetime"]
 
     # 日時指定
     if custom_event_info["event_type"] == 0:

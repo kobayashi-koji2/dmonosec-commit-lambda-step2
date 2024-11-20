@@ -96,29 +96,28 @@ def lambda_handler(event, context, user):
         ### 7. カスタムイベント設定情報取得
         device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         custom_event_list = list()
-        for item in device_info:
-            for custom_event_a in item.get("device_data").get("config").get("custom_event_list", []):
-                ### 8. メッセージ応答
-                if custom_event_a["event_type"] == 0:
-                    custom_event_item = {
-                        "custom_event_id": custom_event_a["custom_event_id"],
-                        'custom_event_reg_datetime': custom_event_a["custom_event_reg_datetime"],
-                        "event_type": custom_event_a["event_type"],
-                        "custom_event_name": custom_event_a["custom_event_name"],
-                        "time": custom_event_a["time"],
-                        "weekday": custom_event_a["weekday"],
-                        "di_event_list": custom_event_a["di_event_list"],
-                    }
-                if custom_event_a["event_type"] == 1:
-                    custom_event_item = {
-                        "custom_event_id": custom_event_a["custom_event_id"],
-                        'custom_event_reg_datetime': custom_event_a["custom_event_reg_datetime"],
-                        "event_type": custom_event_a["event_type"],
-                        "custom_event_name": custom_event_a["custom_event_name"],
-                        "elapsed_time": custom_event_a["elapsed_time"],
-                        "di_event_list": custom_event_a["di_event_list"],
-                    }
-                custom_event_list.append(custom_event_item)
+        for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
+            ### 8. メッセージ応答
+            if custom_event["event_type"] == 0:
+                custom_event_item = {
+                    "custom_event_id": custom_event["custom_event_id"],
+                    'custom_event_reg_datetime': custom_event["custom_event_reg_datetime"],
+                    "event_type": custom_event["event_type"],
+                    "custom_event_name": custom_event["custom_event_name"],
+                    "time": custom_event["time"],
+                    "weekday": custom_event["weekday"],
+                    "di_event_list": custom_event["di_event_list"],
+                }
+            if custom_event["event_type"] == 1:
+                custom_event_item = {
+                    "custom_event_id": custom_event["custom_event_id"],
+                    'custom_event_reg_datetime': custom_event["custom_event_reg_datetime"],
+                    "event_type": custom_event["event_type"],
+                    "custom_event_name": custom_event["custom_event_name"],
+                    "elapsed_time": custom_event["elapsed_time"],
+                    "di_event_list": custom_event["di_event_list"],
+                }
+            custom_event_list.append(custom_event_item)
 
         res_body = {"message": "", "custom_event_list": custom_event_list}
         return {
