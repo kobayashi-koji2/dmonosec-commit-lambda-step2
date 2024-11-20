@@ -48,6 +48,8 @@ def lambda_handler(event, context, user_info):
 
         logger.debug(f"user_info: {user_info}")
 
+        cotract_id = user_info["contract_id"]
+
         ### 2. デバイスID取得（作業者・参照者の場合）
         device_id_list = list()
         if user_info["user_type"] in ("worker", "referrer"):
@@ -59,7 +61,6 @@ def lambda_handler(event, context, user_info):
         ### 3. デバイスID取得（管理者・副管理者の場合）
         if user_info["user_type"] in ("admin", "sub_admin"):
             logger.info("In case of admin/sub_admin")
-            cotract_id = user_info["contract_id"]
             contract_info = db.get_contract_info(cotract_id, contract_table)
             logger.debug(f"contract_info: {contract_info}")
             device_id_list = contract_info["contract_data"]["device_list"]
