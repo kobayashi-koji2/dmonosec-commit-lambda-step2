@@ -124,7 +124,7 @@ def customEventHist(device_info, hist_list_items, event_datetime, group_list, te
     hist_list_item = {
         "device_id": device_info.get("device_id"),
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": event_hpn_datetime,
+        "event_datetime": int(event_hpn_datetime),
         "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info.get("device_data", {}).get("config", {}).get("device_name"),

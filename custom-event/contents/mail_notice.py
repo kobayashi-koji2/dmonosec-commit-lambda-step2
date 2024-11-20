@@ -77,7 +77,7 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                 JST = timezone(timedelta(hours=+9), 'JST')
                 now = datetime.now()
                 notice_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
-                event_dt = datetime.fromtimestamp(hist_list_items[i]['event_datetime'] / 1000).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
+                event_dt = datetime.fromtimestamp(int(int(hist_list_items[i]['event_datetime']) / 1000)).replace(tzinfo=timezone.utc).astimezone(tz=JST).strftime('%Y/%m/%d %H:%M:%S')
 
                 mail_subject = "イベントが発生しました"
                 event_detail = textwrap.dedent(event_detail)
