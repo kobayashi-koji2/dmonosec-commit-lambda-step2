@@ -136,9 +136,9 @@ def keyword_detection_user(detect_condition, keyword, account):
 
     account_config = account.get("user_data", {}).get("config", {})
     if detect_condition == 0:
-        get_flag = user_detect_all(keyword, account_config, account)
+        get_flag = user_detect_all(keyword, account)
     elif detect_condition == 1 or detect_condition == 2:
-        get_flag = user_detect(detect_condition, keyword, account_config, account)
+        get_flag = user_detect(detect_condition, keyword, account)
     else:
         get_flag = True
     
