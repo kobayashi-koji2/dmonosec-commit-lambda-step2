@@ -1,13 +1,8 @@
 import json
-import boto3
-import ddb
-import re
-from decimal import Decimal
 from aws_lambda_powertools import Logger
 
 # layer
 import db
-import convert
 
 logger = Logger()
 
@@ -23,7 +18,7 @@ def validate(event, user, device_table, contract_table):
     device_id = pathParam["device_id"]
     if not device_id:
         return {"message": "リクエストパラメータが不正です。"}
-    device_info = ddb.get_device_info(device_id, device_table)
+    device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
     # パラメータの中身チェック
     if not http_method or not device_id:
         return {"message": "パラメータが不正です。"}

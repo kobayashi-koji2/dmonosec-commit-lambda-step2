@@ -2,9 +2,8 @@ import json
 import boto3
 import validate
 import generate_detail
-import ddb
+import db
 import os
-from botocore.exceptions import ClientError
 import traceback
 from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
@@ -95,7 +94,7 @@ def lambda_handler(event, context, user):
                 }
                 
         ### 7. カスタムイベント設定情報取得
-        device_info = ddb.get_device_info(device_id, device_table)
+        device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
         custom_event_list = list()
         for item in device_info:
             for custom_event_a in item.get("device_data").get("config").get("custom_event_list", []):

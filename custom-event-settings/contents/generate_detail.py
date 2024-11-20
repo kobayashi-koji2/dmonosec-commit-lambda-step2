@@ -104,7 +104,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
 
 # カスタムイベント設定更新         
 def update_custom_event_info(custom_event_info, device_table, device_id,device_state_table):
-    device_info = db.get_device_info(device_id, device_table)
+    device_info = db.get_device_info_other_than_unavailable(device_id, device_table)
     device_state = db.get_device_state(device_id, device_state_table)
     custom_put_item = dict()
     

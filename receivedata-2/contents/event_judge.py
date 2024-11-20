@@ -412,7 +412,6 @@ def updateCurrentStateInfo(current_state_info, event_info, event_datetime, recv_
         recv_datetime = recv_data.get("recv_datetime")
         custom_timer_event_list = current_state_info.get("custom_timer_event_list") or []
         for custom_timer_event in custom_timer_event_list:
-            elapsed_time = custom_timer_event.get("elapsed_time") * 60 * 1000
             di_event_list = custom_timer_event.get("di_event_list", [])
             for di_event in di_event_list:
                 if di_event.get("di_no") == event_info.get("terminal_no"):
