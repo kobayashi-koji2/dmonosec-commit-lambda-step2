@@ -172,7 +172,7 @@ def user_detect(detect_condition, keyword, account):
             else account.get("email_address")
         )
         logger.info(f"user_name:{search_value}")
-    elif detect_condition == 1:
+    elif detect_condition == 2:
         search_value = account.get("email_address")
         logger.info(f"mail_address:{search_value}")
     else :
