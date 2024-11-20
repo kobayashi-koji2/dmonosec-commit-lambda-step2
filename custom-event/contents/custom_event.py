@@ -76,18 +76,27 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                         or di_event.get("di_custom_event_state") == 1
                     ):
                         continue
-                    custom_event_period_time = custom_event_info.get("elapsed_time") * 60 * 1000
-                    di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
-                    logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
-                    if di_last_change_datetime in device_current_state:
-                        last_change_datetime = device_current_state.get(di_last_change_datetime)
-                        elapsed_time = event_datetime - last_change_datetime
-                        logger.debug(f"event_datetime={event_datetime}, last_change_datetime={last_change_datetime}")
-                        logger.debug(f"elapsed_time={elapsed_time}, custom_event_period_time={custom_event_period_time}")
-                        if elapsed_time >= custom_event_period_time:
+                    if di_event.get("delay_flag") == 1:
+                        last_recv_datetime = di_event.get("event_judge_datetime")
+                        custom_event_period_time = 3 * 60 * 1000
+                        event_judge_datetime = last_recv_datetime + custom_event_period_time
+                        if event_datetime >= event_judge_datetime:
                             device_current_state["custom_timer_event_list"][i]["di_event_list"][j]["di_custom_event_state"] = 1
-                            event_hpn_datetime = int(device_current_state.get(di_last_change_datetime)) + int(custom_event_period_time)
+                            event_hpn_datetime = int(event_judge_datetime)
                             hist_list_items = customEventHist(device_info, hist_list_items, event_datetime, group_list, terminal_no, current_di_state, event_hpn_datetime, custom_event_info, event_type)
+                    else:
+                        custom_event_period_time = custom_event_info.get("elapsed_time") * 60 * 1000
+                        di_last_change_datetime = f"di{terminal_no}_last_change_datetime"
+                        logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
+                        if di_last_change_datetime in device_current_state:
+                            last_change_datetime = device_current_state.get(di_last_change_datetime)
+                            elapsed_time = event_datetime - last_change_datetime
+                            logger.debug(f"event_datetime={event_datetime}, last_change_datetime={last_change_datetime}")
+                            logger.debug(f"elapsed_time={elapsed_time}, custom_event_period_time={custom_event_period_time}")
+                            if elapsed_time >= custom_event_period_time:
+                                device_current_state["custom_timer_event_list"][i]["di_event_list"][j]["di_custom_event_state"] = 1
+                                event_hpn_datetime = int(device_current_state.get(di_last_change_datetime)) + int(custom_event_period_time)
+                                hist_list_items = customEventHist(device_info, hist_list_items, event_datetime, group_list, terminal_no, current_di_state, event_hpn_datetime, custom_event_info, event_type)
     logger.debug("customEvent正常終了")
     return device_current_state, hist_list_items
 

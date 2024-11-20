@@ -323,8 +323,7 @@ def lambda_handler(event, context, user_info):
             )
 
             pre_register_device_group_relation = []
-            pre_reg_device_info_add_group_name_list = []
-            for pre_reg_device_info in pre_reg_device_info_list:
+            for i, pre_reg_device_info in enumerate(pre_reg_device_info_list):
                 if pre_reg_device_info.get("device_code") == "MS-C0130":
                     pre_device_id = pre_reg_device_info.get("device_sigfox_id")
                 else:
@@ -337,16 +336,15 @@ def lambda_handler(event, context, user_info):
                     unregistered_device_group_info = db.get_group_info(pre_device_group_id, tables["group_table"])
                     unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_data").get("config").get("group_name"))
                 
-                pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
-                pre_reg_device_info_add_group_name_list.append(pre_reg_device_info)
-
-            pre_reg_device_info_list = pre_reg_device_info_add_group_name_list
+                pre_reg_device_info_list[i]["group_name_list"] = unregistered_device_group_name_list
 
             if keyword == None or keyword == "":
                 pass
             elif detect_condition != None:
-                pre_reg_device_info_list = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation,unregistered_device_group_name_list)
-            
+                pre_reg_device_info_list = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation)
+
+            pre_reg_device_info_list = [{k: v for k, v in d.items() if k != "group_name_list"} for d in pre_reg_device_info_list]
+
             ##################
             # 8 応答メッセージ生成
             ##################
@@ -640,18 +638,18 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
 
 
 # 未登録デバイス検索
-def keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation,unregistered_device_group_name_list):
+def keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation):
 
     if detect_condition == 0:
-        filtered_device_list = device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list,unregistered_device_group_name_list)
+        filtered_device_list = device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
     elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4 or detect_condition == 5:
-        filtered_device_list = device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation,unregistered_device_group_name_list)
+        filtered_device_list = device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation)
     else:
         filtered_device_list = pre_reg_device_info_list
     
     return filtered_device_list
 
-def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation,unregistered_device_group_name_list):
+def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation):
 
     # AND,OR区切りでリスト化
     if " OR " in keyword:
@@ -695,7 +693,7 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
             if device_value == []:
                 continue
         elif detect_condition == 5:
-            device_value = unregistered_device_group_name_list
+            device_value = pre_reg_device_info.get("group_name_list")
         else :
             device_value = None
 
@@ -785,7 +783,7 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
 
     return return_list
 
-def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list,unregistered_device_group_name_list):
+def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list):
 
     # AND,OR区切りでリスト化
     if " OR " in keyword:
@@ -817,7 +815,7 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list,
             device_id = pre_reg_device_info.get("device_sigfox_id")
         else:
             device_id = pre_reg_device_info.get("device_imei")
-        group_name_list = unregistered_device_group_name_list
+        group_name_list = pre_reg_device_info.get("group_name_list")
 
         #Noneの場合にエラーが起きることの回避のため
         if device_name is None:
