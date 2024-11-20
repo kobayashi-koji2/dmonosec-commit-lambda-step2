@@ -55,6 +55,8 @@ def lambda_handler(event, context):
             dt_event = datetime.fromtimestamp(event_datetime)
             if dt_event.tzname != "JST":
                 dt_event = dt_event + timedelta(hours=+9)
+            # UNIX秒をUNIXミリ秒に変換
+            event_datetime = event_datetime * 1000
             event_trigger = payload.get("event_trigger")
             contract_id = payload.get("contract_id")
             logger.debug(f"event_trigger={event_trigger}, contract_id={contract_id}")
@@ -99,7 +101,7 @@ def lambda_handler(event, context):
                 logger.debug(f"group_name={group_name}")
 
                 # カスタムイベント処理
-                hist_list_items = customEvent(device_info, device_current_state, hist_list_items, now_datetime, dt_event, group_list)
+                hist_list_items = customEvent(device_info, device_current_state, hist_list_items, now_datetime, event_datetime, dt_event, group_list)
 
                 if hist_list_items:
                     # メール通知

@@ -67,7 +67,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
             for di_event in custom_event_info["di_event_list"]:
                 di_no = di_event["di_no"]
                 delay_flag = 0
-                event_judge_datetime = custom_event_reg_datetime
+                event_judge_datetime = custom_event_reg_datetime * 1000
                 """
                 di_last_change_datetime = f"di{di_no}_last_change_datetime"
                 last_change_datetime = device_state.get(di_last_change_datetime)
@@ -169,7 +169,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                     if not find_flag:
                         di_no = di_event["di_no"]
                         delay_flag = 0
-                        event_judge_datetime = custom_event_reg_datetime
+                        event_judge_datetime = custom_event_reg_datetime * 1000
                         """
                         di_last_change_datetime = f"di{di_no}_last_change_datetime"
                         last_change_datetime = device_state.get(di_last_change_datetime)
@@ -196,7 +196,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                 for di_event in custom_event_info["di_event_list"]:
                     di_no = di_event["di_no"]
                     delay_flag = 0
-                    event_judge_datetime = custom_event_reg_datetime
+                    event_judge_datetime = custom_event_reg_datetime * 1000
                     """
                     di_last_change_datetime = f"di{di_no}_last_change_datetime"
                     last_change_datetime = device_state.get(di_last_change_datetime)
@@ -229,7 +229,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
             if device_state_custom_event["custom_event_id"] == custom_event_info["custom_event_id"]:
                 device_state_custom_event = device_state_put_item
             device_state_timer_list.append(device_state_custom_event)
-        device_state_custom_event_db_update = ddb.update_ddb_device_state_info(device_state_put_item, device_state_table, device_id)
+        device_state_custom_event_db_update = ddb.update_ddb_device_state_info(device_state_timer_list, device_state_table, device_id)
     else:
         device_state_custom_event_db_update = True
 
