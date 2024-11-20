@@ -63,11 +63,11 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
         # 経過時間
         elif event_type == "custom_timer":
             custom_timer_event_list = device_current_state.get("custom_timer_event_list", [])
-            for custom_timer_event in custom_timer_event_list:
+            for i, custom_timer_event in enumerate(custom_timer_event_list):
                 if custom_timer_event.get("custom_event_id") != custom_event_info.get("custom_event_id"):
                     continue
 
-                for di_event in custom_timer_event.get("di_event_list", []):
+                for j, di_event in enumerate(custom_timer_event.get("di_event_list", [])):
                     terminal_no = di_event.get("di_no")
                     terminal_key = f"di{terminal_no}_state"
                     current_di_state = device_current_state.get(terminal_key)
@@ -85,10 +85,11 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                         logger.debug(f"event_datetime={event_datetime}, last_change_datetime={last_change_datetime}")
                         logger.debug(f"elapsed_time={elapsed_time}, custom_event_period_time={custom_event_period_time}")
                         if elapsed_time >= custom_event_period_time:
+                            device_current_state["custom_timer_event_list"][i]["di_event_list"][j]["di_custom_event_state"] = 1
                             event_hpn_datetime = device_current_state.get(di_last_change_datetime) + custom_event_period_time
                             hist_list_items = customEventHist(device_info, hist_list_items, event_datetime, group_list, terminal_no, current_di_state, event_hpn_datetime, custom_event_info, event_type)
     logger.debug("customEvent正常終了")
-    return hist_list_items
+    return device_current_state, hist_list_items
 
 
 def customEventHist(device_info, hist_list_items, event_datetime, group_list, terminal_no, current_di_state, event_hpn_datetime, custom_event_info, event_type):
