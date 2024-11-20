@@ -66,14 +66,16 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
             di_event_list = list()
             for di_event in custom_event_info["di_event_list"]:
                 di_no = di_event["di_no"]
-                di_last_change_datetime = f"di{di_no}_last_change_datetime"
                 delay_flag = 0
-                event_judge_datetime = 0
+                event_judge_datetime = custom_event_reg_datetime
+                """
+                di_last_change_datetime = f"di{di_no}_last_change_datetime"
                 last_change_datetime = device_state.get(di_last_change_datetime)
                 # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
                 if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
                     delay_flag = 1
                     event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                """
                 di_list_item = {
                     "di_no": di_no,
                     "di_state": di_event["di_state"],
@@ -166,15 +168,16 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                             break
                     if not find_flag:
                         di_no = di_event["di_no"]
-                        di_last_change_datetime = f"di{di_no}_last_change_datetime"
-                        logger.debug(f"di_last_change_datetime={di_last_change_datetime}")
                         delay_flag = 0
-                        event_judge_datetime = 0
+                        event_judge_datetime = custom_event_reg_datetime
+                        """
+                        di_last_change_datetime = f"di{di_no}_last_change_datetime"
                         last_change_datetime = device_state.get(di_last_change_datetime)
                         # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
                         if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
                             delay_flag = 1
                             event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                        """
                         di_list_item = {
                             "di_no": di_no,
                             "di_state": di_event["di_state"],
@@ -192,14 +195,16 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
                 di_event_list = list()
                 for di_event in custom_event_info["di_event_list"]:
                     di_no = di_event["di_no"]
-                    di_last_change_datetime = f"di{di_no}_last_change_datetime"
                     delay_flag = 0
-                    event_judge_datetime = 0
+                    event_judge_datetime = custom_event_reg_datetime
+                    """
+                    di_last_change_datetime = f"di{di_no}_last_change_datetime"
                     last_change_datetime = device_state.get(di_last_change_datetime)
                     # 最終変化日時 + 経過時間(分) < 登録日時の場合は3分後のイベント検知
                     if last_change_datetime + custom_event_info["elapsed_time"] * 60 * 1000 < custom_event_reg_datetime:
                         delay_flag = 1
                         event_judge_datetime = custom_event_reg_datetime + 3 * 60 * 1000
+                    """
                     di_list_item = {
                         "di_no": di_no,
                         "di_state": di_event["di_state"],
