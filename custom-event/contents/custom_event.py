@@ -86,7 +86,7 @@ def customEvent(device_info, device_current_state, hist_list_items, now_unixtime
                         logger.debug(f"elapsed_time={elapsed_time}, custom_event_period_time={custom_event_period_time}")
                         if elapsed_time >= custom_event_period_time:
                             device_current_state["custom_timer_event_list"][i]["di_event_list"][j]["di_custom_event_state"] = 1
-                            event_hpn_datetime = device_current_state.get(di_last_change_datetime) + custom_event_period_time
+                            event_hpn_datetime = int(device_current_state.get(di_last_change_datetime)) + int(custom_event_period_time)
                             hist_list_items = customEventHist(device_info, hist_list_items, event_datetime, group_list, terminal_no, current_di_state, event_hpn_datetime, custom_event_info, event_type)
     logger.debug("customEvent正常終了")
     return device_current_state, hist_list_items
