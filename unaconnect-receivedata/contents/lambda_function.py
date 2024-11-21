@@ -180,9 +180,11 @@ def lambda_handler(event, context):
                 current_state_info = judge_near_battery(current_state_info,hist_item,hist_list_table)
 
             # デバイスヘルシー判定
-            if current_state_info.get("device_healthy_state") == 1:
-                current_state_info = device_healthy_recover(req_body, recv_datetime, device_info, current_state_info,
-                                                            group_list, hist_list_table, notification_hist_table, user_table, account_table)
+            if current_state_info:
+                # デバイスヘルシー
+                if current_state_info.get("device_healthy_state") == 1:
+                    current_state_info = device_healthy_recover(req_body, recv_datetime, device_info, current_state_info,
+                                                                group_list, hist_list_table, notification_hist_table, user_table, account_table)
 
             ddb.put_db_item(current_state_info,state_table)
         
