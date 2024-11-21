@@ -112,7 +112,6 @@ def mailNotice(device_info, group_name, hist_list_items, now_datetime, user_tabl
                 ddb.put_notice_hist(notice_hist_info, notification_hist_table)
                 # 履歴一覧編集
                 hist_list_items[i]['hist_data']['notification_hist_id'] = notice_hist_info.get("notification_hist_id")
-                break
 
     logger.debug("mailNotice終了")
     return hist_list_items
