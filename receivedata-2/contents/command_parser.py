@@ -259,13 +259,19 @@ def commandParser(
         if hist_flg:
             # 現状態更新タイプ
             update_digit = 0b0000
-            if current_state_info.get("device_healthy_state") != device_current_state.get("device_healthy_state"):
-                update_digit |= 0b0001
-            di_range = 2 if szDeviceType == "PJ1" else 9
-            for i in range(1, di_range):
-                di_healthy_state_key = f"di{i}_healthy_state"
-                if current_state_info.get(di_healthy_state_key) != device_current_state.get(di_healthy_state_key):
-                    update_digit |= 0b0010
+            if (current_state_info and device_current_state):
+                # デバイスヘルシー
+                if "device_healthy_state" in current_state_info and "device_healthy_state" in device_current_state:
+                    if current_state_info.get("device_healthy_state") != device_current_state.get("device_healthy_state"):
+                        update_digit |= 0b0001
+
+                # 接点入力未変化検出
+                di_range = 2 if szDeviceType == "PJ1" else 9
+                for i in range(1, di_range):
+                    di_healthy_state_key = f"di{i}_healthy_state"
+                    if di_healthy_state_key in current_state_info and di_healthy_state_key in device_current_state:
+                        if current_state_info.get(di_healthy_state_key) != device_current_state.get(di_healthy_state_key):
+                            update_digit |= 0b0010
             logger.debug(f"現状態テーブル dbItem={current_state_info}")
             ddb.update_current_state(current_state_info, device_info, update_digit, state_table)
 
