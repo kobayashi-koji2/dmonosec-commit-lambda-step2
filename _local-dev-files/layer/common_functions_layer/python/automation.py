@@ -181,7 +181,7 @@ def automation_control(device_id, event_type, terminal_no, di_state, occurrence_
             control_device.get("device_id"), control_do.get("do_no"), remote_controls_table
         )
         if remote_control_latest:
-            control_trigger = remote_control_latest.get("control_trigger")
+            control_trigger = remote_control_latest[0].get("control_trigger")
         else:
             control_trigger = ""
         # 制御状況を追加（同時処理の排他制御）
