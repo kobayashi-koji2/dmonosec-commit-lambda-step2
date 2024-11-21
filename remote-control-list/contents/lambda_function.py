@@ -109,9 +109,11 @@ def lambda_handler(event, context, user_info):
                         if not do_info["do_control"]:
                             continue
                         device_info_item["device_data"]["config"]["terminal_settings"]["do_info"] = do_info
+                        logger.info(f"device_info_item:{device_info_item}")
                         device_info_list.append(device_info_item)
                     break
 
+        logger.info(f"device_info_list:{device_info_list}")
 
         detect_condition = None
         keyword = None
@@ -511,7 +513,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or any(keyword in do_name) or any(keyword in group_name for group_name in group_name_list):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or (keyword in do_name) or any(keyword in group_name for group_name in group_name_list):
                 return_list.append(device_info)
 
     return return_list
