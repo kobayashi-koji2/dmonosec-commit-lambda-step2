@@ -8,6 +8,7 @@ from aws_lambda_powertools import Logger
 from aws_xray_sdk.core import patch_all
 from functools import reduce
 import boto3
+import copy
 
 # layer
 import auth
@@ -110,7 +111,8 @@ def lambda_handler(event, context, user_info):
                             continue
                         device_info_item["device_data"]["config"]["terminal_settings"]["do_info"] = do_info
                         logger.info(f"device_info_item:{device_info_item}")
-                        device_info_list.append(device_info_item)
+                        copy_item = copy.deepcopy(device_info_item)
+                        device_info_list.append(copy_item)
                     break
 
         logger.info(f"device_info_list:{device_info_list}")
