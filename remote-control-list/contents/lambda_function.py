@@ -104,7 +104,12 @@ def lambda_handler(event, context, user_info):
         for device_item in device_id_list:
             for device_info_item in device_info_all_list:
                 if device_info_item["device_id"] == device_item:
-                    device_info_list.append(device_info_item)
+                    do_list = device_info_item["device_data"]["config"]["terminal_settings"]["do_list"]
+                    for do_info in do_list:
+                        if not do_info["do_control"]:
+                            continue
+                        device_info_item["device_data"]["config"]["terminal_settings"]["do_info"] = do_info
+                        device_info_list.append(device_info_item)
                     break
 
 
@@ -153,8 +158,6 @@ def lambda_handler(event, context, user_info):
                 device_name = (
                     device_info.get("device_data", {}).get("config", {}).get("device_name", "")
                 )
-                # 接点出力一覧
-                do_list = device_info["device_data"]["config"]["terminal_settings"]["do_list"]
                 # 接点入力一覧
                 di_list = device_info["device_data"]["config"]["terminal_settings"]["di_list"]
 
@@ -177,13 +180,11 @@ def lambda_handler(event, context, user_info):
                 logger.info(f"グループ名:{group_name_list}")
 
                 # 接点出力を基準にそれに紐づく接点入力をレスポンス内容として設定
-                for do_info in do_list:
-                    if not do_info["do_control"]:
-                        continue
-                    res_item = __generate_response_items(
-                        device_info["device_id"], device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list
-                    )
-                    results.append(res_item)
+                do_info = device_info["device_data"]["config"]["terminal_settings"]["do_info"]
+                res_item = __generate_response_items(
+                    device_info["device_id"], device_name, device_imei, device_code, do_info, di_list, state_info, group_name_list
+                )
+                results.append(res_item)
                 
 
         ### 6. メッセージ応答
@@ -334,9 +335,7 @@ def device_detect(detect_condition, keyword, device_info_list, group_info_list, 
                 continue
         elif detect_condition == 6:
             device_id = device_info["device_id"]
-            device_value = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
-            if device_value == []:
-                continue
+            device_value = device_info.get("device_data").get("config").get("terminal_settings").get("do_info").get("do_name")
         else :
             pass
 
@@ -459,7 +458,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
         )
         device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
-        do_name_list = [do_list_item["do_name"] for do_list_item in device_info.get("device_data").get("config").get("terminal_settings").get("do_list")]
+        do_name = device_info.get("device_data").get("config").get("terminal_settings").get("do_info").get("do_name")
         filtered_device_group_relation = next(
             (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
         ).get("group_list", [])
@@ -479,14 +478,14 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
             device_id = ""
         if device_code is None:
             device_code = ""
-        if not do_name_list:
-            do_name_list = ""
+        if not do_name:
+            do_name = ""
         if not group_name_list:
             group_name_list = ""
 
         if case == 1:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or any(key in do_name for do_name in do_name_list) or any(key in group_name for group_name in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name) or any(key in group_name for group_name in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -497,7 +496,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                     return_list.append(device_info)
         elif case == 2:
             for key in key_list:
-                if (key in device_name) or (key in device_id) or (key in device_code) or any(key in do_name for do_name in do_name_list) or any(key in group_name for group_name in group_name_list):
+                if (key in device_name) or (key in device_id) or (key in device_code) or (key in do_name) or any(key in group_name for group_name in group_name_list):
                     hit_list.append(1)
                 else:
                     hit_list.append(0)
@@ -507,12 +506,12 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
                 if result != 0:
                     return_list.append(device_info)
         elif case == 3:
-            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or any(keyword[1:] in do_name for do_name in do_name_list) or any(keyword[1:] in group_name for group_name in group_name_list):
+            if (keyword[1:] in device_name) or (keyword[1:] in device_id) or (keyword[1:] in device_code) or (keyword[1:] in do_name) or any(keyword[1:] in group_name for group_name in group_name_list):
                 pass
             else:
                 return_list.append(device_info)
         else:
-            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or any(keyword in do_name for do_name in do_name_list) or any(keyword in group_name for group_name in group_name_list):
+            if (keyword in device_name) or (keyword in device_id) or (keyword in device_code) or any(keyword in do_name) or any(keyword in group_name for group_name in group_name_list):
                 return_list.append(device_info)
 
     return return_list
