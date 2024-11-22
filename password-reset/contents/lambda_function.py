@@ -66,9 +66,16 @@ def lambda_handler(event, context):
                 ConfirmationCode=body["auth_code"],
                 Password=body["new_password"],
             )
+        except cognito.exceptions.CodeMismatchException:
+            res_body = {"message": "認証コードが違います。\n認証コードをご確認のうえ、もう一度入力してください。\n\nエラーコード：002-0501"}
+            return {
+                "statusCode": 500,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
         except cognito.exceptions.ExpiredCodeException:
             res_body = {
-                "message": "認証コードの有効期限が切れています。再度パスワード再設定をお試しください。"
+                "message": "認証コードの有効期限が切れています。\nもう一度パスワード再設定をお試しください。\n\nエラーコード：002-0503"
             }
             return {
                 "statusCode": 500,
