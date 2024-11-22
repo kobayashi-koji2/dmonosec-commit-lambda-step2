@@ -24,6 +24,7 @@ def lambda_handler(event, context):
         contract_id = body.get("contract_id")
         mss_office = body.get("mss_office")
         use = body.get("use")
+        service = body.get("service")
 
         validate_result = validate.validate(contract_id, contract_table)
         if validate_result.get("message"):
@@ -33,19 +34,31 @@ def lambda_handler(event, context):
                 "body": json.dumps(validate_result, ensure_ascii=False),
             }
         
+        if use == 1:
+            use_value = ""
+        elif use == 2:
+            use_value = "internaluse"
+        else:
+            return {
+                "statusCode": 400,
+                "headers": res_headers,
+                "body": json.dumps({"message": "用途が無効な値です"}, ensure_ascii=False),
+            }
+
+        
         transact_items = []
         put_item = {
             "contract_id": contract_id,
-            "service": "monosc",
+            "service": service,
             "contract_data": {
                 "user_list": [],
                 "device_list": [],
                 "group_list": []
             },
-            "use": use,
+            "use": use_value,
             "mss_office": mss_office,
             "history_storage_period": 3,
-            "contract": 1
+            "contract": "new"
         }
         put_item_fmt = convert.dict_dynamo_format(put_item)
         put_contract = {

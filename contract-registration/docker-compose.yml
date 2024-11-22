@@ -1,10 +1,10 @@
 version: '3'
 services:
   app:
-    container_name: device-list
+    container_name: contract-registration
     build:
       context: ../
-      dockerfile: ./device-list/Dockerfile
+      dockerfile: ./contract-registration/Dockerfile
     environment:
       - AWS_DEFAULT_REGION=ap-northeast-1
       - AWS_ACCESS_KEY_ID=dummy
