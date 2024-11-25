@@ -23,7 +23,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     # 日時指定
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:
-            custom_event_name = "無題の日時カスタムイベント"
+            custom_event_name = ""
         else:
             custom_event_name = custom_event_info["custom_event_name"]
         custom_put_item = {
@@ -39,7 +39,7 @@ def create_custom_event_info(custom_event_info, device_table, device_id,device_s
     # 状態継続
     elif custom_event_info["event_type"] == 1:
         if not custom_event_info["custom_event_name"]:
-            custom_event_name = "無題の継続時間カスタムイベント"
+            custom_event_name = ""
         else:
             custom_event_name = custom_event_info["custom_event_name"]
         custom_put_item = {
@@ -117,7 +117,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     # 日時指定
     if custom_event_info["event_type"] == 0:
         if not custom_event_info["custom_event_name"]:
-            custom_event_name = "無題の日時カスタムイベント"
+            custom_event_name = ""
         else:
             custom_event_name = custom_event_info["custom_event_name"]
         custom_put_item = {
@@ -133,7 +133,7 @@ def update_custom_event_info(custom_event_info, device_table, device_id,device_s
     # 状態継続
     elif custom_event_info["event_type"] == 1:
         if not custom_event_info["custom_event_name"]:
-            custom_event_name = "無題の継続時間カスタムイベント"
+            custom_event_name = ""
         else:
             custom_event_name = custom_event_info["custom_event_name"]
         custom_put_item = {
