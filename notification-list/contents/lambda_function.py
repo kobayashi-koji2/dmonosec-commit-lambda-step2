@@ -172,7 +172,7 @@ def keyword_detection_device_list(detect_condition, keyword, device_info_list, g
 
     if detect_condition == 0:
         filtered_device_list = device_detect_all(keyword, device_info_list, group_info_list, device_group_relation)
-    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4:
+    elif detect_condition == 1 or detect_condition == 2 or detect_condition == 3 or detect_condition == 4 or detect_condition == 5:
         filtered_device_list = device_detect(detect_condition, keyword, device_info_list, group_info_list, device_group_relation)
     else:
         filtered_device_list = device_info_list
