@@ -13,6 +13,7 @@ def validate(event, user_info, tables):
     headers = event.get("headers", {})
     pathParam = event.get("pathParameters", {})
     body = event.get("body", {})
+    method = event.get("httpMethod")
     if not headers or not pathParam or not body:
         return {"message": "リクエストパラメータが不正です。"}
     if "authorization" not in headers or "device_id" not in pathParam:
@@ -29,6 +30,14 @@ def validate(event, user_info, tables):
     contract_info = db.get_contract_info(user_info["contract_id"], tables["contract_table"])
     if not contract_info:
         return {"message": "アカウント情報が存在しません。"}
+
+    user_type = user_info["user_type"]
+    logger.debug(f"権限:{user_type}")
+    if user_type == "referrer":
+        if method == "POST":
+            return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0608"}
+        else:
+            return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0608"}
 
     ##################
     # 2 デバイス操作権限チェック

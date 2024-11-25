@@ -29,9 +29,14 @@ def validate(event, user_info, tables):
     if not contract_info:
         return {"message": "アカウント情報が存在しません。"}
 
+    user_type = user_info["user_type"]
+    logger.debug(f"権限:{user_type}")
+    if user_type == "referrer":
+        return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0608"}
+
     ##################
     # 2 デバイス操作権限チェック
-    ##################
+    #################
     device_info = db.get_device_info_other_than_unavailable(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")

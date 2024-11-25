@@ -80,11 +80,18 @@ def lambda_handler(event, context, user_info):
         control_result = "0" if remote_control.get("control_result") == "0" else "1"
         logger.info(f"result:{control_result}")
 
-        res_body = {
-            "message": "",
-            "device_req_no": validate_result["request_params"]["device_req_no"],
-            "control_result": control_result,
-        }
+        if control_result == "0":
+            res_body = {
+                "message": "",
+                "device_req_no": validate_result["request_params"]["device_req_no"],
+                "control_result": control_result,
+            }
+        else:
+            res_body = {
+                "message": "コントロールコマンドがデバイスに届かなかった可能性があります。\nデバイスの電源がOFF、またはデバイスの通信状況が悪い可能性があります。\nエラーコード：003-0603",
+                "device_req_no": validate_result["request_params"]["device_req_no"],
+                "control_result": control_result,
+            } 
 
         return {
             "statusCode": 200,

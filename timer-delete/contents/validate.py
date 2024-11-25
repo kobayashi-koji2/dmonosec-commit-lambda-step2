@@ -34,6 +34,10 @@ def validate(event, user_info, tables):
     if not contract_info:
         return {"message": "アカウント情報が存在しません。"}
 
+    user_type = user_info["user_type"]
+    if user_type == "referrer":
+        return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0612"}
+
     ##################
     # 2 デバイス操作権限チェック
     ##################

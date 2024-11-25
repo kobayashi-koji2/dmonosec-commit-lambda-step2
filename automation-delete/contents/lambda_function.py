@@ -55,6 +55,13 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
 
         ### 2. 連動制御設定取得
         automation_info = ddb.get_automation_info(request_body["automation_id"], automation_table)
+        if not automation_info:
+            res_body = {"message": "削除されたオートメーションが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0701"}
+            return {
+                "statusCode": 404,
+                "headers": res_headers,
+                "body": json.dumps(res_body, ensure_ascii=False),
+            }
 
         ### 3. デバイス種別チェック(共通)
         device_info = db.get_device_info_other_than_unavailable(
