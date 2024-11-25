@@ -288,13 +288,50 @@ def update_user_info(
         transact_items.append(update_user)
 
     #################################################
-    # デバイス関係テーブル（デバイス）
+    # デバイス関係テーブル（グループ）
     #################################################
     group_relation_list = db.get_device_relation(
         "u-" + user_id, device_relation_table, sk_prefix="g-"
     )
     group_list_old = [relation["key2"][2:] for relation in group_relation_list]
 
+    # 削除されたグループ
+    removed_group_list = convert.list_difference(group_list_old, request_params["management_group_list"])
+    for remove_group_id in removed_group_list:
+        remove_group_relation_device_id_list = db.get_group_relation_device_id_list(remove_group_id, device_relation_table)
+        remove_device_id_list.extend(remove_group_relation_device_id_list)
+        remove_group = {
+            "Delete": {
+                "TableName": device_relation_table_name,
+                "Key": {
+                    "key1": {"S": "u-" + user_id},
+                    "key2": {"S": "g-" + remove_group_id},
+                },
+            }
+        }
+        transact_items.append(remove_group)
+
+    # 追加されたグループ
+    added_group_list = convert.list_difference(request_params["management_group_list"], group_list_old)
+    for add_group_id in added_group_list:
+        added_group_relation_device_id_list = db.get_group_relation_device_id_list(add_group_id, device_relation_table)
+        added_device_id_list.extend(added_group_relation_device_id_list)
+        group_relation_item = {
+            "key1": "u-" + user_id,
+            "key2": "g-" + add_group_id,
+        }
+        group_relation_item_fmt = convert.dict_dynamo_format(group_relation_item)
+        add_group = {
+            "Put": {
+                "TableName": device_relation_table_name,
+                "Item": group_relation_item_fmt,
+            }
+        }
+        transact_items.append(add_group)
+
+    #################################################
+    # デバイス関係テーブル（デバイス）
+    #################################################
     device_relation_list = db.get_device_relation(
         "u-" + user_id, device_relation_table, sk_prefix="d-"
     )
@@ -344,44 +381,6 @@ def update_user_info(
             }
         }
         transact_items.append(add_device)
-
-    #################################################
-    # デバイス関係テーブル（グループ）
-    #################################################
-
-    # 削除されたグループ
-    removed_group_list = convert.list_difference(group_list_old, request_params["management_group_list"])
-    for remove_group_id in removed_group_list:
-        remove_group_relation_device_id_list = db.get_group_relation_device_id_list(remove_group_id, device_relation_table)
-        remove_device_id_list.extend(remove_group_relation_device_id_list)
-        remove_group = {
-            "Delete": {
-                "TableName": device_relation_table_name,
-                "Key": {
-                    "key1": {"S": "u-" + user_id},
-                    "key2": {"S": "g-" + remove_group_id},
-                },
-            }
-        }
-        transact_items.append(remove_group)
-
-    # 追加されたグループ
-    added_group_list = convert.list_difference(request_params["management_group_list"], group_list_old)
-    for add_group_id in added_group_list:
-        added_group_relation_device_id_list = db.get_group_relation_device_id_list(add_group_id, device_relation_table)
-        added_device_id_list.extend(added_group_relation_device_id_list)
-        group_relation_item = {
-            "key1": "u-" + user_id,
-            "key2": "g-" + add_group_id,
-        }
-        group_relation_item_fmt = convert.dict_dynamo_format(group_relation_item)
-        add_group = {
-            "Put": {
-                "TableName": device_relation_table_name,
-                "Item": group_relation_item_fmt,
-            }
-        }
-        transact_items.append(add_group)
 
     #################################################
     # デバイス管理テーブル（通知先設定）
