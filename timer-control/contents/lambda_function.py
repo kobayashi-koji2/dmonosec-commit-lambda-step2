@@ -234,12 +234,22 @@ def lambda_handler(event, context):
                     device_req_no = icc_id + "-" + req_no
                     do_di_return = int(do_info["do_di_return"])
                     do_onoff_control = int(do_info["do_timer"]["do_onoff_control"])
-                    if do_onoff_control == 0:
-                        control_trigger = "on_timer_control"
-                    elif do_onoff_control == 1:
-                        control_trigger = "off_timer_control"
-                    elif do_onoff_control == 9:
-                        control_trigger = "timer_control"
+
+                    control_trigger_map = {
+                        0: "on_timer_control",
+                        1: "off_timer_control",
+                        9: "timer_control"
+                    }
+                    control_trigger = control_trigger_map.get(do_onoff_control, None)
+
+                    if do_di_return != 0:
+                        link_terminal = next((di for di in di_list if di["di_no"] == do_di_return), None)
+                        if do_onoff_control == 0:
+                            link_terminal_state_name = link_terminal.get("di_on_name", "クローズ")
+                        elif do_onoff_control == 1:
+                            link_terminal_state_name = link_terminal.get("di_off_name", "オープン")
+                        elif do_onoff_control == 9:
+                            link_terminal_state_name = ""
                     else:
                         logger.info(f"接点出力_ON/OFF制御の値が不正です。 device_id={device_id}")
                         continue
@@ -271,6 +281,7 @@ def lambda_handler(event, context):
                                     "iccid": {"S": icc_id},
                                     "timer_time": {"S": do_info["do_timer"]["do_time"]},
                                     "do_timer_name": {"S": do_timer_name},
+                                    "link_terminal_state_name": {"S": link_terminal_state_name},
                                 },
                             }
                         }
@@ -681,7 +692,7 @@ def __send_mail(
                 　 ※スケジュール「{do_timer_name} ／ {do_timer}」
             """
         else:
-            reason = f"""
+            event_detail = f"""
                 　【スケジュール(不実施)】
                 　オートメーションにより、{do_name}をコントロール中でした。
                 　そのため、コントロールを行いませんでした。

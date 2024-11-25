@@ -195,7 +195,7 @@ def send_mail(
             event_detail = f"""
                 　【スケジュール(失敗)】
                 　{do_name}のコントロールコマンドがデバイスに届きましたが、{di_name}が変化しませんでした。
-                　 ※スケジュール「{remote_control.get("do_timer_name")} ／ {remote_control.get("timer_time")}」
+                　 ※スケジュール「{remote_control.get("do_timer_name")} ／ {remote_control.get("link_terminal_state_name")}コントロール ／ {remote_control.get("timer_time")}」」
             """
         elif remote_control.get("control_trigger") in [
             "automation_control",
