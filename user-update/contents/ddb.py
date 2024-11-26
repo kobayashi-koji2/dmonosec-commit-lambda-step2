@@ -353,7 +353,15 @@ def update_user_info(
         }
         transact_items.append(remove_device)
 
-        # 削除されたデバイスが所属しているグループのデバイスを抽出
+    # 削除されたデバイスが所属しているグループのデバイス
+    device_id_list_old = []
+    for group_id_old in group_list_old:
+        device_id_list = db.get_group_relation_device_id_list(group_id_old, device_relation_table)
+        device_id_list_old.extend(device_id_list)
+    device_id_list_old = list(set(device_id_list_old))
+    removed_device_list = convert.list_difference(device_id_list_old, request_params["management_device_list"])
+
+    for remove_device_id in removed_device_list:
         remove_device_group_id_list = []
         remove_device_group_id_list = db.get_device_relation_group_id_list(remove_device_id, device_relation_table)
         group_id_list = list(set(remove_device_group_id_list) & set(group_list_old))
