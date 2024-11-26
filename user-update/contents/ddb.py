@@ -337,25 +337,6 @@ def update_user_info(
     remove_group_relation_id_list = list(set(remove_group_relation_id_list))
     relation_device_id_list = list(set(relation_device_id_list))
 
-    # 追加されたデバイス
-    added_device_list = convert.list_difference(request_params["management_device_list"], device_list_old)
-    added_device_list.extend(relation_device_id_list)
-    added_device_list = list(set(added_device_list))
-    added_device_id_list.extend(added_device_list)
-    for add_device_id in added_device_list:
-        device_relation_item = {
-            "key1": "u-" + user_id,
-            "key2": "d-" + add_device_id,
-        }
-        device_relation_item_fmt = convert.dict_dynamo_format(device_relation_item)
-        add_device = {
-            "Put": {
-                "TableName": device_relation_table_name,
-                "Item": device_relation_item_fmt,
-            }
-        }
-        transact_items.append(add_device)
-
     #################################################
     # デバイス関係テーブル（グループ）
     #################################################
@@ -393,6 +374,33 @@ def update_user_info(
             }
         }
         transact_items.append(add_group)
+
+    #################################################
+    # デバイス関係テーブル（デバイス）
+    #################################################
+    # 追加されたデバイス
+    if removed_group_list:
+        added_device_list = convert.list_difference(request_params["management_device_list"], device_list_old)
+        # 削除されたグループに所属しているデバイスを除外
+        added_device_list = convert.list_difference(added_device_list, remove_device_id_list)
+    else:
+        added_device_list = convert.list_difference(request_params["management_device_list"], device_list_old)
+    added_device_list.extend(relation_device_id_list)
+    added_device_list = list(set(added_device_list))
+    added_device_id_list.extend(added_device_list)
+    for add_device_id in added_device_list:
+        device_relation_item = {
+            "key1": "u-" + user_id,
+            "key2": "d-" + add_device_id,
+        }
+        device_relation_item_fmt = convert.dict_dynamo_format(device_relation_item)
+        add_device = {
+            "Put": {
+                "TableName": device_relation_table_name,
+                "Item": device_relation_item_fmt,
+            }
+        }
+        transact_items.append(add_device)
 
     #################################################
     # デバイス管理テーブル（通知先設定）
