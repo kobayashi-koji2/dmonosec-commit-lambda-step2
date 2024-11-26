@@ -1,15 +1,20 @@
-import json
 import os
+import json
 import boto3
 import validate
-from aws_lambda_powertools import Logger
-
 import ssm
 import db
 import convert
 
-logger = Logger()
+from aws_lambda_powertools import Logger
+from aws_xray_sdk.core import patch_all
+
+patch_all()
+
 dynamodb = boto3.resource("dynamodb", endpoint_url=os.environ.get("endpoint_url"))
+SSM_KEY_TABLE_NAME = os.environ["SSM_KEY_TABLE_NAME"]
+logger = Logger()
+
 
 def lambda_handler(event, context):
     logger.info(event)

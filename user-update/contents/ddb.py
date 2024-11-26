@@ -303,7 +303,6 @@ def update_user_info(
     # 削除されたデバイス
     removed_device_list = convert.list_difference(device_list_old, request_params["management_device_list"])
     remove_device_id_list.extend(removed_device_list)
-    relation_device_id_list = []
     for remove_device_id in removed_device_list:
         remove_device = {
             "Delete": {
@@ -318,24 +317,30 @@ def update_user_info(
 
     # 削除されたデバイスが所属しているグループのデバイス
     device_id_list_old = []
+    logger.debug(f"group_list_old={group_list_old}")
     for group_id_old in group_list_old:
         device_id_list = db.get_group_relation_device_id_list(group_id_old, device_relation_table)
         device_id_list_old.extend(device_id_list)
     device_id_list_old = list(set(device_id_list_old))
     removed_device_list = convert.list_difference(device_id_list_old, request_params["management_device_list"])
+    logger.debug(f"removed_device_list={removed_device_list}")
 
+    relation_device_id_list = []
     remove_group_relation_id_list = []
     for remove_device_id in removed_device_list:
         remove_device_group_id_list = []
         remove_device_group_id_list = db.get_device_relation_group_id_list(remove_device_id, device_relation_table)
         group_id_list = list(set(remove_device_group_id_list) & set(group_list_old))
+        logger.debug(f"group_id_list={group_id_list}")
         for group_id in group_id_list:
             device_id_list = db.get_group_relation_device_id_list(group_id, device_relation_table)
             if device_id_list:
                 relation_device_id_list.extend([device_id for device_id in device_id_list if device_id != remove_device_id])
                 remove_group_relation_id_list.append(group_id)
     remove_group_relation_id_list = list(set(remove_group_relation_id_list))
+    logger.debug(f"relation_device_id_list={relation_device_id_list}")
     relation_device_id_list = list(set(relation_device_id_list))
+    logger.debug(f"relation_device_id_list={relation_device_id_list}")
 
     #################################################
     # デバイス関係テーブル（グループ）
@@ -343,6 +348,7 @@ def update_user_info(
     # 削除されたグループ
     removed_group_list = convert.list_difference(group_list_old, request_params["management_group_list"])
     removed_group_list.extend(remove_group_relation_id_list)
+    logger.debug(f"removed_group_list={removed_group_list}")
     for remove_group_id in removed_group_list:
         remove_group_relation_device_id_list = db.get_group_relation_device_id_list(remove_group_id, device_relation_table)
         remove_device_id_list.extend(remove_group_relation_device_id_list)
