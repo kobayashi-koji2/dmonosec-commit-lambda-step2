@@ -290,6 +290,11 @@ def update_user_info(
     #################################################
     # デバイス関係テーブル（デバイス）
     #################################################
+    group_relation_list = db.get_device_relation(
+        "u-" + user_id, device_relation_table, sk_prefix="g-"
+    )
+    group_list_old = [relation["key2"][2:] for relation in group_relation_list]
+
     device_relation_list = db.get_device_relation(
         "u-" + user_id, device_relation_table, sk_prefix="d-"
     )
@@ -354,11 +359,6 @@ def update_user_info(
     #################################################
     # デバイス関係テーブル（グループ）
     #################################################
-    group_relation_list = db.get_device_relation(
-        "u-" + user_id, device_relation_table, sk_prefix="g-"
-    )
-    group_list_old = [relation["key2"][2:] for relation in group_relation_list]
-
     # 削除されたグループ
     removed_group_list = convert.list_difference(group_list_old, request_params["management_group_list"])
     removed_group_list.extend(remove_group_relation_id_list)
