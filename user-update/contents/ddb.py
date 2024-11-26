@@ -349,6 +349,7 @@ def update_user_info(
                 "Item": device_relation_item_fmt,
             }
         }
+        transact_items.append(add_device)
 
     #################################################
     # デバイス関係テーブル（グループ）
