@@ -80,7 +80,7 @@ def lambda_handler(event, context, user, body):
         notification_target_list = body["notification_target_list"]
         for user_id in notification_target_list:
             if user_id not in contract["contract_data"]["user_list"]:
-                res_body = {"message": "不正なユーザーIDが指定されています。"}
+                res_body = {"message": "削除されたユーザーが通知先に選択されました。\n画面の更新を行います。\n\nエラーコード：009-0102"}
                 return {
                     "statusCode": 400,
                     "headers": res_headers,

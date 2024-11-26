@@ -32,7 +32,7 @@ def validate(event, user, account_table, contract_table, user_table):
 
     if http_method == "POST":
         if "email_address" not in body_params or not isValidEmail(body_params["email_address"]):
-            return {"message": "パラメータが不正です"}
+            return {"message": "不正なメールアドレス形式です。\nメールアドレスをご確認のうえ、もう一度入力してください。\n\nエラーコード：006-0108"}
 
         email_address = body_params.get("email_address").lower()
         account = db.get_account_info_by_email_address(email_address, account_table)
@@ -41,7 +41,7 @@ def validate(event, user, account_table, contract_table, user_table):
                 account["account_id"], user["contract_id"], user_table
             )
             if duplicate_user:
-                return {"message": "メールアドレスが重複しています。"}
+                return {"message": "入力したメールアドレスは既に登録されています\n\nエラーコード：006-0107"}
 
     if "user_type" not in body_params:
         return {"message": "パラメータが不正です"}

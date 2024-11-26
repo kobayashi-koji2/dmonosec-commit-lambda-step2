@@ -25,7 +25,7 @@ def validate(event, user, contract_table):
     if not params["user_id"]:
         return {"message": "パラメータが不正です"}
     if params["user_id"] not in contract["contract_data"]["user_list"]:
-        return {"message": "不正なユーザIDが指定されています。"}
+        return {"message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0101"}
 
     return {
         "contract_info": contract,

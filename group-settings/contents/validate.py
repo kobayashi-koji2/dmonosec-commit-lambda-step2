@@ -26,14 +26,14 @@ def validate(event, user, contract_table, group_table):
     if http_method == "POST":
         group_list = contract.get("contract_data", []).get("group_list", [])
         if len(group_list) >= 300:
-            return {"message": "グループ登録可能数の上限に達しています。"}
+            return {"message": "グループの登録可能上限300に達しています。\n画面の更新を行います。\n\nエラーコード：005-0105"}
 
     # グループIDの権限チェック（更新の場合）
     if http_method == "PUT":
         if "group_id" not in path_params:
             return {"message": "パラメータが不正です"}
         if path_params["group_id"] not in contract["contract_data"]["group_list"]:
-            return {"message": "不正なグループIDが指定されています。"}
+            return {"message": "削除されたグループが選択されました。\n画面の更新を行います。\n\nエラーコード：005-0103"}
 
     # デバイスIDの権限チェック
     device_list = body_params.get("device_list", [])
@@ -48,7 +48,7 @@ def validate(event, user, contract_table, group_table):
             continue
         group = db.get_group_info(group_id, group_table)
         if group.get("group_data", {}).get("config", {}).get("group_name") == group_name:
-            return {"message": "グループ名が重複しています。"}
+            return {"message": "入力したグループ名称は既に登録されています。\n別の名称を入力してください。\n\nエラーコード：005-0106"}
     if len(group_name) > 50:
         return {"message": "グループ名は50文字以内で入力してください。"}
 

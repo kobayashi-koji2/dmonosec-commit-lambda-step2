@@ -76,7 +76,7 @@ def lambda_handler(event, context, login_user, user_id):
             return {
                 "statusCode": 404,
                 "headers": res_headers,
-                "body": json.dumps({"message": "ユーザーが存在しません。"}, ensure_ascii=False),
+                "body": json.dumps({"message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0102"}, ensure_ascii=False),
             }
 
         transact_items = []

@@ -26,7 +26,7 @@ def validate(event, user, contract_table):
     if not path_params["group_id"]:
         return {"message": "パラメータが不正です"}
     if path_params["group_id"] not in contract["contract_data"]["group_list"]:
-        return {"message": "不正なグループIDが指定されています。"}
+        return {"message": "削除されたグループが選択されました。\n画面の更新を行います。\n\nエラーコード：005-0102"}
 
     params = {
         "group_id": path_params.get("group_id"),

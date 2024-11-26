@@ -11,7 +11,10 @@ logger = Logger()
 def validate(event, user, device_table, contract_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
-        return {"message": "ユーザの操作権限がありません。"}
+        if event.get("httpMethod") == "POST":
+            return {"message": "閲覧ユーザーは操作権限がありません。\n\nエラーコード：003-0804"}
+        else:
+            return {"message": "閲覧ユーザーは操作権限がありません。\n\nエラーコード：003-0805"}
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
@@ -86,7 +89,7 @@ def validate(event, user, device_table, contract_table):
         for custom_event_id in device_info.get("device_data").get("config").get("custom_event_list", []):
             custom_event_id_list.append(custom_event_id["custom_event_id"])
         if body_params["custom_event_id"] not in custom_event_id_list:
-            return {"message": "イベントカスタムIDが存在しません"}
+            return {"message": "削除されたカスタムイベントが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0802"}
             
     return {"custom_info": body_params, "device_id": device_id, "message": ""}
 

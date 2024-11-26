@@ -65,7 +65,7 @@ def validate(
             user["user_id"], device_relation_table
         )
         if device_id not in user_device_list:
-            return {"message": "不正なデバイスIDが指定されています。"}
+            return {"message": "コントロール設定が変更されたため、実施しませんでした。\n画面の更新を行います。\n\nエラーコード：003-0607"}
 
     params = {
         "device_req_no": path_params["device_req_no"],

@@ -68,7 +68,7 @@ def lambda_handler(event, context, user_list):
                 AccessToken=body["access_token"],
             )
         except cognito.exceptions.NotAuthorizedException:
-            res_body = {"message": "パスワードが不正です。"}
+            res_body = {"message": "現在のパスワードが違います。\n\nエラーコード：007-0101"}
             respons["statusCode"] = 400
             respons["body"] = json.dumps(res_body, ensure_ascii=False)
             return respons

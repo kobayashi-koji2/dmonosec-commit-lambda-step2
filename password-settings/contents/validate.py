@@ -1,5 +1,6 @@
 import json
 import re
+import textwrap
 
 from aws_lambda_powertools import Logger
 
@@ -35,7 +36,19 @@ def validate(event):
         return {"message": "「新しいパスワード」のデータ型が不正です。"}
     ### 「新しいパスワード」の形式チェック
     if not re.search(password_policy, body.get("new_password").strip()):
-        return {"message": "「新しいパスワード」がパスワードポリシー違反です。"}
+        message = """
+            新しいパスワードがポリシーを満たしていません
+
+            ＜パスワードポリシー＞
+            - 8文字以上
+            - 英大文字と英小文字を含む
+            - 数字を含む
+            - 記号を含む
+
+            エラーコード：007-0102
+        """
+        message = textwrap.dedent(message)
+        return {"message": message}
 
     ### 「access_token」の必須チェック
     if "access_token" not in body:
