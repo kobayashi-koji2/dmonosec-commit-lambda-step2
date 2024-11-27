@@ -298,7 +298,7 @@ def device_detect(detect_condition, keyword, device_info_list, group_info_list, 
         key_list = re.split(" AND | |\u3000",keyword)
         logger.info(f"key_list:{key_list}")
         case = 1
-    elif "-" == keyword[0]:
+    elif "-" == keyword[0] and keyword != "-":
         case = 3
     else:
         case = 0
@@ -442,7 +442,7 @@ def device_detect_all(keyword, device_info_list, group_info_list, device_group_r
         key_list = re.split(" AND | |\u3000",keyword)
         logger.info(f"key_list:{key_list}")
         case = 1
-    elif "-" == keyword[0]:
+    elif "-" == keyword[0] and keyword != "-":
         case = 3
     else:
         case = 0
