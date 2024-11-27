@@ -56,6 +56,7 @@ def lambda_handler(event, context):
         elif validate_result["device_code"] in ["MS-C0130"]:
             identification_id = validate_result["sigfox_id"]
         pre_device_item["identification_id"] = identification_id
+        pre_device_item["ship_contract_id"] = validate_result["ship_contract_id"]
 
         pre_device_item_fmt = convert.dict_dynamo_format(pre_device_item)
         put_pre_device = {

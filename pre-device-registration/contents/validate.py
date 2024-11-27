@@ -26,7 +26,7 @@ def validate(event, contract_table):
         return {"message": "契約コードが未指定です"}
 
     contract_info = db.get_contract_info(contract_id, contract_table)
-    if contract_info:
+    if not contract_info:
         return {"message": "該当の契約情報が存在しません"}
 
     if ship_contract_id is None:
