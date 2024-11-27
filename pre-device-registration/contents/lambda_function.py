@@ -163,7 +163,7 @@ def lambda_handler(event, context):
         return {
             "statusCode": 200,
             "headers": res_headers,
-            "body": json.dumps(res_body, ensure_ascii=False),
+            "body": json.dumps(res_body, ensure_ascii=False, default=ddb.decimal_to_num),
         }
     except Exception as e:
         logger.error(e)
