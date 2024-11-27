@@ -35,9 +35,9 @@ def validate(event, user_info, tables):
     logger.debug(f"権限:{user_type}")
     if user_type == "referrer":
         if method == "POST":
-            return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0610"}
+            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0610"}
         else:
-            return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0611"}
+            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0611"}
 
     ##################
     # 2 デバイス操作権限チェック

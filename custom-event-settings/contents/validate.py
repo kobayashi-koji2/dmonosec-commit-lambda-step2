@@ -12,9 +12,9 @@ def validate(event, user, device_table, contract_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
         if event.get("httpMethod") == "POST":
-            return {"message": "閲覧ユーザーは操作権限がありません。\n\nエラーコード：003-0804"}
+            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0804"}
         else:
-            return {"message": "閲覧ユーザーは操作権限がありません。\n\nエラーコード：003-0805"}
+            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0805"}
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
@@ -81,7 +81,7 @@ def validate(event, user, device_table, contract_table):
     # 登録カスタムイベント数チェック（登録の場合、各デバイス10個まで）
     if http_method == "POST":
         if len(device_info.get("device_data").get("config").get("custom_event_list", [])) >= 10:
-            return {"message": "イベントカスタム上限10件に達しています"}
+            return {"message": "カスタムイベントの登録上限10件に達しています\n\nエラーコード：003-0804"}
                 
     # イベントカスタムID存在チェック 
     if http_method == "PUT":

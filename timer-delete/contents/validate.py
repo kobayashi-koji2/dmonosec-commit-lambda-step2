@@ -36,7 +36,7 @@ def validate(event, user_info, tables):
 
     user_type = user_info["user_type"]
     if user_type == "referrer":
-        return {"message": "閲覧ユーザーのため、操作権限がありません。\n\nエラーコード：003-0612"}
+        return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0612"}
 
     ##################
     # 2 デバイス操作権限チェック

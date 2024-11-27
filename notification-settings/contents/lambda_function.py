@@ -31,6 +31,8 @@ def lambda_handler(event, context, user, body):
     try:
         device_table = dynamodb.Table(ssm.table_names["DEVICE_TABLE"])
         contract_table = dynamodb.Table(ssm.table_names["CONTRACT_TABLE"])
+        user_table = dynamodb.Table(ssm.table_names["USER_TABLE"])
+        device_relation_table = dynamodb.Table(ssm.table_names["DEVICE_RELATION_TABLE"])
     except KeyError as e:
         body = {"message": e}
         return {
@@ -78,9 +80,21 @@ def lambda_handler(event, context, user, body):
             }
 
         notification_target_list = body["notification_target_list"]
+        worker_user_id_list = db.get_device_relation_user_id_list(device_id, device_relation_table)
         for user_id in notification_target_list:
-            if user_id not in contract["contract_data"]["user_list"]:
+            user_info = db.get_user_info_by_user_id(user_id, user_table)
+            if not user_info or user_id not in contract["contract_data"]["user_list"]:
                 res_body = {"message": "削除されたユーザーが通知先に選択されました。\n画面の更新を行います。\n\nエラーコード：009-0102"}
+                return {
+                    "statusCode": 400,
+                    "headers": res_headers,
+                    "body": json.dumps(res_body, ensure_ascii=False),
+                }
+            if (
+                (user_info["user_type"] == "worker" or user_info["user_type"] == "referrer")
+                and user_id not in worker_user_id_list
+            ):
+                res_body = {"message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：009-0103"}
                 return {
                     "statusCode": 400,
                     "headers": res_headers,

@@ -15,7 +15,7 @@ logger = Logger()
 def validate(event, user, device_table, contract_table):
     operation_auth = operation_auth_check(user)
     if not operation_auth:
-        return {"message": "閲覧ユーザーは操作権限がありません。\n\nエラーコード：003-0806"}
+        return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0806"}
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
