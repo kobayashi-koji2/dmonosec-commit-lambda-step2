@@ -340,6 +340,7 @@ def update_user_info(
     remove_group_relation_id_list = list(set(remove_group_relation_id_list))
     logger.debug(f"relation_device_id_list={relation_device_id_list}")
     relation_device_id_list = list(set(relation_device_id_list))
+    relation_device_id_list = convert.list_difference(relation_device_id_list, removed_device_list)
     logger.debug(f"relation_device_id_list={relation_device_id_list}")
 
     #################################################
