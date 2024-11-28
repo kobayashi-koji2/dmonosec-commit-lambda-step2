@@ -56,9 +56,9 @@ def validate(event, user, account_table, contract_table, user_table):
             return {"message": "パラメータが不正です"}
         update_user_res = db.get_user_info_by_user_id(path_params["user_id"], user_table)
         if not update_user_res:
-            return {"message": "ユーザ情報が存在しません。"}
+            return {"message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0105"}
         if path_params["user_id"] not in contract["contract_data"]["user_list"]:
-            return {"message": "不正なユーザIDが指定されています。"}
+            return {"message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0105"}
         if update_user_res["user_type"] in ["admin"]:
             return {"message": "管理ユーザーは更新できません。"}
 
