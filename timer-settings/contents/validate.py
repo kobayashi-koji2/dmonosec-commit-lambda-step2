@@ -31,18 +31,34 @@ def validate(event, user_info, tables):
     if not contract_info:
         return {"message": "アカウント情報が存在しません。"}
 
+    device_info = db.get_device_info_other_than_unavailable(device_id, tables["device_table"])
+
     user_type = user_info["user_type"]
     logger.debug(f"権限:{user_type}")
     if user_type == "referrer":
         if method == "POST":
             return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0610"}
         else:
-            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0611"}
+            do_list = (
+                device_info.get("device_data").get("config").get("terminal_settings").get("do_list", [])
+            )
+            do_timer_name = ""
+            for do in do_list:
+                if do.get("do_no") != body.get("do_no"):
+                    continue
+                do_timer_list = do.get("do_timer_list", [])
+                for do_timer in do_timer_list:
+                    if do_timer.get("do_timer_id") == body.get("do_timer_id"):
+                        do_timer_name = do_timer.get("do_timer_name")
+                        break
+            if do_timer_name != body.get("do_timer_name"):
+                return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0611"}
+            else:
+                return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0612"}
 
     ##################
     # 2 デバイス操作権限チェック
     ##################
-    device_info = db.get_device_info_other_than_unavailable(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
     if not device_info:

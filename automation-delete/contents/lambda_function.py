@@ -46,7 +46,7 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         ### 1. 入力情報チェック
         # ユーザー権限確認
         if not validate.operation_auth_check(user_info, "referrer", False):
-            res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0706"}
+            res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0707"}
             return {
                 "statusCode": 400,
                 "headers": res_headers,

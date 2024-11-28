@@ -62,9 +62,9 @@ def lambda_handler(event, context, login_user, user_id):
 
         if user_id not in contract.get("contract_data", {}).get("user_list", []):
             return {
-                "statusCode": 400,
+                "statusCode": 404,
                 "headers": res_headers,
-                "body": json.dumps({"message": "ユーザーに対しての操作権限がありません。"}, ensure_ascii=False),
+                "body": json.dumps({"message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0102"}, ensure_ascii=False),
             }
 
         # 削除対象ユーザーの存在チェック

@@ -50,7 +50,20 @@ def lambda_handler(event, context, user_info, trigger_device_id, request_body):
         ### 1. 入力情報チェック
         # ユーザー権限確認
         if not validate.operation_auth_check(user_info, "referrer", False):
-            res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0704"}
+            if event["httpMethod"] == "POST":
+                res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0704"}
+            else:
+                automation = automation_table.get_item(
+                    Key={"automation_id": request_body["automation_id"]}
+                ).get("Item")
+                if automation:
+                    if automation.get("automation_name") != request_body["automation_name"]:
+                        res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0705"}
+                    else:
+                        res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0706"}
+                else:
+                    res_body = {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0705"}
+
             return {
                 "statusCode": 400,
                 "headers": res_headers,

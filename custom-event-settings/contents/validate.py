@@ -14,7 +14,16 @@ def validate(event, user, device_table, contract_table):
         if event.get("httpMethod") == "POST":
             return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0804"}
         else:
-            return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0805"}
+            custom_event_id_list = list()
+            custom_event_name = ""
+            for custom_event_info in device_info.get("device_data").get("config").get("custom_event_list", []):
+                if custom_event_info["custom_event_id"] == body_params["custom_event_id"]:
+                    custom_event_name = custom_event_info["custom_event_name"]
+                    break
+            if custom_event_name != body_params["custom_event_name"]:
+                return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0805"}
+            else:
+                return {"message": "閲覧ユーザーは操作権限がありません\n\nエラーコード：003-0806"}
     http_method = event.get("httpMethod")
     body_params = json.loads(event.get("body", "{}"))
     pathParam = event.get("pathParameters") or {}
