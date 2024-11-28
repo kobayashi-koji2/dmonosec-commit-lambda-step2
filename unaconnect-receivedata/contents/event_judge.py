@@ -1,8 +1,13 @@
 from aws_lambda_powertools import Logger
 import ddb
+import os
 from decimal import Decimal
 
 logger = Logger()
+BATTERY_ENOUGH_TH = float(os.environ["BATTERY_ENOUGH_TH"])
+BATTERY_NEAR_TH = float(os.environ["BATTERY_NEAR_TH"])
+SIGNAL_SCORE_HIGH_TH = int(os.environ["SIGNAL_SCORE_HIGH_TH"])
+SIGNAL_SCORE_LOW_TH = int(os.environ["SIGNAL_SCORE_LOW_TH"])
 
 def eventJudge(req_body,device_current_state,device_id,signal_state):
     
@@ -72,16 +77,16 @@ def judge_near_battery(current_state_info,hist_item,hist_list_table):
     current_battry_state = current_state_info.get("battery_near_state")
 
     if current_battry_state:
-        if (current_battry_state == 0) and (current_battry_voltage < 2.0):
+        if (current_battry_state == 0) and (current_battry_voltage < BATTERY_NEAR_TH):
             current_state_info["battery_near_state"] = 1
             hist_item["hist_data"]["occurrence_flag"] = 1
             ddb.put_db_item(hist_item,hist_list_table)
-        elif (current_battry_state == 1) and (current_battry_voltage >= 3.0):
+        elif (current_battry_state == 1) and (current_battry_voltage >= BATTERY_ENOUGH_TH):
             current_state_info["battery_near_state"] = 0
             hist_item["hist_data"]["occurrence_flag"] = 0
             ddb.put_db_item(hist_item,hist_list_table)
     else:
-        if current_battry_voltage < 2.0:
+        if current_battry_voltage < BATTERY_NEAR_TH:
             current_state_info["battery_near_state"] = 1
             hist_item["hist_data"]["occurrence_flag"] = 1
             ddb.put_db_item(hist_item,hist_list_table)
@@ -93,9 +98,9 @@ def judge_near_battery(current_state_info,hist_item,hist_list_table):
 
 def judge_signal_state(signal_score):
 
-    if signal_score >= 60.0:
+    if signal_score >= SIGNAL_SCORE_HIGH_TH:
         signal_state = "high"
-    elif signal_score >= 40.0:
+    elif signal_score >= SIGNAL_SCORE_LOW_TH:
         signal_state = "mid"
     else:
         signal_state = "low"
