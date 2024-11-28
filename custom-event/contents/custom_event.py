@@ -123,9 +123,9 @@ def customEventHist(device_info, hist_list_items, event_datetime, group_list, te
     custom_event_name = custom_event_info.get("custom_event_name")
     if not custom_event_name:
         if event_type == "custom_datetime":
-            custom_event_name = "無題の日時指定カスタムイベント"
+            custom_event_name = "無題の日時カスタムイベント"
         else:
-            custom_event_name = "無題の時間経過カスタムイベント"
+            custom_event_name = "無題の経過時間カスタムイベント"
 
     expire_datetime = int((datetime.fromtimestamp(event_datetime / 1000) + relativedelta.relativedelta(years=HIST_LIST_TTL)).timestamp())
     hist_list_item = {

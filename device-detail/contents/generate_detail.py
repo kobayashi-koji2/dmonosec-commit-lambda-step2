@@ -160,22 +160,26 @@ def customevent_info_fmt(device_info):
             ### 8. メッセージ応答
         logger.info(item)
         if item["event_type"] == 0:
+            if not item["custom_event_name"]:
+                custom_event_name = "無題の日時カスタムイベント"
             custom_event_item = {
                 "custom_event_id": item["custom_event_id"],
                 'custom_event_reg_datetime': item["custom_event_reg_datetime"],
                 "event_type": item["event_type"],
-                "custom_event_name": item["custom_event_name"],
+                "custom_event_name": custom_event_name,
                 "time": item["time"],
                 "weekday": item["weekday"],
                 "di_event_list": item["di_event_list"],
             }
             custom_event_list.append(custom_event_item)
         elif item["event_type"] == 1:
+            if not item["custom_event_name"]:
+                custom_event_name = "無題の経過時間カスタムイベント"
             custom_event_item = {
                 "custom_event_id": item["custom_event_id"],
                 'custom_event_reg_datetime': item["custom_event_reg_datetime"],
                 "event_type": item["event_type"],
-                "custom_event_name": item["custom_event_name"],
+                "custom_event_name": custom_event_name,
                 "elapsed_time": item["elapsed_time"],
                 "di_event_list": item["di_event_list"],
             }
