@@ -158,21 +158,21 @@ def lambda_handler(event, context, user, body):
         logger.debug(notification_list)
         logger.debug(notification_target_list)
 
-        notification_target_object_list = []
-        for notification_target in notification_target_list:
-            user_info = db.get_user_info_by_user_id(notification_target, user_table)
-            account_info = db.get_account_info_by_account_id(user_info.get("account_id"), account_table)
-            send_info = {
-                "user_id": notification_target,
-                "user_name": account_info.get("user_data").get("config").get("user_name"),
-                "mail_address": account_info.get("email_address")
-            }
-            notification_target_object_list.append(send_info)
+        # notification_target_object_list = []
+        # for notification_target in notification_target_list:
+        #     user_info = db.get_user_info_by_user_id(notification_target, user_table)
+        #     account_info = db.get_account_info_by_account_id(user_info.get("account_id"), account_table)
+        #     send_info = {
+        #         "user_id": notification_target,
+        #         "user_name": account_info.get("user_data").get("config").get("user_name"),
+        #         "mail_address": account_info.get("email_address")
+        #     }
+        #     notification_target_object_list.append(send_info)
 
         res_body = {
             "message": "",
             "notification_list": notification_list,
-            "notification_target_list": notification_target_object_list,
+            "notification_target_list": notification_target_list,
         }
         return {
             "statusCode": 200,
