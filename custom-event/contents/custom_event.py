@@ -142,7 +142,7 @@ def customEventHist(device_info, hist_list_items, event_datetime, group_list, te
             "terminal_name": terminal_name,
             "terminal_state_name": terminal_state_name,
             "custom_event_id": custom_event_info.get("custom_event_id"),
-            "custom_event_name": custom_event_info.get("custom_event_name"),
+            "custom_event_name": custom_event_name,
             "time": custom_event_info.get("time"),
             "elapsed_time": custom_event_info.get("elapsed_time"),
         },
