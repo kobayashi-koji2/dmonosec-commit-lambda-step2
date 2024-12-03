@@ -4,6 +4,8 @@ import validate
 import generate_detail
 import os
 import ddb
+import time
+from datetime import datetime
 from botocore.exceptions import ClientError
 import traceback
 from aws_lambda_powertools import Logger
@@ -84,6 +86,34 @@ def lambda_handler(event, context, user_info):
             device_info = ddb.get_device_info(device_id, tables["device_table"])
             # デバイス現状態取得
             device_state = db.get_device_state(device_id, tables["device_state_table"])
+
+            if device_state and device_state.get("device_healthy_state", 0) == 1:
+                if device_info.get("device_type") == "UnaTag":
+                    last_recv_datetime = device_state.get("unatag_last_recv_datetime")
+                else:
+                    last_recv_datetime = device_state.get("device_abnormality_last_update_datetime")
+
+                # デバイスヘルシーチェック
+                now = datetime.now()
+                now_datetime = int(time.mktime(now.timetuple()) * 1000) + int(now.microsecond / 1000)
+                device_healthy_period = device_info["device_data"]["config"].get("device_healthy_period", 0)
+                elapsed_time = now_datetime - last_recv_datetime
+                device_healthy_period_time = device_healthy_period * 24 * 60 * 60 * 1000
+
+                if elapsed_time < device_healthy_period_time:
+                    try:
+                        ddb.update_device_state(device_id, tables["device_state_table"])
+                    except ClientError as e:
+                        logger.info(f"デバイス現状態更新エラー e={e}")
+                        res_body = {"message": "デバイス現状態の更新に失敗しました。"}
+                        return {
+                            "statusCode": 500,
+                            "headers": res_headers,
+                            "body": json.dumps(
+                                res_body, ensure_ascii=False, default=convert.decimal_default_proc
+                            ),
+                        }
+
             # グループ情報取得
             group_id_list = db.get_device_relation_group_id_list(
                 device_id, tables["device_relation_table"]

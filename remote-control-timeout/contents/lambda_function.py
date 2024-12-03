@@ -107,20 +107,17 @@ def send_mail(
             trigger_event_type_name = ""
             trigger_event_detail_name = ""
             if trigger_event_type == "di_change_state":
-                trigger_event_type_name = (
-                    f"接点入力{remote_control.get('automation_trigger_terminal_no')}（接点状態）"
-                )
-                trigger_event_detail_name = (
-                    "オープン"
-                    if remote_control.get("automation_trigger_event_detail_state") == "1"
-                    else "クローズ"
-                )
+                trigger_event_type_name = remote_control.get("automation_trigger_terminal_name", "接点入力" + str(remote_control.get("automation_trigger_terminal_no", "")))
+                if remote_control.get("automation_trigger_event_detail_state") == 1:
+                    trigger_event_detail_name = remote_control.get("automation_trigger_terminal_state_name", "オープン")
+                else:
+                    trigger_event_detail_name = remote_control.get("automation_trigger_terminal_state_name", "クローズ")
             elif trigger_event_type == "di_unhealthy":
-                trigger_event_type_name = f"接点入力{remote_control.get('automation_trigger_terminal_no')}（変化検出状態）"
+                trigger_event_type_name = remote_control.get("automation_trigger_terminal_name", "接点入力" + str(remote_control.get("automation_trigger_terminal_no", "")))
                 trigger_event_detail_name = (
                     "接点入力検出復旧"
                     if remote_control.get("automation_trigger_event_detail_flag") == "0"
-                    else "接点入力未変化検出"
+                    else "未変化検出"
                 )
             elif trigger_event_type == "device_unhealthy":
                 trigger_event_type_name = "デバイスヘルシー未受信"

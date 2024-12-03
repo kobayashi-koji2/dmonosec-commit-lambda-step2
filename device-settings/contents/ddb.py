@@ -5,6 +5,7 @@ from aws_lambda_powertools import Logger
 import boto3
 from boto3.dynamodb.conditions import Key
 from boto3.dynamodb.conditions import Attr
+from botocore.exceptions import ClientError
 
 
 logger = Logger()
@@ -50,4 +51,29 @@ def update_device_settings(device_id, identification_id, device_settings, table)
         ExpressionAttributeValues=expression_attribute_values,
         ExpressionAttributeNames=expression_attribute_name,
     )
+    return
+
+
+# 現状態データ更新
+def update_device_state(device_id, state_table):
+
+    # デバイスヘルシー
+    option = {
+        "Key": {
+            "device_id": device_id,
+        },
+        "UpdateExpression": "set #device_healthy_state = :device_healthy_state",
+        "ExpressionAttributeNames": {
+            "#device_healthy_state": "device_healthy_state",
+        },
+        "ExpressionAttributeValues": {
+            ":device_healthy_state": 0,
+        },
+    }
+
+    try:
+        state_table.update_item(**option)
+    except ClientError as e:
+        logger.debug(f"update_current_stateエラー e={e}")
+
     return

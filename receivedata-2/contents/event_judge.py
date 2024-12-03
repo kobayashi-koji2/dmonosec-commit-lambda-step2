@@ -182,6 +182,12 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 hist_list_data["hist_data"]["automation_trigger_terminal_no"] = event_info.get(
                     "automation_trigger_terminal_no"
                 )
+                hist_list_data["hist_data"]["automation_trigger_terminal_name"] = event_info.get(
+                    "automation_trigger_terminal_name"
+                )
+                hist_list_data["hist_data"]["automation_trigger_terminal_state_name"] = event_info.get(
+                    "automation_trigger_terminal_state_name"
+                )
                 hist_list_data["hist_data"]["automation_trigger_event_detail_state"] = (
                     event_info.get("automation_trigger_event_detail_state")
                 )
@@ -234,6 +240,12 @@ def createHistListData(recv_data, device_info, event_info, device_relation_table
                 )
                 hist_list_data["hist_data"]["automation_trigger_terminal_no"] = event_info.get(
                     "automation_trigger_terminal_no"
+                )
+                hist_list_data["hist_data"]["automation_trigger_terminal_name"] = event_info.get(
+                    "automation_trigger_terminal_name"
+                )
+                hist_list_data["hist_data"]["automation_trigger_terminal_state_name"] = event_info.get(
+                    "automation_trigger_terminal_state_name"
                 )
                 hist_list_data["hist_data"]["automation_trigger_event_detail_state"] = (
                     event_info.get("automation_trigger_event_detail_state")
@@ -293,6 +305,25 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
             "di1_state": int(di_list[0]) if di_list else None,
         }
 
+        device_state_custom_timer_event_list = []
+        for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
+            if custom_event.get("event_type") == 1:
+                custom_timer_event = {}
+                custom_timer_event["custom_event_id"] = custom_event.get("custom_event_id")
+                custom_timer_event["elapsed_time"] = custom_event.get("elapsed_time")
+                device_state_di_event_list = []
+                for di_event in custom_event.get("di_event_list", []):
+                    device_state_di_event = {}
+                    device_state_di_event["di_no"] = di_event["di_no"]
+                    device_state_di_event["di_state"] = di_event["di_state"]
+                    device_state_di_event["event_judge_datetime"] = 0
+                    device_state_di_event["delay_flag"] = 0
+                    device_state_di_event["di_custom_event_state"] = 0
+                    device_state_di_event_list.append(device_state_di_event)
+                custom_timer_event["di_event_list"] = device_state_di_event_list
+                device_state_custom_timer_event_list.append(custom_timer_event)
+        current_state_info["custom_timer_event_list"] = device_state_custom_timer_event_list
+
         if recv_data.get("device_type") in ["PJ2", "PJ3"]:
             current_state_info["di2_state"] = int(di_list[1]) if di_list else None
             current_state_info["di3_state"] = int(di_list[2]) if di_list else None
@@ -322,25 +353,6 @@ def initCurrentStateInfo(recv_data, device_current_state, device_info, init_stat
                 current_state_info["ai1_threshold_last_update_datetime"] = recv_data.get("recv_datetime")
                 current_state_info["ai2_threshold_last_update_datetime"] = recv_data.get("recv_datetime")
             """
-
-            device_state_custom_timer_event_list = []
-            for custom_event in device_info.get("device_data").get("config").get("custom_event_list", []):
-                if custom_event.get("event_type") == 1:
-                    custom_timer_event = {}
-                    custom_timer_event["custom_event_id"] = custom_event.get("custom_event_id")
-                    custom_timer_event["elapsed_time"] = custom_event.get("elapsed_time")
-                    device_state_di_event_list = []
-                    for di_event in custom_event.get("di_event_list", []):
-                        device_state_di_event = {}
-                        device_state_di_event["di_no"] = di_event["di_no"]
-                        device_state_di_event["di_state"] = di_event["di_state"]
-                        device_state_di_event["event_judge_datetime"] = 0
-                        device_state_di_event["delay_flag"] = 0
-                        device_state_di_event["di_custom_event_state"] = 0
-                        device_state_di_event_list.append(device_state_di_event)
-                    custom_timer_event["di_event_list"] = device_state_di_event_list
-                    device_state_custom_timer_event_list.append(custom_timer_event)
-            current_state_info["custom_timer_event_list"] = device_state_custom_timer_event_list
 
     else:
         current_state_info = device_current_state.copy()
@@ -770,6 +782,12 @@ def eventJudge(
             event_info["automation_trigger_terminal_no"] = remote_control_info.get(
                 "automation_trigger_terminal_no"
             )
+            event_info["automation_trigger_terminal_name"] = remote_control_info.get(
+                "automation_trigger_terminal_name"
+            )
+            event_info["automation_trigger_terminal_state_name"] = remote_control_info.get(
+                "automation_trigger_terminal_state_name"
+            )
             event_info["automation_trigger_event_detail_state"] = remote_control_info.get(
                 "automation_trigger_event_detail_state"
             )
@@ -842,6 +860,12 @@ def eventJudge(
                     )
                     event_info["automation_trigger_terminal_no"] = remote_control_info.get(
                         "automation_trigger_terminal_no"
+                    )
+                    event_info["automation_trigger_terminal_name"] = remote_control_info.get(
+                        "automation_trigger_terminal_name"
+                    )
+                    event_info["automation_trigger_terminal_state_name"] = remote_control_info.get(
+                        "automation_trigger_terminal_state_name"
                     )
                     event_info["automation_trigger_event_detail_state"] = remote_control_info.get(
                         "automation_trigger_event_detail_state"

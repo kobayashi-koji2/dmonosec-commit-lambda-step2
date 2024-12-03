@@ -307,13 +307,9 @@ def create_response(request_params, hist_list):
 def automation_setting(hist):
     event_type = hist["automation_trigger_event_type"]
     if event_type == "di_change_state":
-        event_type_label = (
-            "接点入力" + str(hist.get("automation_trigger_terminal_no", "")) + "(接点状態)"
-        )
+        event_type_label = hist.get("automation_trigger_terminal_name", "接点入力" + str(hist.get("automation_trigger_terminal_no", "")))
     elif event_type == "di_unhealthy":
-        event_type_label = (
-            "接点入力" + str(hist.get("automation_trigger_terminal_no", "")) + "(変化検出状態)"
-        )
+        event_type_label = hist.get("automation_trigger_terminal_name", "接点入力" + str(hist.get("automation_trigger_terminal_no", "")))
     elif event_type == "device_unhealthy":
         event_type_label = "デバイスヘルシー未受信"
     elif event_type == "battery_near":
@@ -329,14 +325,14 @@ def automation_setting(hist):
 
     if event_type == "di_change_state":
         if hist["automation_trigger_event_detail_state"] == 1:
-            event_detail_label = "オープン"
+            event_detail_label = hist.get("automation_trigger_terminal_state_name", "オープン")
         else:
-            event_detail_label = "クローズ"
+            event_detail_label = hist.get("automation_trigger_terminal_state_name", "クローズ")
     elif event_type == "di_unhealthy":
         if hist["automation_trigger_event_detail_flag"] == 0:
             event_detail_label = "接点入力検出復旧"
         else:
-            event_detail_label = "接点入力未変化検出"
+            event_detail_label = "未変化検出"
     else:
         if hist["automation_trigger_event_detail_flag"] == 0:
             event_detail_label = "正常"

@@ -218,6 +218,7 @@ def update_user_info(
     transact_items = []
     remove_device_id_list = []
     added_device_id_list = []
+    added_group_device_id_list = []
 
     user_id = request_params["update_user_id"]
 
@@ -369,6 +370,7 @@ def update_user_info(
     for add_group_id in added_group_list:
         added_group_relation_device_id_list = db.get_group_relation_device_id_list(add_group_id, device_relation_table)
         added_device_id_list.extend(added_group_relation_device_id_list)
+        added_group_device_id_list.extend(added_group_relation_device_id_list)
         group_relation_item = {
             "key1": "u-" + user_id,
             "key2": "g-" + add_group_id,
@@ -381,6 +383,20 @@ def update_user_info(
             }
         }
         transact_items.append(add_group)
+
+        added_group_device_id_list = list(set(added_group_device_id_list))
+        add_group_removed_device_id_list = list(set(device_list_old) & set(added_group_device_id_list))
+        for remove_device_id in add_group_removed_device_id_list:
+            remove_device = {
+                "Delete": {
+                    "TableName": device_relation_table_name,
+                    "Key": {
+                        "key1": {"S": "u-" + user_id},
+                        "key2": {"S": "d-" + remove_device_id},
+                    },
+                }
+            }
+            transact_items.append(remove_device)
 
     #################################################
     # デバイス関係テーブル（デバイス）
