@@ -142,6 +142,14 @@ def put_hist_list(
     }
 
     if remote_control.get("control_trigger") in [
+        "timer_control",
+        "on_timer_control",
+        "off_timer_control",
+    ]:
+        hist_data = hist_list_item["hist_data"]
+        hist_data["link_terminal_state_name"] = remote_control.get("link_terminal_state_name")
+
+    elif remote_control.get("control_trigger") in [
         "automation_control",
         "on_automation_control",
         "off_automation_control",
