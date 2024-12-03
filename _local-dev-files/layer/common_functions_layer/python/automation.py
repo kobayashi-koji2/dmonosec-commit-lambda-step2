@@ -583,34 +583,30 @@ def _send_not_exec_mail(
                 else f"接点出力{control_do.get('do_no')}"
             )
 
-            di_no = control_do.get("do_di_return")
-            if di_no:
-                di = [
-                    di
-                    for di in control_device.get("device_data", {})
-                    .get("config", {})
-                    .get("terminal_settings", {})
-                    .get("di_list", [])
-                    if di.get("di_no") == di_no
-                ]
-                di_name = (
-                    di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
-                )
+            di_no = automation["trigger_terminal_no"]
+            di = [
+                di
+                for di in trigger_device.get("device_data", {})
+                .get("config", {})
+                .get("terminal_settings", {})
+                .get("di_list", [])
+                if di.get("di_no") == di_no
+            ]
+            di_name = (
+                di[0].get("di_name") if di and di[0].get("di_name") else f"接点入力{di_no}"
+            )
 
-                di_state_name = ""
-                if automation["control_di_state"] == 0:
-                    di_state_name = di[0].get("di_on_name", "クローズ")
-                elif automation["control_di_state"] == 1:
-                    di_state_name = di[0].get("di_off_name", "オープン")
+            di_state_name = ""
+            if automation["trigger_event_detail_state"] == 0:
+                di_state_name = di[0].get("di_on_name", "クローズ")
+            elif automation["trigger_event_detail_state"] == 1:
+                di_state_name = di[0].get("di_off_name", "オープン")
 
             event_type_name = ""
             event_detail_name = ""
             if automation["trigger_event_type"] == "di_change_state":
                 event_type_name = di_name if di_name else f"接点入力{di[0].get('di_no')}（{di_state_name}）"
-                if automation["trigger_event_detail_state"] == 0:
-                    event_detail_name = di_state_name if di_state_name else "クローズ"
-                elif automation["trigger_event_detail_state"] == 1:
-                    event_detail_name = di_state_name if di_state_name else "オープン"
+                event_detail_name = di_state_name
             elif automation["trigger_event_type"] == "di_unhealthy":
                 event_type_name = di_name if di_name else f"接点入力{di[0].get('di_no')}"
                 if automation["trigger_event_detail_flag"] == 0:
