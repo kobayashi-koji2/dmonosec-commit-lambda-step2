@@ -34,9 +34,9 @@ def diNameToState(terminal_state_name, device_info):
 def automationSetting(event_type, event_detail_state, event_detail_flag, hist_list_data):
     # トリガーイベント項目
     if event_type == "di_change_state":
-        event_type_label = hist_list_data.get("automation_trigger_terminal_name", "接点入力" + str(hist_list_data.get("automation_trigger_terminal_no", "")))
+        event_type_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_name", "接点入力" + str(hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_no", "")))
     elif event_type == "di_unhealthy":
-        event_type_label = hist_list_data.get("automation_trigger_terminal_name", "接点入力" + str(hist_list_data.get("automation_trigger_terminal_no", "")))
+        event_type_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_name", "接点入力" + str(hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_no", "")))
     elif event_type == "device_unhealthy":
         event_type_label = "デバイスヘルシー未受信"
     elif event_type == "battery_near":
@@ -52,10 +52,10 @@ def automationSetting(event_type, event_detail_state, event_detail_flag, hist_li
 
     # トリガーイベント詳細
     if event_type == "di_change_state":
-        if hist_list_data["automation_trigger_event_detail_state"] == 1:
-            event_detail_label = hist_list_data.get("automation_trigger_terminal_state_name", "オープン")
+        if hist_list_data["hist_data"]["automation_trigger_event_detail_state"] == 1:
+            event_detail_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_state_name", "オープン")
         else:
-            event_detail_label = hist_list_data.get("automation_trigger_terminal_state_name", "クローズ")
+            event_detail_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_state_name", "クローズ")
     elif event_type == "di_unhealthy":
         if event_detail_flag == 0:
             event_detail_label = "接点入力検出復旧"
