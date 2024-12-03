@@ -52,7 +52,7 @@ def automationSetting(event_type, event_detail_state, event_detail_flag, hist_li
 
     # トリガーイベント詳細
     if event_type == "di_change_state":
-        if hist_list_data["hist_data"]["automation_trigger_event_detail_state"] == 1:
+        if event_detail_state == 1:
             event_detail_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_state_name", "オープン")
         else:
             event_detail_label = hist_list_data.get("hist_data", {}).get("automation_trigger_terminal_state_name", "クローズ")

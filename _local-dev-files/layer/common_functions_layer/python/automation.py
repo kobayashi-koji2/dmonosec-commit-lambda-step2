@@ -357,7 +357,7 @@ def _put_remote_controls(
     trigger_di_state_name = ""
     if automation.get("trigger_event_detail_state") == 0:
         trigger_di_state_name = di[0].get("di_on_name", "クローズ")
-    elif automation.get("control_di_state") == 1:
+    elif automation.get("trigger_event_detail_state") == 1:
         trigger_di_state_name = di[0].get("di_off_name", "オープン")
 
     remote_controls_item = {
@@ -483,7 +483,7 @@ def _put_hist_list(
     trigger_di_state_name = ""
     if automation.get("trigger_event_detail_state") == 0:
         trigger_di_state_name = di[0].get("di_on_name", "クローズ")
-    elif automation.get("control_di_state") == 1:
+    elif automation.get("trigger_event_detail_state") == 1:
         trigger_di_state_name = di[0].get("di_off_name", "オープン")
 
     hist_list_item = {
