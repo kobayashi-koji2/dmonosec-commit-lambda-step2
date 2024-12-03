@@ -95,7 +95,7 @@ def send_mail(
         elif remote_control.get("control_trigger") in ["timer_control", "on_timer_control", "off_timer_control"]:
             event_detail = f"""
                 　【スケジュール(失敗)】
-                　{do_name}のコントロールコマンドがデバイスに届きませんでした。
+                　{do_name}のコントロールコマンドがデバイスに届かなかった可能性があります。
                 　 ※スケジュール「{remote_control.get("do_timer_name")} ／ {remote_control.get("timer_time")}」
             """
         elif remote_control.get("control_trigger") in [
@@ -168,7 +168,7 @@ def send_mail(
             )
             event_detail = f"""
                 　【オートメーション(失敗)】
-                　{do_name}コントロールコマンドがデバイスに届きませんでした。
+                　{do_name}コントロールコマンドがデバイスに届かなかった可能性があります。
                 　 ※オートメーション「{trigger_device_name} ／ {trigger_event_type_name} ／ {trigger_event_detail_name}」
             """
     else:
