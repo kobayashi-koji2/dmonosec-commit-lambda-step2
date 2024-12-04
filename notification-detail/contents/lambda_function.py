@@ -93,16 +93,16 @@ def lambda_handler(event, context, user):
                     "custom_event_id": notification_setting.get("custom_event_id", ""),
                 }
             )
-        # notification_target_object_list = []
-        # for notification_target in notification_target_list:
-        #     user_info = db.get_user_info_by_user_id(notification_target, tables["user_table"])
-        #     account_info = db.get_account_info_by_account_id(user_info.get("account_id"), tables["account_table"])
-        #     send_info = {
-        #         "user_id": notification_target,
-        #         "user_name": account_info.get("user_data").get("config").get("user_name"),
-        #         "mail_address": account_info.get("email_address")
-        #     }
-        #     notification_target_object_list.append(send_info)
+        notification_target_object_list = []
+        for notification_target in notification_target_list:
+            user_info = db.get_user_info_by_user_id(notification_target, tables["user_table"])
+            account_info = db.get_account_info_by_account_id(user_info.get("account_id"), tables["account_table"])
+            send_info = {
+                "user_id": notification_target,
+                "user_name": account_info.get("user_data").get("config").get("user_name"),
+                "mail_address": account_info.get("email_address")
+            }
+            notification_target_object_list.append(send_info)
 
         res_body = {
             "message": "",
@@ -113,7 +113,7 @@ def lambda_handler(event, context, user):
             "device_sigfox_id": device.get("sigfox_id", ""),
             "device_code": device.get("device_data", {}).get("param", {}).get("device_code", ""),
             "notification_list": notification_list,
-            "notification_target_list": notification_target_list,
+            "notification_target_list": notification_target_object_list,
         }
         return {
             "statusCode": 200,
