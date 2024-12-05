@@ -60,7 +60,10 @@ def lambda_handler(event, context, login_user, user_id):
                 "statusCode": 400,
                 "headers": res_headers,
                 "body": json.dumps(
-                    {"message": "削除されたユーザーが選択されました。\n画面更新を行います。\n\nエラーコード：006-0104"}, ensure_ascii=False
+                    {
+                        "message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0104"
+                    },
+                    ensure_ascii=False,
                 ),
             }
 
@@ -73,7 +76,12 @@ def lambda_handler(event, context, login_user, user_id):
             return {
                 "statusCode": 404,
                 "headers": res_headers,
-                "body": json.dumps({"message": "削除されたユーザーが選択されました。\n画面更新を行います。\n\nエラーコード：006-0105"}, ensure_ascii=False),
+                "body": json.dumps(
+                    {
+                        "message": "削除されたユーザーが選択されました。\n画面の更新を行います。\n\nエラーコード：006-0105"
+                    },
+                    ensure_ascii=False,
+                ),
             }
 
         # ユーザーのデバイスIDリストを取得

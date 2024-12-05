@@ -30,7 +30,7 @@ def validate(
 
     if "device_req_no" not in path_params:
         return {"message": "パラメータが不正です"}
-    
+
     device_req_no = event["pathParameters"]["device_req_no"]
     logger.info(f"device_req_no: {device_req_no}")
     remote_control = db.get_remote_control(device_req_no, remote_controls_table)
@@ -65,7 +65,9 @@ def validate(
             user["user_id"], device_relation_table
         )
         if device_id not in user_device_list:
-            return {"message": "コントロール設定が変更されたため、実施しませんでした。\n画面の更新を行います。\n\nエラーコード：003-0607"}
+            return {
+                "message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0607"
+            }
 
     params = {
         "device_req_no": path_params["device_req_no"],

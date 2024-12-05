@@ -75,7 +75,7 @@ def lambda_handler(event, context):
             }
         except cognito.exceptions.ExpiredCodeException:
             res_body = {
-                "message": "認証コードの有効期限が切れています。\nもう一度認証コード送付をお試しください。\n\nエラーコード：002-0503"
+                "message": "認証コードの有効期限が切れています。\nパスワード再設定メールの送信をもう一度行ってください。\n\nエラーコード：002-0503"
             }
             return {
                 "statusCode": 500,
