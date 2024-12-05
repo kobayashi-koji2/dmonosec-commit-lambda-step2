@@ -247,7 +247,9 @@ def user_detect_all(keyword, account):
     if case == 1:
         for key in key_list:
             if (key in user_name) or (key in email_address):
-                get_flag = True
+                hit_list.append(1)
+            else:
+                hit_list.append(0)
         logger.info(f"hit_list:{hit_list}")
         if len(hit_list)!=0:
             result = reduce(lambda x, y: x * y, hit_list)
