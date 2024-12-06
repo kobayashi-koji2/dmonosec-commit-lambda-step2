@@ -40,7 +40,7 @@ def send_mail(
     change_state_mail,
     limit_datetime
 ):
-    limit_datetime_converted = datetime.fromtimestamp(limit_datetime / 1000.0,ZoneInfo("Asia/Tokyo"))
+    limit_datetime_converted = datetime.fromtimestamp(float(limit_datetime) / 1000.0,ZoneInfo("Asia/Tokyo"))
     send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
     device_name = (
         device.get("device_data", {}).get("config", {}).get("device_name")
