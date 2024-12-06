@@ -344,7 +344,10 @@ def lambda_handler(event, context):
         link_di_no = remote_control["link_di_no"]
 
         req_datetime = remote_control["req_datetime"]
-        limit_datetime = req_datetime + 10000  # 10秒
+        if remote_control.get("control_trigger") == "manual_control":
+            limit_datetime = req_datetime + 10000  # 10秒
+        else:
+            limit_datetime = req_datetime + 20000  # 20秒
         if time.time() <= limit_datetime / 1000:
             # タイムアウト時間まで待機
             time.sleep(float(limit_datetime) / 1000 - time.time())
@@ -383,6 +386,7 @@ def lambda_handler(event, context):
 
             notification_hist_id = None
             if notification_setting:
+                change_state_mail = False
                 notification_hist_id = send_mail(
                     notification_setting[0],
                     device,
@@ -392,7 +396,7 @@ def lambda_handler(event, context):
                     group_table,
                     device_relation_table,
                     notification_hist_table,
-                    change_state_mail=False,
+                    change_state_mail,
                     limit_datetime
                 )
 
@@ -422,7 +426,10 @@ def lambda_handler(event, context):
         if link_di_no > 0:
             # 接点入力紐づけ設定あり
             recv_datetime = remote_control["recv_datetime"]
-            limit_datetime = recv_datetime + 20000  # 20秒
+            if remote_control.get("control_trigger") == "manual_control":
+                limit_datetime = recv_datetime + 20000  # 20秒
+            else:
+                limit_datetime = recv_datetime + 40000  # 40秒
             if time.time() <= limit_datetime / 1000:
                 # タイムアウト時間まで待機
                 time.sleep(float(limit_datetime) / 1000 - time.time())
@@ -442,6 +449,7 @@ def lambda_handler(event, context):
 
                 notification_hist_id = None
                 if notification_setting:
+                    change_state_mail = True
                     notification_hist_id = send_mail(
                         notification_setting[0],
                         device,
@@ -451,7 +459,7 @@ def lambda_handler(event, context):
                         group_table,
                         device_relation_table,
                         notification_hist_table,
-                        change_state_mail=True,
+                        change_state_mail,
                         limit_datetime
                     )
 
