@@ -127,7 +127,7 @@ def lambda_handler(event, context, user_info):
                 group_info_list = sorted(group_info_list, key=lambda x:x['group_data']['config']['group_name'])
             # デバイス詳細情報生成
             res_body = generate_detail.get_device_detail(
-                device_info[0], device_state, group_info_list
+                device_info, device_state, group_info_list
             )
 
         except ClientError as e:

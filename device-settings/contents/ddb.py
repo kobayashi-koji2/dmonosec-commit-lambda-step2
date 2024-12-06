@@ -18,7 +18,7 @@ def get_device_info(pk, table):
         KeyConditionExpression=Key("device_id").eq(pk),
         FilterExpression=Attr("contract_state").ne(2),
     ).get("Items", [])
-    return db.insert_id_key_in_device_info_list(response)
+    return db.insert_id_key_in_device_info(response[0]) if response else None
 
 
 # デバイス設定更新
