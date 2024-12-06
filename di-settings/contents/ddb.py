@@ -58,6 +58,7 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
         # 接点入力ヘルシーチェックが未設定の場合、1を保持
         if di["di_healthy_period"] == 0 :
             di_state[di_no] = 1
+            continue
 
         current_di_healthy_state = f"di{di_no}_healthy_state"
         if current_di_healthy_state not in device_state or device_state.get(current_di_healthy_state) == 0:
@@ -67,7 +68,7 @@ def update_device_settings(device_id, imei, device_settings, device_table, devic
         di_healthy_type = di.get("di_healthy_type")
         if di_healthy_type == "hour":
             di_healthy_period_time = di_healthy_period * 60 * 60 * 1000
-        elif di_healthy_type == "day":
+        else:
             di_healthy_period_time = di_healthy_period * 24 * 60 * 60 * 1000
 
         di_last_change_datetime = f"di{di_no}_last_change_datetime"

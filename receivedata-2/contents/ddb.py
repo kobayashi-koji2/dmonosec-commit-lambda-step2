@@ -115,7 +115,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
                     #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
                     #di1_last_change_datetime = :di1_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #di1_healthy_state = :di1_healthy_state, \
                     #device_healthy_state = :device_healthy_state",
                 "ExpressionAttributeNames": {
@@ -137,7 +136,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
                     "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
                     "#di1_last_change_datetime": "di1_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#di1_healthy_state": "di1_healthy_state",
                     "#device_healthy_state": "device_healthy_state",
                 },
@@ -160,7 +158,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
                     ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
                     ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":di1_healthy_state": current_state_info.get("di1_healthy_state", 0),
                     ":device_healthy_state": current_state_info.get("device_healthy_state", 0),
                 },
@@ -188,7 +185,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
                     #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
                     #di1_last_change_datetime = :di1_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #device_healthy_state = :device_healthy_state",
                 "ExpressionAttributeNames": {
                     "#signal_last_update_datetime": "signal_last_update_datetime",
@@ -209,7 +205,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
                     "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
                     "#di1_last_change_datetime": "di1_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#device_healthy_state": "device_healthy_state",
                 },
                 "ExpressionAttributeValues": {
@@ -231,7 +226,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
                     ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
                     ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":device_healthy_state": current_state_info.get("device_healthy_state", 0),
                 },
             }
@@ -258,7 +252,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
                     #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
                     #di1_last_change_datetime = :di1_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #di1_healthy_state = :di1_healthy_state",
                 "ExpressionAttributeNames": {
                     "#signal_last_update_datetime": "signal_last_update_datetime",
@@ -279,7 +272,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
                     "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
                     "#di1_last_change_datetime": "di1_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#di1_healthy_state": "di1_healthy_state",
                 },
                 "ExpressionAttributeValues": {
@@ -301,7 +293,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
                     ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
                     ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":di1_healthy_state": current_state_info.get("di1_healthy_state", 0),
                 },
             }
@@ -327,8 +318,7 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #device_abnormality_last_change_datetime = :device_abnormality_last_change_datetime, \
                     #parameter_abnormality_last_change_datetime = :parameter_abnormality_last_change_datetime, \
                     #fw_update_abnormality_last_change_datetime = :fw_update_abnormality_last_change_datetime, \
-                    #di1_last_change_datetime = :di1_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list",
+                    #di1_last_change_datetime = :di1_last_change_datetime",
                 "ExpressionAttributeNames": {
                     "#signal_last_update_datetime": "signal_last_update_datetime",
                     "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
@@ -348,7 +338,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#parameter_abnormality_last_change_datetime": "parameter_abnormality_last_change_datetime",
                     "#fw_update_abnormality_last_change_datetime": "fw_update_abnormality_last_change_datetime",
                     "#di1_last_change_datetime": "di1_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                 },
                 "ExpressionAttributeValues": {
                     ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
@@ -369,7 +358,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":parameter_abnormality_last_change_datetime": current_state_info.get("parameter_abnormality_last_change_datetime"),
                     ":fw_update_abnormality_last_change_datetime": current_state_info.get("fw_update_abnormality_last_change_datetime"),
                     ":di1_last_change_datetime": current_state_info.get("di1_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                 },
             }
     elif device_info["device_type"] == "PJ2":
@@ -423,7 +411,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #di8_last_change_datetime = :di8_last_change_datetime, \
                     #do1_last_change_datetime = :do1_last_change_datetime, \
                     #do2_last_change_datetime = :do2_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #di1_healthy_state = :di1_healthy_state, \
                     #di2_healthy_state = :di2_healthy_state, \
                     #di3_healthy_state = :di3_healthy_state, \
@@ -479,7 +466,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#di8_last_change_datetime": "di8_last_change_datetime",
                     "#do1_last_change_datetime": "do1_last_change_datetime",
                     "#do2_last_change_datetime": "do2_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#di1_healthy_state": "di1_healthy_state",
                     "#di2_healthy_state": "di2_healthy_state",
                     "#di3_healthy_state": "di3_healthy_state",
@@ -536,7 +522,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
                     ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
                     ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":di1_healthy_state": current_state_info.get("di1_healthy_state", 0),
                     ":di2_healthy_state": current_state_info.get("di2_healthy_state", 0),
                     ":di3_healthy_state": current_state_info.get("di3_healthy_state", 0),
@@ -598,7 +583,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #di8_last_change_datetime = :di8_last_change_datetime, \
                     #do1_last_change_datetime = :do1_last_change_datetime, \
                     #do2_last_change_datetime = :do2_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #device_healthy_state = :device_healthy_state",
                 "ExpressionAttributeNames": {
                     "#signal_last_update_datetime": "signal_last_update_datetime",
@@ -646,7 +630,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#di8_last_change_datetime": "di8_last_change_datetime",
                     "#do1_last_change_datetime": "do1_last_change_datetime",
                     "#do2_last_change_datetime": "do2_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#device_healthy_state": "device_healthy_state",
                 },
                 "ExpressionAttributeValues": {
@@ -695,7 +678,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
                     ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
                     ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":device_healthy_state": current_state_info.get("device_healthy_state", 0),
                 },
             }
@@ -749,7 +731,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #di8_last_change_datetime = :di8_last_change_datetime, \
                     #do1_last_change_datetime = :do1_last_change_datetime, \
                     #do2_last_change_datetime = :do2_last_change_datetime, \
-                    #custom_timer_event_list  = :custom_timer_event_list, \
                     #di1_healthy_state = :di1_healthy_state, \
                     #di2_healthy_state = :di2_healthy_state, \
                     #di3_healthy_state = :di3_healthy_state, \
@@ -804,7 +785,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#di8_last_change_datetime": "di8_last_change_datetime",
                     "#do1_last_change_datetime": "do1_last_change_datetime",
                     "#do2_last_change_datetime": "do2_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                     "#di1_healthy_state": "di1_healthy_state",
                     "#di2_healthy_state": "di2_healthy_state",
                     "#di3_healthy_state": "di3_healthy_state",
@@ -860,7 +840,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
                     ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
                     ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                     ":di1_healthy_state": current_state_info.get("di1_healthy_state", 0),
                     ":di2_healthy_state": current_state_info.get("di2_healthy_state", 0),
                     ":di3_healthy_state": current_state_info.get("di3_healthy_state", 0),
@@ -920,8 +899,7 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     #di7_last_change_datetime = :di7_last_change_datetime, \
                     #di8_last_change_datetime = :di8_last_change_datetime, \
                     #do1_last_change_datetime = :do1_last_change_datetime, \
-                    #do2_last_change_datetime = :do2_last_change_datetime,\
-                    #custom_timer_event_list  = :custom_timer_event_list",
+                    #do2_last_change_datetime = :do2_last_change_datetime",
                 "ExpressionAttributeNames": {
                     "#signal_last_update_datetime": "signal_last_update_datetime",
                     "#battery_near_last_update_datetime": "battery_near_last_update_datetime",
@@ -968,7 +946,6 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     "#di8_last_change_datetime": "di8_last_change_datetime",
                     "#do1_last_change_datetime": "do1_last_change_datetime",
                     "#do2_last_change_datetime": "do2_last_change_datetime",
-                    "#custom_timer_event_list": "custom_timer_event_list",
                 },
                 "ExpressionAttributeValues": {
                     ":signal_last_update_datetime": current_state_info.get("signal_last_update_datetime"),
@@ -1016,9 +993,49 @@ def update_current_state(current_state_info, device_info, update_digit, state_ta
                     ":di8_last_change_datetime": current_state_info.get("di8_last_change_datetime"),
                     ":do1_last_change_datetime": current_state_info.get("do1_last_change_datetime"),
                     ":do2_last_change_datetime": current_state_info.get("do2_last_change_datetime"),
-                    ":custom_timer_event_list": current_state_info.get("custom_timer_event_list"),
                 },
             }
+    logger.debug(f"option={option}")
+
+    try:
+        state_table.update_item(**option)
+    except ClientError as e:
+        logger.debug(f"update_current_stateエラー e={e}")
+
+    # カスタムタイマーイベント
+    device_state = get_device_state(current_state_info['device_id'], state_table)
+    if "custom_timer_event_list" in device_state:
+        custom_timer_event_list = device_state.get("custom_timer_event_list")
+        wk_custom_timer_event_list = current_state_info.get("custom_timer_event_list") or []
+        for custom_timer_event in custom_timer_event_list:
+            for wk_custom_timer_event in wk_custom_timer_event_list:
+                if custom_timer_event.get("custom_event_id") != wk_custom_timer_event.get("custom_event_id"):
+                    continue
+                di_event_list = custom_timer_event.get("di_event_list", [])
+                wk_di_event_list = wk_custom_timer_event.get("di_event_list", [])
+                for di_event in di_event_list:
+                    for wk_di_event in wk_di_event_list:
+                        if di_event.get("di_no") != wk_di_event.get("di_no"):
+                            continue
+                        if di_event.get("di_custom_event_state") == 1:
+                            di_event["di_custom_event_state"] = wk_di_event.get("di_custom_event_state")
+                            di_event["event_judge_datetime"] = wk_di_event.get("event_judge_datetime")
+                            di_event["delay_flag"] = wk_di_event.get("delay_flag")
+    else:
+        custom_timer_event_list = current_state_info.get("custom_timer_event_list") or []
+
+    option = {
+        "Key": {
+            "device_id": current_state_info['device_id'],
+        },
+        "UpdateExpression": "set #custom_timer_event_list  = :custom_timer_event_list",
+        "ExpressionAttributeNames": {
+            "#custom_timer_event_list": "custom_timer_event_list",
+        },
+        "ExpressionAttributeValues": {
+            ":custom_timer_event_list": custom_timer_event_list,
+        },
+    }
     logger.debug(f"option={option}")
 
     try:
