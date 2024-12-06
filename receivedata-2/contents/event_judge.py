@@ -816,7 +816,7 @@ def eventJudge(
             )
             logger.debug(f"remote_control_info={remote_control_info}")
             if remote_control_info is not None:
-                event_info["event_datetime"] = remote_control_info.get("req_datetime")
+                event_info["event_datetime"] = recv_data.get("event_datetime")
                 event_info["do_no"] = remote_control_info.get("do_no")
                 if remote_control_info.get("control_trigger") == "manual_control":
                     event_info["control_exec_user_name"] = remote_control_info.get(
