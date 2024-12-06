@@ -220,6 +220,7 @@ def lambda_handler(event, context, user_info):
                     device_relation_table,
                     notification_hist_table,
                     hist_list_table,
+                    remote_control_latest.get("req_datetime")
                 )
                 # 制御状況を削除
                 control_status_table.delete_item(
@@ -422,6 +423,7 @@ def __register_hist_info(
     device_relation_table,
     notification_hist_table,
     hist_list_table,
+    req_datetime
 ):
     """
     - 要求番号が設定されており、接点出力端子が制御中の場合
@@ -470,6 +472,7 @@ def __register_hist_info(
             user_table,
             account_table,
             notification_hist_table,
+            req_datetime
         )
 
     # 履歴情報登録
@@ -483,7 +486,7 @@ def __register_hist_info(
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": now_unixtime,
+        "event_datetime": req_datetime,
         "expire_datetime": expire_datetime,
         "hist_data": {
             "device_name": device_info["device_data"]["config"]["device_name"],
@@ -527,7 +530,9 @@ def __send_mail(
     user_table,
     account_table,
     notification_hist_table,
+    req_datetime
 ):
+    req_datetime_converted = datetime.fromtimestamp(req_datetime / 1000.0,ZoneInfo("Asia/Tokyo"))
     # メール送信内容の設定
     send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
 
@@ -583,7 +588,7 @@ def __send_mail(
     mail_subject = "イベントが発生しました"
     mail_body = textwrap.dedent(
         f"""
-        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
+        ■発生日時：{req_datetime_converted.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}

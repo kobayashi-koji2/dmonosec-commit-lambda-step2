@@ -127,6 +127,7 @@ def lambda_handler(event, context):
                             account_table,
                             notification_hist_table,
                             hist_list_table,
+                            remote_controls_table
                         )
                         logger.info(
                             f"[__check_return_di_state(): FALSE] device_id: {device_id}, do_info: {do_info}"
@@ -451,6 +452,7 @@ def __register_hist_info(
     account_table,
     notification_hist_table,
     hist_list_table,
+    remote_controls_table
 ):
     """
     1. 紐づく接点入力端子番号の指定があり、その出力端子の現状態ステータスがタイマーのON_OFF制御の値と一致する場合
@@ -459,6 +461,11 @@ def __register_hist_info(
     - 履歴情報一覧へ実施しなかったことを登録する
     """
     result = None
+
+    remote_control_latest = ddb.get_remote_control_latest(
+        device_info.get("device_id"), do_info["do_no"], remote_controls_table
+    )
+    req_datetime = remote_control_latest.get("req_datetime")
 
     # グループ情報取得
     group_id_list = db.get_device_relation_group_id_list(
@@ -505,6 +512,7 @@ def __register_hist_info(
             user_table,
             account_table,
             notification_hist_table,
+            req_datetime
         )
 
     # 履歴情報登録
@@ -584,7 +592,7 @@ def __register_hist_info(
     item = {
         "device_id": device_info["device_id"],
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": now_unixtime,
+        "event_datetime": req_datetime,
         "expire_datetime": expire_datetime,
         "hist_data": hist_data,
     }
@@ -620,8 +628,10 @@ def __send_mail(
     user_table,
     account_table,
     notification_hist_table,
+    req_datetime
 ):
     # メール送信内容の設定
+    req_datetime_converted = datetime.fromtimestamp(req_datetime / 1000.0,ZoneInfo("Asia/Tokyo"))
     send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
 
     device_config = device_info.get("device_data", {}).get("config", {})
@@ -704,7 +714,7 @@ def __send_mail(
     mail_subject = "イベントが発生しました"
     mail_body = textwrap.dedent(
         f"""
-        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
+        ■発生日時：{req_datetime_converted.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}

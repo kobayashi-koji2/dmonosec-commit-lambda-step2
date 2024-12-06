@@ -78,6 +78,7 @@ def put_hist_list(
     group_table,
     device_relation_table,
     device_state_table,
+    limit_datetime
 ):
     now_unixtime = int(time.time() * 1000)
 
@@ -116,7 +117,7 @@ def put_hist_list(
     hist_list_item = {
         "device_id": device.get("device_id"),
         "hist_id": str(uuid.uuid4()),
-        "event_datetime": now_unixtime,
+        "event_datetime": limit_datetime,
         # "recv_datetime": "",  # TODO 仕様確認中
         "expire_datetime": expire_datetime,
         "hist_data": {

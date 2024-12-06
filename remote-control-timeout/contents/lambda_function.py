@@ -38,7 +38,9 @@ def send_mail(
     device_relation_table,
     notification_hist_table,
     change_state_mail,
+    limit_datetime
 ):
+    limit_datetime_converted = datetime.fromtimestamp(limit_datetime / 1000.0,ZoneInfo("Asia/Tokyo"))
     send_datetime = datetime.now(ZoneInfo("Asia/Tokyo"))
     device_name = (
         device.get("device_data", {}).get("config", {}).get("device_name")
@@ -275,7 +277,7 @@ def send_mail(
     event_detail = textwrap.dedent(event_detail)
     mail_body = textwrap.dedent(
         f"""\
-        ■発生日時：{send_datetime.strftime('%Y/%m/%d %H:%M:%S')}
+        ■発生日時：{limit_datetime_converted.strftime('%Y/%m/%d %H:%M:%S')}
 
         ■グループ：{group_name}
         　デバイス：{device_name}
@@ -391,6 +393,7 @@ def lambda_handler(event, context):
                     device_relation_table,
                     notification_hist_table,
                     change_state_mail=False,
+                    limit_datetime
                 )
 
             # 履歴レコード作成
@@ -403,6 +406,7 @@ def lambda_handler(event, context):
                 group_table,
                 device_relation_table,
                 device_state_table,
+                limit_datetime
             )
 
             # 接点衆力制御応答テーブルに制御結果（タイムアウト）を登録
@@ -448,6 +452,7 @@ def lambda_handler(event, context):
                         device_relation_table,
                         notification_hist_table,
                         change_state_mail=True,
+                        limit_datetime
                     )
 
                 # 履歴レコード作成
@@ -460,6 +465,7 @@ def lambda_handler(event, context):
                     group_table,
                     device_relation_table,
                     device_state_table,
+                    limit_datetime
                 )
 
                 # 接点衆力制御応答テーブルに接点入力状態変化の結果（タイムアウト）を登録
