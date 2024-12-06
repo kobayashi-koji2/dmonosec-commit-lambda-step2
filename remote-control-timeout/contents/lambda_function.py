@@ -393,7 +393,7 @@ def lambda_handler(event, context):
                     device_relation_table,
                     notification_hist_table,
                     change_state_mail=False,
-                    limit_datetime
+                    limit_datetime = limit_datetime
                 )
 
             # 履歴レコード作成
@@ -452,7 +452,7 @@ def lambda_handler(event, context):
                         device_relation_table,
                         notification_hist_table,
                         change_state_mail=True,
-                        limit_datetime
+                        limit_datetime = limit_datetime
                     )
 
                 # 履歴レコード作成
