@@ -36,12 +36,8 @@ def validate(event, user_info, tables):
     device_info = ddb.get_device_info(device_id, tables["device_table"])
     logger.info(f"device_id: {device_id}")
     logger.info(f"device_info: {device_info}")
-    if len(device_info) == 0:
+    if not device_info:
         return {"message": "デバイス情報が存在しません。"}
-    elif len(device_info) >= 2:
-        return {
-            "message": "デバイスIDに「契約状態:初期受信待ち」「契約状態:使用可能」の機器が複数紐づいています"
-        }
 
     operation_auth = operation_auth_check(user_info, contract_info, device_id, tables)
     if not operation_auth:
@@ -51,7 +47,7 @@ def validate(event, user_info, tables):
     if not input:
         return {"message": "入力パラメータが不正です。"}
 
-    return {"device_id": device_id, "imei": device_info[0].get("imei"), "sigfox_id": device_info[0].get("sigfox_id"), "body": body}
+    return {"device_id": device_id, "imei": device_info.get("imei"), "sigfox_id": device_info.get("sigfox_id"), "body": body}
 
 
 # 操作権限チェック
