@@ -106,7 +106,9 @@ def lambda_handler(event, context, user_info):
 
         # デバイス操作権限チェック
         if device_id not in device_list:
-            res_body = {"message": "デバイスの操作権限がありません。"}
+            res_body = {
+                "message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0607"
+            }
             return {
                 "statusCode": 400,
                 "headers": res_headers,
@@ -122,7 +124,9 @@ def lambda_handler(event, context, user_info):
             logger.info(f"device_id_list: {device_id_list}")
 
             if device_id not in device_id_list:
-                res_body = {"message": "デバイスの操作権限がありません。"}
+                res_body = {
+                    "message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0607"
+                }
                 return {
                     "statusCode": 400,
                     "headers": res_headers,

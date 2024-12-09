@@ -75,7 +75,7 @@ def lambda_handler(event, context, user_info):
                     {"message": "端末要求が存在しません。"}, ensure_ascii=False
                 ),
             }
-            
+
         # デバイス種別取得
         device_id = remote_control.get("device_id")
         device_info = get_device_info(device_id, device_table)
@@ -89,7 +89,7 @@ def lambda_handler(event, context, user_info):
                     {"message": "デバイス情報が存在しません。"}, ensure_ascii=False
                 ),
             }
-        
+
         device_type = device_info[0]["device_type"]
 
         # デバイス種別チェック
@@ -112,7 +112,10 @@ def lambda_handler(event, context, user_info):
                 "statusCode": 400,
                 "headers": response_headers,
                 "body": json.dumps(
-                    {"message": "端末の操作権限がありません。"}, ensure_ascii=False
+                    {
+                        "message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0607"
+                    },
+                    ensure_ascii=False,
                 ),
             }
 
@@ -128,7 +131,9 @@ def lambda_handler(event, context, user_info):
                     "statusCode": 400,
                     "headers": response_headers,
                     "body": json.dumps(
-                        {"message": "端末の操作権限がありません。"},
+                        {
+                            "message": "権限が変更されたデバイスが選択されました。\n画面の更新を行います。\n\nエラーコード：003-0607"
+                        },
                         ensure_ascii=False,
                     ),
                 }
@@ -178,7 +183,7 @@ def lambda_handler(event, context, user_info):
                 {"message": "予期しないエラーが発生しました。"}, ensure_ascii=False
             ),
         }
-        
+
 # デバイス情報取得(契約状態:使用不可以外)
 def get_device_info(pk, table):
     response = table.query(
