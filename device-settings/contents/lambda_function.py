@@ -114,6 +114,9 @@ def lambda_handler(event, context, user_info):
                             ),
                         }
 
+                    # 最新のデバイス現状態を再取得
+                    device_state = db.get_device_state(device_id, tables["device_state_table"])
+
             # グループ情報取得
             group_id_list = db.get_device_relation_group_id_list(
                 device_id, tables["device_relation_table"]
