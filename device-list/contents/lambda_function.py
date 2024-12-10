@@ -428,12 +428,21 @@ def device_detect(detect_condition,keyword,device_info_list,group_info_list,devi
             device_value = (
                 device_info.get("device_data").get("config").get("device_name")
                 if device_info.get("device_data").get("config").get("device_name")
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id').replace("sigfox-","sigfox-0")}(タグID)"
+                if (device_info.get("device_type") == "UnaTag") and ("sigfox-" in device_info.get('sigfox_id'))
                 else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id')}(タグID)"
-                if device_info.get("device_type") == "UnaTag"
+                if (device_info.get("device_type") == "UnaTag")
                 else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('imei')}(IMEI)"
             )
         elif detect_condition == 2:
-            device_value = device_info.get("identification_id")
+            if device_info.get("device_type") == "UnaTag":
+                device_value = (
+                    device_info.get("identification_id").replace("sigfox-","sigfox-0")
+                    if "sigfox-" in device_info.get("identification_id")
+                    else device_info.get("identification_id")
+                ) 
+            else:
+                device_value = device_info.get("identification_id")
         elif detect_condition == 3:
             device_value = device_info.get("device_data").get("param").get("device_code")
         elif detect_condition == 4:
@@ -571,13 +580,22 @@ def device_detect_all(keyword,device_info_list,group_info_list,device_group_rela
         hit_list = []
 
         device_name = (
-            device_info.get("device_data").get("config").get("device_name")
-            if device_info.get("device_data").get("config").get("device_name")
-            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id')}(タグID)"
-            if device_info.get("device_type") == "UnaTag"
-            else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('imei')}(IMEI)"
-        )
-        device_id = device_info.get("identification_id")
+                device_info.get("device_data").get("config").get("device_name")
+                if device_info.get("device_data").get("config").get("device_name")
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id').replace("sigfox-","sigfox-0")}(タグID)"
+                if (device_info.get("device_type") == "UnaTag") and ("sigfox-" in device_info.get('sigfox_id'))
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('sigfox_id')}(タグID)"
+                if (device_info.get("device_type") == "UnaTag")
+                else f"【{device_info.get("device_data", {}).get("param", {}).get("device_code")}】{device_info.get('imei')}(IMEI)"
+            )
+        if device_info.get("device_type") == "UnaTag":
+            device_id = (
+                device_info.get("identification_id").replace("sigfox-","sigfox-0")
+                if "sigfox-" in device_info.get("identification_id")
+                else device_info.get("identification_id")
+            ) 
+        else:
+            device_id = device_info.get("identification_id")
         device_code = device_info.get("device_data").get("param").get("device_code")
         filtered_device_group_relation = next(
             (group for group in device_group_relation if group["device_id"] == device_info["device_id"]), {}
@@ -675,13 +693,19 @@ def device_detect_for_unregistrated_device(detect_condition,keyword,pre_reg_devi
 
         if detect_condition == 1:
             device_value = (
-                f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}(タグID)"
+                f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id').replace("sigfox-","sigfox-0")}(タグID)"
+                if (pre_reg_device_info.get("device_code") == "MS-C0130") and ("sigfox-" in pre_reg_device_info.get('device_sigfox_id'))
+                else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}(タグID)"
                 if pre_reg_device_info.get("device_code") == "MS-C0130"
                 else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_imei')}(IMEI)"
             )
         elif detect_condition == 2:
             if pre_reg_device_info.get("device_code") == "MS-C0130":
-                device_value = pre_reg_device_info.get("device_sigfox_id")
+                device_value = (
+                    pre_reg_device_info.get("device_sigfox_id").replace("sigfox-","sigfox-0")
+                    if "sigfox-" in pre_reg_device_info.get("device_sigfox_id")
+                    else pre_reg_device_info.get("device_sigfox_id")
+                )
             else:
                 device_value = pre_reg_device_info.get("device_imei")
         elif detect_condition == 3:
@@ -808,17 +832,25 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
         hit_list = []
 
         device_name = (
-            f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}(タグID)"
-            if pre_reg_device_info.get("device_code") == "MS-C0130"
-            else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_imei')}(IMEI)"
-        )
+                f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id').replace("sigfox-","sigfox-0")}(タグID)"
+                if (pre_reg_device_info.get("device_code") == "MS-C0130") and ("sigfox-" in pre_reg_device_info.get('device_sigfox_id'))
+                else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_sigfox_id')}(タグID)"
+                if pre_reg_device_info.get("device_code") == "MS-C0130"
+                else f"【{pre_reg_device_info.get('device_code')}】{pre_reg_device_info.get('device_imei')}(IMEI)"
+            )
         device_code = pre_reg_device_info.get("device_code")
         if device_code == "MS-C0130":
-            device_id = pre_reg_device_info.get("device_sigfox_id")
+            device_id = (
+                pre_reg_device_info.get("device_sigfox_id").replace("sigfox-","sigfox-0")
+                if "sigfox-" in pre_reg_device_info.get("device_sigfox_id")
+                else pre_reg_device_info.get("device_sigfox_id")
+            )
         else:
             device_id = pre_reg_device_info.get("device_imei")
         group_name_list = pre_reg_device_info.get("group_name_list")
 
+        logger.info(f"device_name:{device_name}")
+        logger.info(f"device_id:{device_id}")
         #Noneの場合にエラーが起きることの回避のため
         if device_name is None:
             device_name = ""
