@@ -111,7 +111,13 @@ def create_group_info(
     #################################################
     # DB書き込みトランザクション実行
     #################################################
-    transact_result = db.execute_transact_write_item(transact_items)
+    if len(transact_items) > 100:
+        transact_items_list = [transact_items[i:i+100] for i in range(0, len(transact_items), 100)]
+    else:
+        transact_items_list = [transact_items]
+
+    for transact_item in transact_items_list:
+        transact_result = db.execute_transact_write_item(transact_item)
 
     return transact_result, group_id
 
@@ -289,6 +295,12 @@ def update_group_info(
     #################################################
     # DB書き込みトランザクション実行
     #################################################
-    transact_result = db.execute_transact_write_item(transact_items)
+    if len(transact_items) > 100:
+        transact_items_list = [transact_items[i:i+100] for i in range(0, len(transact_items), 100)]
+    else:
+        transact_items_list = [transact_items]
+
+    for transact_item in transact_items_list:
+        transact_result = db.execute_transact_write_item(transact_item)
 
     return transact_result, group_id
