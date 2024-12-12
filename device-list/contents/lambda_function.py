@@ -158,7 +158,7 @@ def lambda_handler(event, context, user_info):
         # 6 デバイス一覧生成
         ##################
         order = 1
-        device_list, device_info_list, device_info_list_order = [], [], []
+        device_list, device_info_list, device_info_list_order, pre_reg_device_list_sorted = [], [], [], []
         device_info_list = ddb.get_device_info_by_contract_id(contract_id,tables["device_table"])
         device_info_list = db.insert_id_key_in_device_info_list(device_info_list)
 
@@ -189,8 +189,68 @@ def lambda_handler(event, context, user_info):
                 "headers": res_headers,
                 "body": json.dumps(res_body, ensure_ascii=False),
             }
-            
 
+        start_num = None
+        device_get_number = None
+        if query_params:
+            start_num_q = query_params.get("start_num")
+            device_get_number_q = query_params.get("device_get_number")
+            if start_num_q:
+                if start_num_q.isdecimal():
+                    start_num = (
+                        int(start_num_q)
+                        if int(start_num_q) >= 1
+                        else None
+                    )
+            if device_get_number_q:
+                if device_get_number_q.isdecimal():
+                    device_get_number = int(device_get_number_q)
+
+        if user_type == "admin" or user_type == "sub_admin":
+            ##################
+            # 7 登録前デバイス情報取得
+            ##################
+            pre_reg_device_info_list = ddb.get_pre_reg_device_info(
+                contract_id, tables["pre_register_table"]
+            )
+            pre_register_device_group_relation = []
+            pre_reg_device_info_add_group_name_list = []
+            for pre_reg_device_info in pre_reg_device_info_list:
+                if pre_reg_device_info.get("device_code") == "MS-C0130":
+                    pre_device_id = pre_reg_device_info.get("device_sigfox_id")
+                else:
+                    pre_device_id = pre_reg_device_info.get("device_imei")
+                pre_device_group_id_list = db.get_pre_device_relation_group_id_list(pre_device_id, tables["device_relation_table"])
+                pre_register_device_group_relation.append({"device_id": pre_device_id, "group_list": pre_device_group_id_list})
+                
+                unregistered_device_group_name_list = []
+                for pre_device_group_id in pre_device_group_id_list:
+                    unregistered_device_group_info = db.get_group_info(pre_device_group_id, tables["group_table"])
+                    unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_data").get("config").get("group_name"))
+                
+                pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
+                pre_reg_device_info_add_group_name_list.append(pre_reg_device_info)
+
+            pre_reg_device_info_temp = pre_reg_device_info_add_group_name_list
+
+            if keyword == None or keyword == "":
+                pass
+            elif detect_condition != None:
+                pre_reg_device_info_temp = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_temp,pre_register_device_group_relation)
+
+            pre_reg_device_list_sorted = sorted(pre_reg_device_info_temp, key = lambda x: x["dev_reg_datetime"])
+
+            device_number = len(device_info_list_order_filtered + pre_reg_device_list_sorted)
+
+            # ページ表示する場合の処理
+            if start_num and device_get_number:
+                device_info_list_order_filtered, pre_reg_device_list_sorted = device_sort(device_info_list_order_filtered, pre_reg_device_list_sorted, start_num, device_get_number)
+        else:
+            # ページ表示する場合の処理
+            if start_num and device_get_number:
+                device_number = len(device_info_list_order_filtered)
+                device_info_list_order_filtered = device_info_list_order_filtered[start_num - 1:device_get_number]
+        
         for device_info in device_info_list_order_filtered:
             logger.info(f"device_info_list_order_filtered:{device_info_list_order_filtered}")
             group_name_list = []
@@ -314,50 +374,18 @@ def lambda_handler(event, context, user_info):
             )
             order += 1
 
+        ##################
+        # 8 応答メッセージ生成
+        ##################
         if user_type == "admin" or user_type == "sub_admin":
-            ##################
-            # 7 登録前デバイス情報取得
-            ##################
-            pre_reg_device_info_list = ddb.get_pre_reg_device_info(
-                contract_id, tables["pre_register_table"]
-            )
-
-            pre_register_device_group_relation = []
-            pre_reg_device_info_add_group_name_list = []
-            for pre_reg_device_info in pre_reg_device_info_list:
-                if pre_reg_device_info.get("device_code") == "MS-C0130":
-                    pre_device_id = pre_reg_device_info.get("device_sigfox_id")
-                else:
-                    pre_device_id = pre_reg_device_info.get("device_imei")
-                pre_device_group_id_list = db.get_pre_device_relation_group_id_list(pre_device_id, tables["device_relation_table"])
-                pre_register_device_group_relation.append({"device_id": pre_device_id, "group_list": pre_device_group_id_list})
-                
-                unregistered_device_group_name_list = []
-                for pre_device_group_id in pre_device_group_id_list:
-                    unregistered_device_group_info = db.get_group_info(pre_device_group_id, tables["group_table"])
-                    unregistered_device_group_name_list.append(unregistered_device_group_info.get("group_data").get("config").get("group_name"))
-                
-                pre_reg_device_info["group_name_list"] = unregistered_device_group_name_list
-                pre_reg_device_info_add_group_name_list.append(pre_reg_device_info)
-
-            pre_reg_device_info_list = pre_reg_device_info_add_group_name_list
-
-            if keyword == None or keyword == "":
-                pass
-            elif detect_condition != None:
-                pre_reg_device_info_list = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_list,pre_register_device_group_relation)
-
-            # pre_reg_device_info_list = sorted(pre_reg_device_info_list, key = lambda x: x["dev_reg_datetime"])
-            ##################
-            # 8 応答メッセージ生成
-            ##################
             res_body = {
                 "message": "",
                 "device_list": device_list,
-                "unregistered_device_list": pre_reg_device_info_list,
+                "unregistered_device_list": pre_reg_device_list_sorted,
+                "device_number": device_number
             }
         elif user_type == "worker" or user_type == "referrer":
-            res_body = {"message": "", "device_list": device_list}
+            res_body = {"message": "", "device_list": device_list, "device_number": device_number}
 
         logger.info(f"レスポンス:{res_body}")
         return {
@@ -894,3 +922,26 @@ def device_detect_all_for_unregistrated_device(keyword,pre_reg_device_info_list)
                 return_list.append(pre_reg_device_info)
 
     return return_list
+
+def device_sort(device_info_list_order_filtered, pre_reg_device_list_sorted, start_num, device_get_number):
+
+    pre_reg_device_length = len(pre_reg_device_list_sorted)
+
+    detect_hit_device = pre_reg_device_list_sorted + device_info_list_order_filtered
+
+    res_detect_hit_device = detect_hit_device[start_num - 1:device_get_number]
+
+    if start_num <= pre_reg_device_length:
+        # 指定したデバイスに未登録デバイスがあり、かつ登録デバイスもある場合
+        pre_reg_device_list_sorted = res_detect_hit_device[0:pre_reg_device_length - start_num + 1]
+        device_info_list_order_filtered = res_detect_hit_device[pre_reg_device_length + 1:device_get_number - len(pre_reg_device_list_sorted)]
+        if len(pre_reg_device_list_sorted) >= device_get_number:
+            # 指定したデバイスに未登録デバイスがあり、かつ登録デバイスがない場合
+            pre_reg_device_list_sorted = pre_reg_device_list_sorted[0:device_get_number]
+            device_info_list_order_filtered = []
+    else:
+        # 指定したデバイスに未登録デバイスがない場合
+        pre_reg_device_list_sorted = []
+        device_info_list_order_filtered = res_detect_hit_device
+
+    return device_info_list_order_filtered, pre_reg_device_list_sorted
