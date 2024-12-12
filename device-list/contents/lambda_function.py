@@ -238,7 +238,7 @@ def lambda_handler(event, context, user_info):
             elif detect_condition != None:
                 pre_reg_device_info_temp = keyword_detection_device_list_for_unregistration_device(detect_condition,keyword,pre_reg_device_info_temp,pre_register_device_group_relation)
 
-            pre_reg_device_list_sorted = sorted(pre_reg_device_info_temp, key = lambda x: x["dev_reg_datetime"])
+            pre_reg_device_list_sorted = sorted(pre_reg_device_info_temp, key = lambda x: x["device_registration_datetime"])
 
             device_number = len(device_info_list_order_filtered + pre_reg_device_list_sorted)
 
